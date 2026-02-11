@@ -97,7 +97,7 @@ export function MyAssignments({
 
   if (assignments.length === 0) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-8 text-center">
+      <div className="rounded-2xl dashboard-panel p-8 text-center">
         <h2 className="text-lg font-semibold text-white mb-2">
           No Assignments Yet
         </h2>
@@ -122,7 +122,7 @@ export function MyAssignments({
           <Link
             key={a.id}
             href={`/scout/${a.match_id}/${a.team_number}`}
-            className="flex items-center justify-between rounded-2xl border border-white/10 bg-gray-900/60 p-4 shadow-sm hover:bg-white/5 transition"
+            className="flex items-center justify-between rounded-2xl dashboard-panel p-4 hover:bg-white/5 transition"
           >
             <div className="flex items-center gap-3">
               <span
@@ -163,7 +163,7 @@ export function MyAssignments({
               {completed.map((a) => (
                 <div
                   key={a.id}
-                  className="flex items-center justify-between rounded-2xl border border-white/10 bg-gray-900/40 p-4 opacity-60"
+                  className="flex items-center justify-between rounded-2xl dashboard-panel p-4 opacity-60"
                 >
                   <div className="flex items-center gap-3">
                     <span
@@ -179,7 +179,7 @@ export function MyAssignments({
                       <p className="font-medium text-gray-300">
                         {a.matchLabel}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-400">
                         Team {a.team_number} &middot; {a.positionLabel}
                       </p>
                     </div>

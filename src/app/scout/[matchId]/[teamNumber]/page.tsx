@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ScoutingForm } from "./scouting-form";
@@ -27,7 +28,7 @@ export default async function ScoutPage({
   // Get match info
   const { data: match } = await supabase
     .from("matches")
-    .select("*, events(name, tba_key)")
+    .select("*, events(name, tba_key, year)")
     .eq("id", matchId)
     .single();
 
@@ -69,16 +70,33 @@ export default async function ScoutPage({
       ? `${prefix} ${normalizedSet}-${normalizedMatch}`
       : `${prefix} ${normalizedMatch}`;
 
+  const eventTitle =
+    match.events?.year && match.events?.name
+      ? `${match.events.year} ${match.events.name}`
+      : match.events?.name ?? "Event";
+
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      <header className="border-b border-white/10 bg-gray-950/80 backdrop-blur">
-        <div className="mx-auto max-w-lg px-4 py-3">
-          <p className="text-xs text-gray-400">
-            {match.events?.name ?? "Event"}
-          </p>
-          <h1 className="text-lg font-bold text-white">
-            {compLabel} &mdash; Team {teamNumber}
-          </h1>
+    <div className="min-h-screen">
+      <header className="border-b border-white/10 bg-black/30 backdrop-blur">
+        <div className="mx-auto flex max-w-lg items-center justify-between gap-3 px-4 py-3">
+          <div>
+            <p className="text-xs text-gray-400">
+              {eventTitle}
+            </p>
+            <h1 className="text-lg font-bold text-white">
+              {compLabel} &mdash; Team {teamNumber}
+            </h1>
+          </div>
+          <Link
+            href={
+              match.events?.tba_key
+                ? `/dashboard/events/${match.events.tba_key}/matches`
+                : "/dashboard"
+            }
+            className="back-button"
+          >
+            Back
+          </Link>
         </div>
       </header>
 
@@ -88,6 +106,7 @@ export default async function ScoutPage({
           teamNumber={parseInt(teamNumber)}
           orgId={profile.org_id}
           userId={user.id}
+          eventKey={match.events?.tba_key ?? null}
           existing={existing}
         />
       </main>

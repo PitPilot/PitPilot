@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { SyncStatsButton } from "./sync-stats-button";
 
 interface TeamStat {
   team_number: number;
@@ -42,10 +43,25 @@ function SortHeader({
   );
 }
 
-export function TeamStatsTable({ data, eventKey }: { data: TeamStat[]; eventKey: string }) {
+export function TeamStatsTable({
+  data,
+  eventKey,
+  canSync = false,
+  highlightTeam = null,
+}: {
+  data: TeamStat[];
+  eventKey: string;
+  canSync?: boolean;
+  highlightTeam?: number | null;
+}) {
   const [sortKey, setSortKey] = useState<SortKey>("epa");
   const [sortAsc, setSortAsc] = useState(false);
   const [search, setSearch] = useState("");
+  const missingEpaCount = useMemo(
+    () => data.filter((team) => team.epa === null).length,
+    [data]
+  );
+  const showEpaNotice = missingEpaCount > 0;
 
   const sorted = useMemo(() => {
     const filtered = data.filter(
@@ -57,7 +73,9 @@ export function TeamStatsTable({ data, eventKey }: { data: TeamStat[]; eventKey:
     return [...filtered].sort((a, b) => {
       const aVal = a[sortKey];
       const bVal = b[sortKey];
-      if (aVal === null && bVal === null) return 0;
+      if (aVal === null && bVal === null) {
+        return a.team_number - b.team_number;
+      }
       if (aVal === null) return 1;
       if (bVal === null) return -1;
       if (typeof aVal === "string" && typeof bVal === "string") {
@@ -87,15 +105,27 @@ export function TeamStatsTable({ data, eventKey }: { data: TeamStat[]; eventKey:
 
   return (
     <div className="space-y-4">
+      {showEpaNotice && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-yellow-300">
+          {missingEpaCount === data.length
+            ? "EPA stats update once matches start or as the event gets closer."
+            : `EPA stats are still missing for ${missingEpaCount} team${missingEpaCount === 1 ? "" : "s"}.`}
+          {canSync && (
+            <div className="mt-2">
+              <SyncStatsButton eventKey={eventKey} />
+            </div>
+          )}
+        </div>
+      )}
       <input
         type="text"
         placeholder="Search by team number or name..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="w-full max-w-sm rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="w-full max-w-sm rounded-lg px-3 py-2 text-sm text-white shadow-sm dashboard-input"
       />
 
-      <div className="overflow-x-auto rounded-2xl border border-white/10 bg-gray-900/60 shadow-sm">
+      <div className="overflow-x-auto rounded-none dashboard-table">
         <table className="min-w-full divide-y divide-white/10">
           <thead className="bg-white/5">
             <tr>
@@ -112,9 +142,11 @@ export function TeamStatsTable({ data, eventKey }: { data: TeamStat[]; eventKey:
             </tr>
           </thead>
           <tbody className="divide-y divide-white/10">
-            {sorted.map((team, i) => (
-              <tr key={team.team_number} className="hover:bg-white/5">
-                <td className="whitespace-nowrap px-3 py-2 text-sm text-gray-500">
+            {sorted.map((team, i) => {
+              const isHighlighted = highlightTeam !== null && team.team_number === highlightTeam;
+              return (
+              <tr key={team.team_number} className={isHighlighted ? "bg-white/10 hover:bg-white/15" : "hover:bg-white/5"}>
+                <td className="whitespace-nowrap px-3 py-2 text-sm text-gray-400">
                   {i + 1}
                 </td>
                 <td className="whitespace-nowrap px-3 py-2 text-sm font-medium">
@@ -146,7 +178,8 @@ export function TeamStatsTable({ data, eventKey }: { data: TeamStat[]; eventKey:
                     : "—"}
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>

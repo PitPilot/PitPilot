@@ -19,13 +19,13 @@ export default async function MatchListPage({
   // Get event
   const { data: event } = await supabase
     .from("events")
-    .select("id, name")
+    .select("id, name, year")
     .eq("tba_key", eventKey)
     .single();
 
   if (!event) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-950 text-white">
+      <div className="flex min-h-screen items-center justify-center dashboard-page">
         <p className="text-gray-400">Event not found. Sync it first.</p>
       </div>
     );
@@ -63,6 +63,14 @@ export default async function MatchListPage({
     .eq("id", user.id)
     .single();
   if (!profile?.org_id) redirect("/join");
+
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("team_number")
+    .eq("id", profile.org_id)
+    .single();
+
+  const orgTeamNumber = org?.team_number ?? null;
 
   // Check which matches have existing briefs
   let existingBriefs: Array<{ match_id: string }> = [];
@@ -129,10 +137,15 @@ export default async function MatchListPage({
   }: {
     match: NonNullable<typeof matches>[number];
   }) {
-    const hasScore = match.red_score !== null;
+    const hasScore = match.red_score !== null || match.blue_score !== null;
     const hasBrief = briefSet.has(match.id);
+    const isOurMatch = orgTeamNumber
+      ? match.red_teams.includes(orgTeamNumber) ||
+        match.blue_teams.includes(orgTeamNumber)
+      : true;
+    const showBriefLink = isOurMatch && (hasBrief || !hasScore);
     return (
-      <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-3 shadow-sm">
+      <div className="rounded-2xl dashboard-panel p-3">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-sm font-semibold text-white">
             {compLabel(
@@ -142,21 +155,18 @@ export default async function MatchListPage({
             )}
           </span>
           <div className="flex items-center gap-2">
-            {hasScore && (
-              <span className="text-xs text-gray-400">
-                {match.red_score} - {match.blue_score}
-              </span>
+            {showBriefLink && (
+              <Link
+                href={`/dashboard/events/${eventKey}/matches/${match.id}/brief`}
+                className={`rounded-md px-2 py-1 text-xs font-semibold transition ${
+                  hasBrief
+                    ? "bg-purple-500/20 text-purple-200 hover:bg-purple-500/30"
+                    : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-purple-200"
+                }`}
+              >
+                {hasBrief ? "View Brief" : "Pre-Match Brief"}
+              </Link>
             )}
-            <Link
-              href={`/dashboard/events/${eventKey}/matches/${match.id}/brief`}
-              className={`rounded px-2 py-1 text-xs font-medium transition ${
-                hasBrief
-                  ? "bg-purple-500/20 text-purple-200 hover:bg-purple-500/30"
-                  : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-purple-200"
-              }`}
-            >
-              {hasBrief ? "View Brief" : "AI Brief"}
-            </Link>
           </div>
         </div>
 
@@ -169,16 +179,16 @@ export default async function MatchListPage({
               <Link
                 key={team}
                 href={`/scout/${match.id}/${team}`}
-                className={`flex-1 rounded px-2 py-1.5 text-center text-xs font-medium transition ${
+                className={`match-chip match-chip-red flex-1 rounded px-2 py-1.5 text-center text-xs font-medium transition ${
                   scouted
                     ? "bg-red-500/30 text-red-100 ring-2 ring-red-400/60"
                     : assigned
-                    ? "bg-red-500/20 text-red-100 ring-2 ring-orange-400/60"
+                    ? "bg-red-500/10 text-red-200 ring-2 ring-orange-400/70 hover:bg-red-500/20"
                     : "bg-red-500/10 text-red-200 hover:bg-red-500/20"
                 }`}
               >
                 {team}
-                {scouted ? " ✓" : assigned ? " ★" : ""}
+                {scouted ? " ✓" : ""}
               </Link>
             );
           })}
@@ -193,16 +203,16 @@ export default async function MatchListPage({
               <Link
                 key={team}
                 href={`/scout/${match.id}/${team}`}
-                className={`flex-1 rounded px-2 py-1.5 text-center text-xs font-medium transition ${
+                className={`match-chip match-chip-blue flex-1 rounded px-2 py-1.5 text-center text-xs font-medium transition ${
                   scouted
                     ? "bg-blue-500/30 text-blue-100 ring-2 ring-blue-400/60"
                     : assigned
-                    ? "bg-blue-500/20 text-blue-100 ring-2 ring-orange-400/60"
+                    ? "bg-blue-500/10 text-blue-200 ring-2 ring-orange-400/70 hover:bg-blue-500/20"
                     : "bg-blue-500/10 text-blue-200 hover:bg-blue-500/20"
                 }`}
               >
                 {team}
-                {scouted ? " ✓" : assigned ? " ★" : ""}
+                {scouted ? " ✓" : ""}
               </Link>
             );
           })}
@@ -211,23 +221,28 @@ export default async function MatchListPage({
     );
   }
 
+  const eventTitle = event.year ? `${event.year} ${event.name}` : event.name;
+
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen dashboard-page">
       <Navbar />
       <main className="mx-auto max-w-2xl px-4 pb-12 pt-24 space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
-              {event.name}
+              {eventTitle}
             </p>
             <h1 className="text-lg font-bold">Scout matches</h1>
             <p className="text-xs text-gray-400">
               Tap a team number to scout
             </p>
+            <p className="mt-1 text-xs text-gray-400">
+              Boxes that are highlighted were assigned to you by the captain.
+            </p>
           </div>
           <Link
             href={`/dashboard/events/${eventKey}`}
-            className="rounded-md border border-white/10 px-3 py-1.5 text-sm text-gray-200 hover:bg-white/5"
+            className="back-button"
           >
             Back
           </Link>

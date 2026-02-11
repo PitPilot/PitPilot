@@ -3,6 +3,8 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/supabase";
 
 export async function sendMagicLink(formData: FormData) {
   const supabase = await createClient();
@@ -212,9 +214,30 @@ export async function updateProfile(formData: FormData) {
     return { error: "Display name cannot be empty." };
   }
 
+  const allowedRoles = new Set([
+    "driver",
+    "coach",
+    "programmer",
+    "scout",
+    "data",
+    "mechanical",
+    "electrical",
+    "cad",
+    "pit",
+    "mentor",
+    "other",
+  ]);
+  const teamRoles = (formData.getAll("teamRoles") as string[])
+    .map((role) => role.trim())
+    .filter((role) => allowedRoles.has(role));
+
   const { error } = await supabase
     .from("profiles")
-    .update({ display_name: displayName })
+    .update({
+      display_name: displayName,
+      team_roles: teamRoles,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", user.id);
 
   if (error) {
@@ -222,6 +245,76 @@ export async function updateProfile(formData: FormData) {
   }
 
   revalidatePath("/dashboard/settings");
+  revalidatePath("/dashboard/settings/account");
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
+export async function deleteAccount() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Not authenticated" };
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, org_id, role")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError || !profile) {
+    return { error: "Profile not found" };
+  }
+
+  if (profile.org_id && profile.role === "captain") {
+    const { count } = await supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("org_id", profile.org_id)
+      .eq("role", "captain");
+
+    if ((count ?? 0) <= 1) {
+      return {
+        error: "Assign another captain before deleting your account.",
+      };
+    }
+  }
+
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) {
+    return { error: "Service role key not configured." };
+  }
+
+  if (profile.org_id) {
+    await supabase
+      .from("profiles")
+      .update({
+        org_id: null,
+        role: "scout",
+        team_roles: [],
+        onboarding_complete: false,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", user.id);
+  }
+
+  const admin = createAdminClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    serviceRoleKey,
+    { auth: { persistSession: false } }
+  );
+
+  const { error: deleteError } = await admin.auth.admin.deleteUser(user.id);
+  if (deleteError) {
+    return { error: deleteError.message };
+  }
+
+  await supabase.auth.signOut();
+  revalidatePath("/dashboard/settings/account");
   revalidatePath("/dashboard");
   return { success: true };
 }

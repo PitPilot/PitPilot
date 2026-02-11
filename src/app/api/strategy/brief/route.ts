@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
   if (!limit.allowed) {
     const retryAfter = retryAfterSeconds(limit.resetAt);
     return NextResponse.json(
-      { error: "Rate limit exceeded. Please try again soon." },
+      { error: "Your team has exceeded the rate limit. Please try again soon." },
       { status: 429, headers: { "Retry-After": retryAfter.toString() } }
     );
   }
@@ -68,6 +68,30 @@ export async function POST(request: NextRequest) {
 
   if (matchError || !match) {
     return NextResponse.json({ error: "Match not found" }, { status: 404 });
+  }
+
+  if (match.red_score !== null || match.blue_score !== null) {
+    return NextResponse.json(
+      { error: "Pre-match briefs are only available before the match starts." },
+      { status: 400 }
+    );
+  }
+
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("team_number")
+    .eq("id", profile.org_id)
+    .single();
+
+  if (
+    org?.team_number &&
+    !match.red_teams.includes(org.team_number) &&
+    !match.blue_teams.includes(org.team_number)
+  ) {
+    return NextResponse.json(
+      { error: "Pre-match briefs are only available for your own matches." },
+      { status: 403 }
+    );
   }
 
   // Get all 6 teams
@@ -196,7 +220,8 @@ Guidelines:
 - If scouting data is missing, note it and base analysis on EPA stats
 - Predictions should factor in both EPA and scouting observations
 - Recommendations should be specific and actionable for drive teams
-- Keep insights concise but informative`;
+- Keep insights concise but informative
+- Do not use emojis or markdown`;
 
   try {
     const client = new Anthropic({ apiKey });
@@ -214,14 +239,24 @@ Guidelines:
       ],
     });
 
-    const textBlock = message.content.find((b) => b.type === "text");
-    if (!textBlock || textBlock.type !== "text") {
+    const textOutput = message.content
+      .filter((b) => b.type === "text")
+      .map((b) => b.text)
+      .join("\n");
+    if (!textOutput) {
       return NextResponse.json({ error: "No text response from AI" }, { status: 500 });
     }
 
     let parsedJson: unknown;
     try {
-      parsedJson = JSON.parse(textBlock.text);
+      const fenced = textOutput.match(/```(?:json)?\s*([\s\S]*?)```/i);
+      let candidate = fenced ? fenced[1] : textOutput;
+      const start = candidate.indexOf("{");
+      const end = candidate.lastIndexOf("}");
+      if (start !== -1 && end !== -1 && end > start) {
+        candidate = candidate.slice(start, end + 1);
+      }
+      parsedJson = JSON.parse(candidate);
     } catch {
       return NextResponse.json(
         { error: "Failed to parse AI response as JSON" },
@@ -237,42 +272,6 @@ Guidelines:
       );
     }
     const briefContent = parsed.data;
-
-    // Try to get ML model prediction (graceful fallback if server unavailable)
-    try {
-      const predictionUrl =
-        process.env.PREDICTION_API_URL || "http://localhost:8000";
-      const mlResp = await fetch(`${predictionUrl}/predict`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          red_teams: match.red_teams,
-          blue_teams: match.blue_teams,
-          event_key: match.events?.tba_key ?? "",
-          comp_level:
-            match.comp_level === "qm"
-              ? 0
-              : match.comp_level === "sf"
-              ? 2
-              : match.comp_level === "f"
-              ? 3
-              : 1,
-          event_week: 0,
-        }),
-        signal: AbortSignal.timeout(10000),
-      });
-      if (mlResp.ok) {
-        const mlData = await mlResp.json();
-        briefContent.mlPrediction = {
-          winner: mlData.winner,
-          winProbability: mlData.win_probability,
-          redScore: mlData.red_score,
-          blueScore: mlData.blue_score,
-        };
-      }
-    } catch {
-      // ML prediction server unavailable — continue without it
-    }
 
     // Upsert the brief
     const { data: brief, error: briefError } = await supabase

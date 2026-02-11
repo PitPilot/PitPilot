@@ -57,6 +57,13 @@ export interface TBAMatch {
   };
 }
 
+export interface TBAEventRankings {
+  rankings: Array<{
+    rank: number;
+    team_key: string;
+  }>;
+}
+
 function parseTeamNumber(teamKey: string): number {
   return parseInt(teamKey.replace("frc", ""), 10);
 }
@@ -71,6 +78,19 @@ export async function fetchEventTeams(eventKey: string): Promise<TBATeam[]> {
 
 export async function fetchEventMatches(eventKey: string): Promise<TBAMatch[]> {
   return tbaFetch<TBAMatch[]>(`/event/${eventKey}/matches`);
+}
+
+export async function fetchEventRankings(eventKey: string): Promise<
+  Array<{ rank: number; teamNumber: number }>
+> {
+  const data = await tbaFetch<TBAEventRankings>(`/event/${eventKey}/rankings`);
+  if (!data?.rankings) return [];
+  return data.rankings
+    .map((ranking) => ({
+      rank: ranking.rank,
+      teamNumber: parseTeamNumber(ranking.team_key),
+    }))
+    .filter((ranking) => !Number.isNaN(ranking.teamNumber));
 }
 
 export function parseMatchAlliance(teamKeys: string[]): number[] {

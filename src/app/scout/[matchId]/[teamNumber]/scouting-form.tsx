@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { CounterButton } from "@/components/counter-button";
 import { StarRating } from "@/components/star-rating";
-import { QRExport } from "@/components/qr-export";
 import { saveOffline, getPendingCount } from "@/lib/offline-queue";
 import type { Tables } from "@/types/supabase";
 
@@ -14,6 +13,7 @@ interface ScoutingFormProps {
   teamNumber: number;
   orgId: string;
   userId: string;
+  eventKey?: string | null;
   existing: Tables<"scouting_entries"> | null;
 }
 
@@ -22,6 +22,7 @@ export function ScoutingForm({
   teamNumber,
   orgId,
   userId,
+  eventKey,
   existing,
 }: ScoutingFormProps) {
   const router = useRouter();
@@ -44,6 +45,54 @@ export function ScoutingForm({
   const [savedOffline, setSavedOffline] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [activeStep, setActiveStep] = useState(0);
+
+  const autoRef = useRef<HTMLDivElement | null>(null);
+  const teleopRef = useRef<HTMLDivElement | null>(null);
+  const endgameRef = useRef<HTMLDivElement | null>(null);
+  const ratingsRef = useRef<HTMLDivElement | null>(null);
+  const notesRef = useRef<HTMLDivElement | null>(null);
+
+  const steps = [
+    { label: "Auto", ref: autoRef },
+    { label: "Teleop", ref: teleopRef },
+    { label: "Endgame", ref: endgameRef },
+    { label: "Ratings", ref: ratingsRef },
+    { label: "Notes", ref: notesRef },
+  ];
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !("IntersectionObserver" in window)) {
+      return;
+    }
+
+    const stepMap = new Map<Element, number>();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const index = stepMap.get(entry.target);
+          if (typeof index === "number") {
+            setActiveStep(index);
+          }
+        });
+      },
+      {
+        root: null,
+        threshold: 0.3,
+        rootMargin: "-20% 0px -50% 0px",
+      }
+    );
+
+    steps.forEach((step, index) => {
+      if (step.ref.current) {
+        stepMap.set(step.ref.current, index);
+        observer.observe(step.ref.current);
+      }
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   const entryData = {
     match_id: matchId,
@@ -67,15 +116,9 @@ export function ScoutingForm({
     };
 
     try {
-      let result;
-      if (existing) {
-        result = await supabase
-          .from("scouting_entries")
-          .update(entry)
-          .eq("id", existing.id);
-      } else {
-        result = await supabase.from("scouting_entries").insert(entry);
-      }
+      const result = await supabase
+        .from("scouting_entries")
+        .upsert(entry, { onConflict: "match_id,team_number,scouted_by" });
 
       if (result.error) {
         throw new Error(result.error.message);
@@ -85,10 +128,31 @@ export function ScoutingForm({
       setSubmitted(true);
       setSavedOffline(false);
       setLoading(false);
-      setTimeout(() => router.back(), 2000);
-    } catch {
-      // Any network error (offline, timeout, server error) — save to IndexedDB
-      // At FRC venues, network is often spotty — catch ALL failures, not just offline
+      setTimeout(() => {
+        if (eventKey) {
+          router.push(`/dashboard/events/${eventKey}/matches?updated=1`);
+          router.refresh();
+        } else {
+          router.back();
+        }
+      }, 1500);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to save.";
+      const lowerMessage = message.toLowerCase();
+      const shouldSaveOffline =
+        typeof navigator !== "undefined" &&
+        (!navigator.onLine ||
+          lowerMessage.includes("fetch") ||
+          lowerMessage.includes("network") ||
+          lowerMessage.includes("timeout"));
+
+      if (!shouldSaveOffline) {
+        setError(message);
+        setLoading(false);
+        return;
+      }
+
+      // Network issue (offline/timeout) — save to IndexedDB
       try {
         await saveOffline({
           id: `${matchId}-${teamNumber}-${userId}`,
@@ -145,13 +209,18 @@ export function ScoutingForm({
           )}
         </div>
 
-        {/* QR Code backup — always available after submit */}
-        <QRExport data={entryData} />
+        {savedOffline && (
+          <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 p-4 text-sm text-amber-200">
+            Offline mode is active. You can keep scouting and we&apos;ll sync your
+            entries when the connection returns. Some pages (like the dashboard)
+            won&apos;t load until you&apos;re back online.
+          </div>
+        )}
 
         {savedOffline && (
           <button
             onClick={() => router.back()}
-            className="w-full rounded-lg bg-white/10 py-3 text-sm font-medium text-gray-200 transition hover:bg-white/20"
+            className="back-button back-button-block back-button-lg"
           >
             Back to Matches
           </button>
@@ -161,15 +230,54 @@ export function ScoutingForm({
   }
 
   return (
-    <div className="space-y-6 pb-8">
+      <div className="space-y-6 pb-8">
       {error && (
         <div className="rounded-md border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">
           {error}
         </div>
       )}
 
+      <div className="scout-panel p-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs font-semibold uppercase tracking-widest text-cyan-200">
+            Progress
+          </p>
+          <p className="text-xs text-gray-400">
+            Step {activeStep + 1} of {steps.length}
+          </p>
+        </div>
+        <div className="mt-3 grid grid-cols-5 gap-2">
+          {steps.map((step, index) => (
+            <button
+              key={step.label}
+              type="button"
+              onClick={() =>
+                step.ref.current?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                })
+              }
+              className="text-left"
+            >
+              <span
+                className={`block h-1.5 rounded-full ${
+                  index <= activeStep ? "bg-cyan-400" : "bg-white/10"
+                }`}
+              />
+              <span
+                className={`mt-1 block text-[10px] uppercase tracking-widest ${
+                  index === activeStep ? "text-cyan-200" : "text-gray-400"
+                }`}
+              >
+                {step.label}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Auto Section */}
-      <section className="rounded-2xl border border-white/10 bg-gray-900/60 p-4 shadow-sm">
+      <section ref={autoRef} className="scout-panel p-4">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-blue-300">
           Autonomous
         </h2>
@@ -183,7 +291,7 @@ export function ScoutingForm({
       </section>
 
       {/* Teleop Section */}
-      <section className="rounded-2xl border border-white/10 bg-gray-900/60 p-4 shadow-sm">
+      <section ref={teleopRef} className="scout-panel p-4">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-emerald-300">
           Teleop
         </h2>
@@ -197,7 +305,7 @@ export function ScoutingForm({
       </section>
 
       {/* Endgame Section */}
-      <section className="rounded-2xl border border-white/10 bg-gray-900/60 p-4 shadow-sm">
+      <section ref={endgameRef} className="scout-panel p-4">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-purple-300">
           Endgame
         </h2>
@@ -211,7 +319,7 @@ export function ScoutingForm({
       </section>
 
       {/* Ratings Section */}
-      <section className="rounded-2xl border border-white/10 bg-gray-900/60 p-4 shadow-sm">
+      <section ref={ratingsRef} className="scout-panel p-4">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-amber-300">
           Ratings
         </h2>
@@ -230,7 +338,7 @@ export function ScoutingForm({
       </section>
 
       {/* Notes Section */}
-      <section className="rounded-2xl border border-white/10 bg-gray-900/60 p-4 shadow-sm">
+      <section ref={notesRef} className="scout-panel p-4">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-300">
           Notes
         </h2>
@@ -239,7 +347,7 @@ export function ScoutingForm({
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Quick observations..."
           rows={3}
-          className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white shadow-sm placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="w-full px-3 py-2 text-sm text-white shadow-sm placeholder:text-gray-500 scout-input"
         />
       </section>
 
@@ -247,7 +355,7 @@ export function ScoutingForm({
       <button
         onClick={handleSubmit}
         disabled={loading}
-        className="w-full rounded-lg bg-blue-600 py-3 text-base font-semibold text-white active:bg-blue-700 disabled:opacity-50"
+        className="w-full rounded-lg bg-cyan-600 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-cyan-500 active:bg-cyan-700 disabled:opacity-50"
       >
         {loading
           ? "Submitting..."

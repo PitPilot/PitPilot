@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
   if (!limit.allowed) {
     const retryAfter = retryAfterSeconds(limit.resetAt);
     return NextResponse.json(
-      { error: "Rate limit exceeded. Please try again soon." },
+      { error: "Your team has exceeded the rate limit. Please try again soon." },
       { status: 429, headers: { "Retry-After": retryAfter.toString() } }
     );
   }

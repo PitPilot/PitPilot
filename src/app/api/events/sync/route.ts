@@ -49,6 +49,12 @@ export async function POST(request: Request) {
       );
     }
 
+    const { data: org } = await supabase
+      .from("organizations")
+      .select("team_number")
+      .eq("id", profile.org_id)
+      .single();
+
     const limit = checkRateLimit(
       `events-sync:${profile.org_id}`,
       5 * 60_000,
@@ -57,7 +63,7 @@ export async function POST(request: Request) {
     if (!limit.allowed) {
       const retryAfter = retryAfterSeconds(limit.resetAt);
       return NextResponse.json(
-        { error: "Rate limit exceeded. Please try again soon." },
+        { error: "Your team has exceeded the rate limit. Please try again soon." },
         { status: 429, headers: { "Retry-After": retryAfter.toString() } }
       );
     }
@@ -121,6 +127,48 @@ export async function POST(request: Request) {
       );
     }
 
+    const eventTeamRows = tbaTeams.map((t) => ({
+      event_id: dbEvent.id,
+      team_number: t.team_number,
+    }));
+
+    for (let i = 0; i < eventTeamRows.length; i += 200) {
+      const batch = eventTeamRows.slice(i, i + 200);
+      const { error: eventTeamError } = await supabase
+        .from("event_teams")
+        .upsert(batch, {
+          onConflict: "event_id,team_number",
+          ignoreDuplicates: true,
+        });
+
+      if (eventTeamError) {
+        return NextResponse.json(
+          { error: `Failed to link event teams: ${eventTeamError.message}` },
+          { status: 500 }
+        );
+      }
+    }
+
+    const isAttending = org?.team_number
+      ? tbaTeams.some((t) => t.team_number === org.team_number)
+      : false;
+
+    const { error: orgEventError } = await supabase.from("org_events").upsert(
+      {
+        org_id: profile.org_id,
+        event_id: dbEvent.id,
+        is_attending: isAttending,
+      },
+      { onConflict: "org_id,event_id" }
+    );
+
+    if (orgEventError) {
+      return NextResponse.json(
+        { error: `Failed to link event: ${orgEventError.message}` },
+        { status: 500 }
+      );
+    }
+
     // 4. Fetch and upsert matches
     const tbaMatches = await fetchEventMatches(eventKey);
     const matchRows = tbaMatches.map((m) => ({
@@ -156,6 +204,9 @@ export async function POST(request: Request) {
       event: tbaEvent.name,
       teams: tbaTeams.length,
       matches: tbaMatches.length,
+      warning: isAttending
+        ? null
+        : "Your team isn’t listed for this event. You can still scout it, but it won’t be on your schedule.",
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";

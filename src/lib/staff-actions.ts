@@ -81,6 +81,60 @@ export async function clearOrganizationTeamNumber(formData: FormData) {
   return { success: true } as const;
 }
 
+export async function deleteOrganization(formData: FormData) {
+  const ctx = await requireStaff();
+  if ("error" in ctx) return ctx;
+
+  const orgId = (formData.get("orgId") as string | null)?.trim();
+  if (!orgId) {
+    return { error: "Missing organization id" } as const;
+  }
+
+  const tablesToDelete = [
+    "scout_assignments",
+    "scouting_entries",
+    "strategy_briefs",
+    "pick_lists",
+    "org_events",
+  ] as const;
+
+  for (const table of tablesToDelete) {
+    const { error } = await ctx.supabase
+      .from(table)
+      .delete()
+      .eq("org_id", orgId);
+    if (error) {
+      return { error: error.message } as const;
+    }
+  }
+
+  const { error: profileError } = await ctx.supabase
+    .from("profiles")
+    .update({
+      org_id: null,
+      role: "scout",
+      team_roles: [],
+      updated_at: new Date().toISOString(),
+    })
+    .eq("org_id", orgId);
+
+  if (profileError) {
+    return { error: profileError.message } as const;
+  }
+
+  const { error: orgError } = await ctx.supabase
+    .from("organizations")
+    .delete()
+    .eq("id", orgId);
+
+  if (orgError) {
+    return { error: orgError.message } as const;
+  }
+
+  revalidatePath("/dashboard/admin");
+  return { success: true } as const;
+}
+
 export async function upsertAnnouncement(formData: FormData) {
   const ctx = await requireStaff();
   if ("error" in ctx) return ctx;

@@ -1,12 +1,5 @@
 import { z } from "zod";
 
-export const MLPredictionSchema = z.object({
-  winner: z.string(),
-  winProbability: z.number(),
-  redScore: z.number(),
-  blueScore: z.number(),
-});
-
 export const AllianceAnalysisSchema = z.object({
   totalEPA: z.number(),
   strengths: z.array(z.string()),
@@ -34,7 +27,6 @@ export const BriefContentSchema = z.object({
     redScore: z.number(),
     blueScore: z.number(),
   }),
-  mlPrediction: MLPredictionSchema.optional(),
   redAlliance: AllianceAnalysisSchema,
   blueAlliance: AllianceAnalysisSchema,
   teamAnalysis: z.array(TeamAnalysisSchema),
@@ -71,7 +63,6 @@ export const PickListContentSchema = z.object({
   summary: z.string(),
 });
 
-export type MLPrediction = z.infer<typeof MLPredictionSchema>;
 export type AllianceAnalysis = z.infer<typeof AllianceAnalysisSchema>;
 export type TeamAnalysis = z.infer<typeof TeamAnalysisSchema>;
 export type BriefContent = z.infer<typeof BriefContentSchema>;

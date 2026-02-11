@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Navbar } from "@/components/navbar";
-import { SettingsForm } from "./settings-form";
+import { TeamSettingsForm } from "./settings-form";
 
 export const metadata: Metadata = {
   title: "Settings | ScoutAI",
@@ -46,7 +46,7 @@ export default async function SettingsPage() {
     .order("created_at", { ascending: true });
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen dashboard-page">
       <Navbar />
 
       <main className="mx-auto max-w-4xl px-4 pb-12 pt-24">
@@ -55,21 +55,22 @@ export default async function SettingsPage() {
             <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
               Settings
             </p>
-            <h1 className="mt-2 text-3xl font-bold">Team &amp; account setup</h1>
+            <h1 className="mt-2 text-3xl font-bold">Team settings</h1>
             <p className="mt-2 text-sm text-gray-300">
-              Manage your team details, join code, and profile preferences.
+              Manage organization details, join codes, and member roles.
             </p>
           </div>
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm font-medium text-gray-200 transition hover:bg-white/5"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
-            Back to dashboard
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href="/dashboard"
+              className="back-button"
+            >
+              Back to dashboard
+            </Link>
+          </div>
         </div>
 
-        <SettingsForm
+        <TeamSettingsForm
           profile={{
             displayName: profile.display_name,
             email: user.email ?? "",

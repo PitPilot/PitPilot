@@ -28,13 +28,13 @@ export default async function TeamDetailPage({
   // Get event
   const { data: event } = await supabase
     .from("events")
-    .select("id, name")
+    .select("id, name, year")
     .eq("tba_key", eventKey)
     .single();
 
   if (!event) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-950 text-white">
+      <div className="flex min-h-screen items-center justify-center dashboard-page">
         <p className="text-gray-400">Event not found.</p>
       </div>
     );
@@ -148,14 +148,16 @@ export default async function TeamDetailPage({
     return "★".repeat(Math.round(rating)) + "☆".repeat(5 - Math.round(rating));
   }
 
+  const eventTitle = event.year ? `${event.year} ${event.name}` : event.name;
+
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen dashboard-page">
       <Navbar />
       <main className="mx-auto max-w-4xl px-4 pb-12 pt-24 space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
-              {event.name}
+              {eventTitle}
             </p>
             <h1 className="text-lg font-bold">
               Team {teamNumber}
@@ -166,7 +168,7 @@ export default async function TeamDetailPage({
               )}
             </h1>
             {team?.city && (
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-400">
                 {team.city}
                 {team.state ? `, ${team.state}` : ""}
               </p>
@@ -174,34 +176,32 @@ export default async function TeamDetailPage({
           </div>
           <div className="flex gap-2">
             <Link
-              href={`/scout/${teamMatches[0]?.id ?? ""}/${teamNumber}`}
-              className={`rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-500 ${
-                teamMatches.length === 0 ? "pointer-events-none opacity-50" : ""
-              }`}
+              href={`/dashboard/events/${eventKey}/picklist?ask=${teamNumber}`}
+              className="dashboard-action dashboard-action-alt"
             >
-              Scout
+              AI Briefing
             </Link>
             <Link
               href={`/dashboard/events/${eventKey}`}
-              className="rounded-md border border-white/10 px-3 py-1.5 text-sm text-gray-200 hover:bg-white/5"
+              className="back-button"
             >
               Back
             </Link>
           </div>
         </div>
         {/* EPA Stats Card */}
-        <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-6 shadow-sm">
+        <div className="rounded-2xl dashboard-panel p-6">
           <h2 className="mb-4 text-lg font-semibold text-white">
             EPA Statistics
           </h2>
           {stats ? (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
-              <div className="rounded-2xl bg-white/5 p-3 text-center">
-                <p className="text-xs text-gray-400">Total EPA</p>
-                <p className="text-2xl font-bold text-white">
-                  {formatNum(stats.epa)}
-                </p>
-              </div>
+                <div className="rounded-2xl bg-white/5 p-3 text-center">
+                  <p className="text-xs text-gray-400">Total EPA</p>
+                  <p className="text-2xl font-bold text-white">
+                    {formatNum(stats.epa)}
+                  </p>
+                </div>
               <div className="rounded-2xl bg-white/5 p-3 text-center">
                 <p className="text-xs text-gray-400">Auto</p>
                 <p className="text-xl font-semibold text-white">
@@ -237,7 +237,7 @@ export default async function TeamDetailPage({
         </div>
 
         {/* Aggregated Scouting Summary */}
-        <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-6 shadow-sm">
+        <div className="rounded-2xl dashboard-panel p-6">
           <h2 className="mb-4 text-lg font-semibold text-white">
             Scouting Summary
             {entryCount > 0 && (
@@ -311,7 +311,7 @@ export default async function TeamDetailPage({
         </div>
 
         {/* Match History */}
-        <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-6 shadow-sm">
+        <div className="rounded-2xl dashboard-panel p-6">
           <h2 className="mb-4 text-lg font-semibold text-white">
             Match History ({teamMatches.length} matches)
           </h2>
@@ -340,7 +340,7 @@ export default async function TeamDetailPage({
                         )}
                       </span>
                       <span
-                        className={`rounded px-1.5 py-0.5 text-xs font-medium ${
+                        className={`match-badge rounded px-1.5 py-0.5 text-xs font-medium ${
                           onRed
                             ? "bg-red-500/20 text-red-200"
                             : "bg-blue-500/20 text-blue-200"
@@ -350,7 +350,7 @@ export default async function TeamDetailPage({
                       </span>
                       {hasScore && (
                         <span
-                          className={`rounded px-1.5 py-0.5 text-xs font-medium ${
+                          className={`match-badge rounded px-1.5 py-0.5 text-xs font-medium ${
                             tied
                               ? "bg-white/10 text-gray-200"
                               : won
@@ -392,7 +392,7 @@ export default async function TeamDetailPage({
 
         {/* Individual Scouting Entries */}
         {entries.length > 0 && (
-          <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-6 shadow-sm">
+          <div className="rounded-2xl dashboard-panel p-6">
             <h2 className="mb-4 text-lg font-semibold text-white">
               Scouting Entries
             </h2>

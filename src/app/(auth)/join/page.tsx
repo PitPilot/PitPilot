@@ -1,11 +1,24 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { Suspense, useState, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { createOrganization, joinOrganization } from "@/lib/auth-actions";
 
 export default function JoinPage() {
-  const [mode, setMode] = useState<"choose" | "create" | "join">("choose");
+  return (
+    <Suspense>
+      <JoinPageContent />
+    </Suspense>
+  );
+}
+
+function JoinPageContent() {
+  const searchParams = useSearchParams();
+  const prefillCode = searchParams.get("code") ?? "";
+  const [mode, setMode] = useState<"choose" | "create" | "join">(
+    prefillCode ? "join" : "choose"
+  );
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [teamLookup, setTeamLookup] = useState<{
@@ -226,7 +239,7 @@ export default function JoinPage() {
               <button
                 type="button"
                 onClick={() => { setMode("choose"); setError(null); }}
-                className="w-full text-sm text-gray-500 transition hover:text-gray-300"
+                className="back-button back-button-block"
               >
                 Back
               </button>
@@ -254,6 +267,7 @@ export default function JoinPage() {
                   type="text"
                   required
                   maxLength={6}
+                  defaultValue={prefillCode}
                   className="mt-1 block w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-center text-lg font-mono tracking-[0.3em] text-white uppercase placeholder-gray-500 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   placeholder="ABC123"
                 />
@@ -271,7 +285,7 @@ export default function JoinPage() {
               <button
                 type="button"
                 onClick={() => { setMode("choose"); setError(null); }}
-                className="w-full text-sm text-gray-500 transition hover:text-gray-300"
+                className="back-button back-button-block"
               >
                 Back
               </button>

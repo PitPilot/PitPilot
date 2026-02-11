@@ -59,7 +59,7 @@ export function PostMatchAnalysis({
   }
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-6 shadow-sm">
+    <div className="rounded-2xl dashboard-panel p-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-white">
           Post-Match Analysis

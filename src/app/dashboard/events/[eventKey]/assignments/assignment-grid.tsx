@@ -110,12 +110,15 @@ export function AssignmentGrid({
     const consecutiveCount: Record<string, number> = {};
     for (const id of scoutIds) consecutiveCount[id] = 0;
 
+    const allowRepeats = numScouts < POSITIONS.length;
+
     for (const match of filteredMatches) {
       const assignedThisMatch = new Set<string>();
 
       for (const pos of POSITIONS) {
         // Find next available scout
         let attempts = 0;
+        let assigned = false;
         while (attempts < numScouts) {
           const candidateId = scoutIds[scoutIndex % numScouts];
           scoutIndex++;
@@ -129,7 +132,15 @@ export function AssignmentGrid({
 
           newMap[`${match.id}-${pos}`] = candidateId;
           assignedThisMatch.add(candidateId);
+          assigned = true;
           break;
+        }
+
+        if (!assigned && allowRepeats && numScouts > 0) {
+          const candidateId = scoutIds[scoutIndex % numScouts];
+          scoutIndex++;
+          newMap[`${match.id}-${pos}`] = candidateId;
+          assignedThisMatch.add(candidateId);
         }
       }
 
@@ -229,7 +240,7 @@ export function AssignmentGrid({
     <div className="space-y-4">
       {/* Controls */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex rounded-md border border-white/10 bg-white/5">
+        <div className="flex rounded-lg border border-white/10 bg-white/5 dashboard-chip">
           {(
             [
               ["qm", "Quals"],
@@ -253,20 +264,20 @@ export function AssignmentGrid({
 
         <button
           onClick={autoRotate}
-          className="rounded-md bg-purple-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-purple-500"
+          className="rounded-lg bg-purple-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-500"
         >
           Auto-Rotate
         </button>
         <button
           onClick={clearAll}
-          className="rounded-md border border-white/10 px-3 py-1.5 text-sm text-gray-200 hover:bg-white/5"
+          className="rounded-lg border border-white/10 px-3 py-1.5 text-sm text-gray-200 hover:bg-white/5 dashboard-chip"
         >
           Clear All
         </button>
         <button
           onClick={handleSave}
           disabled={saving}
-          className="rounded-md bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-500 disabled:opacity-50"
+          className="rounded-lg bg-green-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-green-500 disabled:opacity-50"
         >
           {saving ? "Saving..." : "Save Assignments"}
         </button>
@@ -278,22 +289,22 @@ export function AssignmentGrid({
       </div>
 
       {error && (
-        <div className="rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
           {error}
         </div>
       )}
       {success && (
-        <div className="rounded-md border border-green-500/30 bg-green-500/10 p-3 text-sm text-green-200">
+        <div className="rounded-lg border border-green-500/30 bg-green-500/10 p-3 text-sm text-green-200">
           Assignments saved!
         </div>
       )}
 
       {/* Grid */}
-      <div className="overflow-x-auto rounded-2xl border border-white/10 bg-gray-900/60 shadow-sm">
+      <div className="overflow-x-auto rounded-2xl dashboard-table">
         <table className="min-w-full divide-y divide-white/10 text-sm">
           <thead className="bg-white/5">
             <tr>
-              <th className="sticky left-0 z-10 bg-white/5 px-3 py-2 text-left text-xs font-medium uppercase text-gray-400">
+              <th className="sticky left-0 z-10 bg-white/5 px-3 py-2 text-left text-xs font-medium uppercase text-gray-400 assignment-header-label">
                 Match
               </th>
               {POSITIONS.map((pos) => (
@@ -301,8 +312,8 @@ export function AssignmentGrid({
                   key={pos}
                   className={`px-2 py-2 text-center text-xs font-medium uppercase ${
                     pos.startsWith("red")
-                      ? "bg-red-500/10 text-red-200"
-                      : "bg-blue-500/10 text-blue-200"
+                      ? "bg-red-500/10 text-red-200 assignment-header-red"
+                      : "bg-blue-500/10 text-blue-200 assignment-header-blue"
                   }`}
                 >
                   {pos.replace("red", "R").replace("blue", "B")}
@@ -331,7 +342,7 @@ export function AssignmentGrid({
                       }`}
                     >
                       <div className="text-center">
-                        <p className="text-[10px] text-gray-500 mb-0.5">
+                        <p className="text-[10px] text-gray-400 mb-0.5">
                           {teamNum}
                         </p>
                         <select
@@ -339,7 +350,7 @@ export function AssignmentGrid({
                           onChange={(e) =>
                             setAssignment(match.id, pos, e.target.value)
                           }
-                          className="w-full min-w-[80px] rounded border border-white/10 bg-white/5 px-1 py-0.5 text-xs text-gray-200 focus:border-blue-400 focus:outline-none"
+                          className="w-full min-w-[80px] rounded border border-white/10 bg-white/5 px-1 py-0.5 text-xs text-gray-200 focus:border-blue-400 focus:outline-none dashboard-input"
                         >
                           <option value="">—</option>
                           {members.map((m) => (
@@ -359,7 +370,7 @@ export function AssignmentGrid({
       </div>
 
       {filteredMatches.length === 0 && (
-        <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-8 text-center">
+        <div className="rounded-2xl dashboard-panel p-8 text-center">
           <p className="text-gray-400">
             No matches found. Sync the event first.
           </p>

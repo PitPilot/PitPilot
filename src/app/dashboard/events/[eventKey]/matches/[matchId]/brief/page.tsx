@@ -3,7 +3,6 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import type { BriefContent } from "@/types/strategy";
 import { GenerateBriefButton } from "./generate-button";
-import { PostMatchAnalysis } from "./post-match-analysis";
 import { Navbar } from "@/components/navbar";
 
 export default async function BriefPage({
@@ -27,16 +26,22 @@ export default async function BriefPage({
 
   if (!profile?.org_id) redirect("/join");
 
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("team_number")
+    .eq("id", profile.org_id)
+    .single();
+
   // Get match
   const { data: match } = await supabase
     .from("matches")
-    .select("*, events(name)")
+    .select("*, events(name, year)")
     .eq("id", matchId)
     .single();
 
   if (!match) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-950 text-white">
+      <div className="flex min-h-screen items-center justify-center dashboard-page">
         <p className="text-gray-400">Match not found.</p>
       </div>
     );
@@ -82,38 +87,55 @@ export default async function BriefPage({
     match.set_number
   );
   const content = brief?.content as BriefContent | null;
+  const matchCompleted = match.red_score !== null || match.blue_score !== null;
+  const orgTeamNumber = org?.team_number ?? null;
+  const isOurMatch = orgTeamNumber
+    ? match.red_teams.includes(orgTeamNumber) ||
+      match.blue_teams.includes(orgTeamNumber)
+    : true;
+
+  const eventTitle =
+    match.events?.year && match.events?.name
+      ? `${match.events.year} ${match.events.name}`
+      : match.events?.name;
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen dashboard-page">
       <Navbar />
       <main className="mx-auto max-w-4xl px-4 pb-12 pt-24 space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
-              {match.events?.name}
+              {eventTitle}
             </p>
             <h1 className="text-lg font-bold">
-              {matchLabel} — AI Strategy Brief
+              {matchLabel} — Pre-Match Brief
             </h1>
           </div>
           <Link
             href={`/dashboard/events/${eventKey}/matches`}
-            className="rounded-md border border-white/10 px-3 py-1.5 text-sm text-gray-200 hover:bg-white/5"
+            className="back-button"
           >
             Back
           </Link>
         </div>
         {!content ? (
-          <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-8 text-center">
+          <div className="rounded-2xl dashboard-panel p-8 text-center">
             <p className="text-gray-400 mb-4">
-              No strategy brief generated yet for this match.
+              {!isOurMatch
+                ? "Pre-match briefs are only available for matches your team is playing."
+                : matchCompleted
+                ? "This match already has a score. Pre-match briefs are only available before the match starts."
+                : "No pre-match brief generated yet for this match."}
             </p>
-            <GenerateBriefButton matchId={matchId} />
+            {isOurMatch && !matchCompleted && (
+              <GenerateBriefButton matchId={matchId} />
+            )}
           </div>
         ) : (
           <>
             {/* Prediction Card */}
-            <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-6 shadow-sm">
+            <div className="rounded-2xl dashboard-panel p-6">
               <h2 className="mb-4 text-lg font-semibold text-white">
                 Match Prediction
               </h2>
@@ -153,57 +175,6 @@ export default async function BriefPage({
                 </div>
               </div>
             </div>
-
-            {/* ML Model Prediction — shown when available */}
-            {content.mlPrediction && (
-              <div className="rounded-2xl border border-purple-500/30 bg-purple-500/10 p-4 shadow-sm">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="rounded bg-purple-500/20 px-2 py-0.5 text-xs font-semibold text-purple-200">
-                    ML Model
-                  </span>
-                  <h3 className="text-sm font-medium text-gray-200">
-                    XGBoost Prediction
-                  </h3>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <div className="text-center">
-                    <p className="text-xs text-gray-400">Red Score</p>
-                    <p className="text-lg font-bold text-red-200">
-                      {content.mlPrediction.redScore}
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                        content.mlPrediction.winner === "red"
-                          ? "bg-red-500/20 text-red-200"
-                          : "bg-blue-500/20 text-blue-200"
-                      }`}
-                    >
-                      {content.mlPrediction.winner === "red" ? "Red" : "Blue"}{" "}
-                      {(content.mlPrediction.winProbability * 100).toFixed(0)}%
-                    </span>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-xs text-gray-400">Blue Score</p>
-                    <p className="text-lg font-bold text-blue-200">
-                      {content.mlPrediction.blueScore}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Post-Match Analysis — shown when actual scores are available */}
-            {match.red_score !== null && match.blue_score !== null && (
-              <PostMatchAnalysis
-                prediction={content.prediction}
-                actualRedScore={match.red_score}
-                actualBlueScore={match.blue_score}
-                redTeams={match.red_teams}
-                blueTeams={match.blue_teams}
-              />
-            )}
 
             {/* Alliance Analysis */}
             <div className="grid gap-6 md:grid-cols-2">
@@ -275,7 +246,7 @@ export default async function BriefPage({
             </div>
 
             {/* Team Analysis */}
-            <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-6 shadow-sm">
+            <div className="rounded-2xl dashboard-panel p-6">
               <h2 className="mb-4 text-lg font-semibold text-white">
                 Team Analysis
               </h2>
@@ -339,7 +310,7 @@ export default async function BriefPage({
             </div>
 
             {/* Strategy Recommendations */}
-            <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-6 shadow-sm">
+            <div className="rounded-2xl dashboard-panel p-6">
               <h2 className="mb-4 text-lg font-semibold text-white">
                 Strategy Recommendations
               </h2>
@@ -389,7 +360,7 @@ export default async function BriefPage({
             <div className="text-center">
               <GenerateBriefButton
                 matchId={matchId}
-                label="Regenerate Brief"
+                label="Regenerate Pre-Match Brief"
               />
               <p className="mt-2 text-xs text-gray-400">
                 Generated {new Date(brief!.created_at).toLocaleString()}

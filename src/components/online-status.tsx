@@ -16,6 +16,7 @@ export function OnlineStatus() {
   const [syncProgress, setSyncProgress] = useState({ current: 0, total: 0 });
   const [syncErrors, setSyncErrors] = useState(0);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
+  const [offlineHidden, setOfflineHidden] = useState(false);
 
   const refreshCount = useCallback(async () => {
     try {
@@ -30,7 +31,10 @@ export function OnlineStatus() {
     setMounted(true);
     setIsOnline(navigator.onLine);
 
-    const handleOnline = () => setIsOnline(true);
+    const handleOnline = () => {
+      setIsOnline(true);
+      setOfflineHidden(false);
+    };
     const handleOffline = () => setIsOnline(false);
 
     window.addEventListener("online", handleOnline);
@@ -100,6 +104,9 @@ export function OnlineStatus() {
   // Hidden when online with nothing pending and no errors
   if (isOnline && pendingCount === 0 && syncErrors === 0) return null;
 
+  // Hidden when user dismissed offline banner
+  if (!isOnline && offlineHidden) return null;
+
   return (
     <div
       className={`fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-sm rounded-lg px-4 py-3 text-sm font-medium shadow-lg transition-colors duration-300 ${
@@ -150,8 +157,24 @@ export function OnlineStatus() {
               ✕
             </button>
           )}
+          {!isOnline && (
+            <button
+              onClick={() => setOfflineHidden(true)}
+              className="text-xs opacity-70 hover:opacity-100"
+              aria-label="Hide offline banner"
+            >
+              ✕
+            </button>
+          )}
         </div>
       </div>
+
+      {!isOnline && (
+        <p className="mt-2 text-xs text-yellow-900/80">
+          If you&apos;ve already loaded match pages, you can still scout without reloading.
+          Your entries will sync automatically when you&apos;re back online.
+        </p>
+      )}
 
       {/* Sync progress bar */}
       {syncing && syncProgress.total > 0 && (

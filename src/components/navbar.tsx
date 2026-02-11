@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { UserMenu } from "@/components/user-menu";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export async function Navbar() {
   const supabase = await createClient();
@@ -32,18 +33,19 @@ export async function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 z-50 w-full border-b border-white/10 bg-gray-950/80 backdrop-blur-xl">
+    <nav className="fixed top-0 z-50 w-full border-b border-white/10 bg-gray-950/85 font-sans backdrop-blur-xl">
       {announcement?.message && (
         <div className={`border-b px-4 py-2 text-center text-xs font-medium ${bannerStyles[announcement.variant] ?? bannerStyles.info}`}>
           {announcement.message}
         </div>
       )}
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-        <Link href="/" className="text-xl font-bold tracking-tight text-white">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
+        <Link href="/" className="text-lg font-semibold tracking-tight text-white">
           Scout<span className="text-blue-500">AI</span>
         </Link>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
           {user ? (
             <UserMenu
               name={profile?.display_name ?? user.email ?? "Account"}
@@ -54,13 +56,13 @@ export async function Navbar() {
             <>
               <Link
                 href="/signup"
-                className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
+                className="rounded-md bg-blue-600 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-blue-500"
               >
                 Get Started
               </Link>
               <Link
                 href="/login"
-                className="flex items-center gap-1.5 text-sm font-medium text-gray-400 transition hover:text-white"
+                className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-gray-400 transition hover:bg-white/5 hover:text-white"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />

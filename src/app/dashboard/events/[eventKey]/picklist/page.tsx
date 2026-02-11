@@ -4,13 +4,21 @@ import { createClient } from "@/lib/supabase/server";
 import type { PickListContent } from "@/types/strategy";
 import { GeneratePickListButton } from "./generate-button";
 import { Navbar } from "@/components/navbar";
+import { StrategyChat } from "../strategy-chat";
 
 export default async function PickListPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ eventKey: string }>;
+  searchParams?: { [key: string]: string | string[] | undefined };
 }) {
   const { eventKey } = await params;
+  const askParam =
+    typeof searchParams?.ask === "string" ? searchParams.ask : null;
+  const initialAsk = askParam
+    ? `Give me a quick briefing on Team ${askParam} for this event.`
+    : "";
   const supabase = await createClient();
 
   const {
@@ -29,13 +37,13 @@ export default async function PickListPage({
   // Get event
   const { data: event } = await supabase
     .from("events")
-    .select("id, name")
+    .select("id, name, year")
     .eq("tba_key", eventKey)
     .single();
 
   if (!event) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-950 text-white">
+      <div className="flex min-h-screen items-center justify-center dashboard-page">
         <p className="text-gray-400">Event not found.</p>
       </div>
     );
@@ -78,26 +86,35 @@ export default async function PickListPage({
     return "text-gray-200 bg-white/10";
   }
 
+  const eventTitle = event.year ? `${event.year} ${event.name}` : event.name;
+  const generatedAt = pickList?.created_at
+    ? new Date(pickList.created_at).toLocaleString()
+    : null;
+
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen dashboard-page">
       <Navbar />
-      <main className="mx-auto max-w-4xl px-4 pb-12 pt-24 space-y-6">
-        <div className="flex items-center justify-between">
+      <main className="mx-auto max-w-6xl px-4 pb-12 pt-24 space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
-              {event.name}
+              {eventTitle}
             </p>
-            <h1 className="text-lg font-bold">Alliance Pick List</h1>
+            <h1 className="text-2xl font-bold text-white">Alliance Pick List</h1>
+            <p className="mt-1 text-sm text-gray-400">
+              AI-ranked partners based on complementarity, EPA, and your scouting.
+            </p>
           </div>
-          <Link
-            href={`/dashboard/events/${eventKey}`}
-            className="rounded-md border border-white/10 px-3 py-1.5 text-sm text-gray-200 hover:bg-white/5"
-          >
-            Back
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            {!content && <GeneratePickListButton eventId={event.id} />}
+            <Link href={`/dashboard/events/${eventKey}`} className="back-button">
+              Back
+            </Link>
+          </div>
         </div>
+
         {!content ? (
-          <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-8 text-center">
+          <div className="rounded-2xl dashboard-panel p-8 text-center">
             <h2 className="text-lg font-semibold text-white mb-2">
               No Pick List Yet
             </h2>
@@ -108,160 +125,216 @@ export default async function PickListPage({
             <GeneratePickListButton eventId={event.id} />
           </div>
         ) : (
-          <>
-            {/* Summary */}
-            <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-semibold text-white">
-                  Strategy Summary
-                </h2>
-                {content.yourTeamNumber && (
-                  <span className="text-sm text-gray-400">
-                    For Team {content.yourTeamNumber}
+          <div className="grid gap-6 lg:grid-cols-[1.6fr_0.9fr]">
+            <div className="space-y-6">
+              <section className="rounded-2xl dashboard-panel p-6">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <h2 className="text-lg font-semibold text-white">
+                      Strategy Summary
+                    </h2>
+                    <p className="text-xs text-gray-400">
+                      {content.rankings.length} teams ranked
+                      {content.yourTeamNumber
+                        ? ` • built for Team ${content.yourTeamNumber}`
+                        : ""}
+                    </p>
+                  </div>
+                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-gray-300">
+                    {generatedAt ? `Generated ${generatedAt}` : "Generated just now"}
                   </span>
-                )}
-              </div>
-              <p className="text-sm text-gray-200 leading-relaxed">
-                {content.summary}
-              </p>
-            </div>
+                </div>
+                <p className="mt-4 text-sm text-gray-200 leading-relaxed">
+                  {content.summary}
+                </p>
+              </section>
 
-            {/* Rankings */}
-            <div className="rounded-2xl border border-white/10 bg-gray-900/60 shadow-sm overflow-hidden">
-              <div className="border-b border-white/10 bg-white/5 px-6 py-3">
-                <h2 className="text-sm font-semibold text-gray-200 uppercase tracking-wider">
-                  Ranked Teams ({content.rankings.length})
-                </h2>
-              </div>
+              <section className="rounded-2xl dashboard-panel p-4">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-gray-300">
+                  <span className="text-[10px] uppercase tracking-widest text-gray-400">
+                    Legend
+                  </span>
+                  <span className={`rounded-full px-2 py-0.5 ${roleColor("scorer")}`}>
+                    scorer
+                  </span>
+                  <span className={`rounded-full px-2 py-0.5 ${roleColor("defender")}`}>
+                    defender
+                  </span>
+                  <span className={`rounded-full px-2 py-0.5 ${roleColor("versatile")}`}>
+                    versatile
+                  </span>
+                  <span className={`rounded-full px-2 py-0.5 ${synergyColor("high")}`}>
+                    high synergy
+                  </span>
+                  <span className={`rounded-full px-2 py-0.5 ${synergyColor("medium")}`}>
+                    medium synergy
+                  </span>
+                </div>
+              </section>
 
-              <div className="divide-y divide-white/10">
-                {content.rankings.map((team) => (
-                  <div
-                    key={team.teamNumber}
-                    className="px-6 py-4 hover:bg-white/5 transition"
-                  >
-                    {/* Top row: rank, team, score, badges */}
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-3">
-                        <span
-                          className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
-                            team.rank <= 3
-                              ? "bg-purple-600 text-white"
-                              : team.rank <= 8
-                              ? "bg-purple-500/20 text-purple-200"
-                              : "bg-white/10 text-gray-200"
-                          }`}
-                        >
-                          {team.rank}
-                        </span>
-                        <div>
-                          <span className="font-semibold text-white">
-                            Team {team.teamNumber}
+              <section className="rounded-2xl dashboard-table overflow-hidden">
+                <div className="border-b border-white/10 bg-white/5 px-6 py-3">
+                  <h2 className="text-sm font-semibold text-gray-200 uppercase tracking-wider">
+                    Ranked Teams
+                  </h2>
+                </div>
+
+                <div className="divide-y divide-white/10">
+                  {content.rankings.map((team) => (
+                    <div
+                      key={team.teamNumber}
+                      className="px-6 py-5 hover:bg-white/5 transition"
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-4">
+                        <div className="flex items-start gap-4">
+                          <span
+                            className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${
+                              team.rank <= 3
+                                ? "bg-purple-600 text-white"
+                                : team.rank <= 8
+                                ? "bg-purple-500/20 text-purple-200"
+                                : "bg-white/10 text-gray-200"
+                            }`}
+                          >
+                            {team.rank}
                           </span>
-                          <span className="ml-2 text-sm text-gray-400">
-                            {teamNames[team.teamNumber] ?? ""}
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-base font-semibold text-white">
+                                Team {team.teamNumber}
+                              </span>
+                              <span className="text-sm text-gray-400">
+                                {teamNames[team.teamNumber] ?? ""}
+                              </span>
+                            </div>
+                            <p className="mt-2 text-sm text-gray-200">
+                              {team.pickReason}
+                            </p>
+                            <p className="mt-1 text-xs text-gray-400 italic">
+                              Synergy: {team.synergyReason}
+                            </p>
+                            {team.scoutingSummary !== "No scouting data" && (
+                              <p className="mt-2 text-xs text-gray-400">
+                                Scouting: {team.scoutingSummary}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-xs font-medium ${roleColor(team.role)}`}
+                          >
+                            {team.role}
+                          </span>
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-xs font-medium ${synergyColor(team.synergy)}`}
+                          >
+                            {team.synergy} synergy
+                          </span>
+                          <span
+                            className={`rounded-md px-2.5 py-1 text-sm font-bold ${scoreColor(team.overallScore)}`}
+                          >
+                            {team.overallScore}
                           </span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${roleColor(team.role)}`}
-                        >
-                          {team.role}
-                        </span>
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${synergyColor(team.synergy)}`}
-                        >
-                          {team.synergy} synergy
-                        </span>
-                        <span
-                          className={`rounded-md px-2 py-1 text-sm font-bold ${scoreColor(team.overallScore)}`}
-                        >
-                          {team.overallScore}
-                        </span>
+
+                      <div className="mt-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
+                        <div className="rounded-lg bg-white/5 p-2 text-center">
+                          <p className="text-[10px] uppercase tracking-widest text-gray-400">
+                            EPA
+                          </p>
+                          <p className="text-sm font-semibold text-white">
+                            {team.epa.total.toFixed(1)}
+                          </p>
+                        </div>
+                        <div className="rounded-lg bg-white/5 p-2 text-center">
+                          <p className="text-[10px] uppercase tracking-widest text-gray-400">
+                            Auto
+                          </p>
+                          <p className="text-sm font-semibold text-white">
+                            {team.epa.auto.toFixed(1)}
+                          </p>
+                        </div>
+                        <div className="rounded-lg bg-white/5 p-2 text-center">
+                          <p className="text-[10px] uppercase tracking-widest text-gray-400">
+                            Teleop
+                          </p>
+                          <p className="text-sm font-semibold text-white">
+                            {team.epa.teleop.toFixed(1)}
+                          </p>
+                        </div>
+                        <div className="rounded-lg bg-white/5 p-2 text-center">
+                          <p className="text-[10px] uppercase tracking-widest text-gray-400">
+                            Endgame
+                          </p>
+                          <p className="text-sm font-semibold text-white">
+                            {team.epa.endgame.toFixed(1)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {team.strengths.map((s, i) => (
+                          <span
+                            key={`s-${i}`}
+                            className="rounded-full bg-green-500/20 px-2 py-0.5 text-xs text-green-200"
+                          >
+                            + {s}
+                          </span>
+                        ))}
+                        {team.weaknesses.map((w, i) => (
+                          <span
+                            key={`w-${i}`}
+                            className="rounded-full bg-red-500/20 px-2 py-0.5 text-xs text-red-200"
+                          >
+                            − {w}
+                          </span>
+                        ))}
                       </div>
                     </div>
+                  ))}
+                </div>
+              </section>
+            </div>
 
-                    {/* EPA breakdown */}
-                    <div className="grid grid-cols-4 gap-2 mb-2">
-                      <div className="rounded bg-white/5 p-1.5 text-center">
-                        <p className="text-xs text-gray-400">EPA</p>
-                        <p className="text-sm font-semibold text-white">
-                          {team.epa.total.toFixed(1)}
-                        </p>
-                      </div>
-                      <div className="rounded bg-white/5 p-1.5 text-center">
-                        <p className="text-xs text-gray-400">Auto</p>
-                        <p className="text-sm font-semibold text-white">
-                          {team.epa.auto.toFixed(1)}
-                        </p>
-                      </div>
-                      <div className="rounded bg-white/5 p-1.5 text-center">
-                        <p className="text-xs text-gray-400">Teleop</p>
-                        <p className="text-sm font-semibold text-white">
-                          {team.epa.teleop.toFixed(1)}
-                        </p>
-                      </div>
-                      <div className="rounded bg-white/5 p-1.5 text-center">
-                        <p className="text-xs text-gray-400">Endgame</p>
-                        <p className="text-sm font-semibold text-white">
-                          {team.epa.endgame.toFixed(1)}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Pick reason */}
-                    <p className="text-sm text-gray-200 mb-1">
-                      {team.pickReason}
+            <aside className="space-y-6">
+              <section className="rounded-2xl dashboard-panel p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
+                      Ask ScoutAI
                     </p>
-
-                    {/* Synergy reason */}
-                    <p className="text-xs text-gray-400 italic">
-                      Synergy: {team.synergyReason}
+                    <h2 className="text-lg font-bold text-white">
+                      Strategy chat for this event
+                    </h2>
+                    <p className="text-sm text-gray-400">
+                      Get quick insights on opponents and alliance fit.
                     </p>
-
-                    {/* Strengths & Weaknesses */}
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {team.strengths.map((s, i) => (
-                        <span
-                          key={`s-${i}`}
-                          className="rounded-full bg-green-500/20 px-2 py-0.5 text-xs text-green-200"
-                        >
-                          + {s}
-                        </span>
-                      ))}
-                      {team.weaknesses.map((w, i) => (
-                        <span
-                          key={`w-${i}`}
-                          className="rounded-full bg-red-500/20 px-2 py-0.5 text-xs text-red-200"
-                        >
-                          − {w}
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* Scouting summary */}
-                    {team.scoutingSummary !== "No scouting data" && (
-                      <p className="mt-2 text-xs text-gray-400">
-                        📋 {team.scoutingSummary}
-                      </p>
-                    )}
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
+                <div className="mt-4">
+                  <StrategyChat eventKey={eventKey} initialInput={initialAsk} />
+                </div>
+              </section>
 
-            {/* Regenerate */}
-            <div className="text-center">
-              <GeneratePickListButton
-                eventId={event.id}
-                label="Regenerate Pick List"
-              />
-              <p className="mt-2 text-xs text-gray-400">
-                Generated {new Date(pickList!.created_at).toLocaleString()}
-              </p>
-            </div>
-          </>
+              <section className="rounded-2xl dashboard-panel p-6">
+                <h3 className="text-sm font-semibold text-white">
+                  Refresh the list
+                </h3>
+                <p className="mt-2 text-xs text-gray-400">
+                  Regenerate after new scouting data or updated EPA stats.
+                </p>
+                <div className="mt-4">
+                  <GeneratePickListButton
+                    eventId={event.id}
+                    label="Regenerate Pick List"
+                  />
+                </div>
+              </section>
+            </aside>
+          </div>
         )}
       </main>
     </div>

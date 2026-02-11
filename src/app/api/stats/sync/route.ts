@@ -7,18 +7,10 @@ const STATBOTICS_BASE = "https://api.statbotics.io/v3";
 interface StatboticsTeamEvent {
   epa: {
     breakdown: {
-      total_points: {
-        mean: number;
-      };
-      auto_points?: {
-        mean: number;
-      };
-      teleop_points?: {
-        mean: number;
-      };
-      endgame_points?: {
-        mean: number;
-      };
+      total_points: number | { mean: number };
+      auto_points?: number | { mean: number };
+      teleop_points?: number | { mean: number };
+      endgame_points?: number | { mean: number };
     };
   };
   record: {
@@ -78,7 +70,7 @@ export async function POST(request: Request) {
     if (!limit.allowed) {
       const retryAfter = retryAfterSeconds(limit.resetAt);
       return NextResponse.json(
-        { error: "Rate limit exceeded. Please try again soon." },
+        { error: "Your team has exceeded the rate limit. Please try again soon." },
         { status: 429, headers: { "Retry-After": retryAfter.toString() } }
       );
     }
@@ -98,23 +90,32 @@ export async function POST(request: Request) {
     }
 
     // Get all teams at this event from our DB
-    const { data: matches } = await supabase
-      .from("matches")
-      .select("red_teams, blue_teams")
+    const { data: eventTeams } = await supabase
+      .from("event_teams")
+      .select("team_number")
       .eq("event_id", dbEvent.id);
 
-    if (!matches || matches.length === 0) {
-      return NextResponse.json(
-        { error: "No matches found. Sync the event first." },
-        { status: 404 }
-      );
+    let teamNumbers = new Set<number>((eventTeams ?? []).map((t) => t.team_number));
+
+    if (teamNumbers.size === 0) {
+      const { data: matches } = await supabase
+        .from("matches")
+        .select("red_teams, blue_teams")
+        .eq("event_id", dbEvent.id);
+
+      if (matches && matches.length > 0) {
+        for (const match of matches) {
+          match.red_teams.forEach((t: number) => teamNumbers.add(t));
+          match.blue_teams.forEach((t: number) => teamNumbers.add(t));
+        }
+      }
     }
 
-    // Collect unique team numbers
-    const teamNumbers = new Set<number>();
-    for (const match of matches) {
-      match.red_teams.forEach((t: number) => teamNumbers.add(t));
-      match.blue_teams.forEach((t: number) => teamNumbers.add(t));
+    if (teamNumbers.size === 0) {
+      return NextResponse.json(
+        { error: "No teams found to sync stats. Sync the event first." },
+        { status: 404 }
+      );
     }
 
     // Fetch EPA from Statbotics for each team
@@ -122,6 +123,17 @@ export async function POST(request: Request) {
     let successCount = 0;
     let errorCount = 0;
     const failedTeams: number[] = [];
+
+    const extractMean = (
+      value?: number | { mean?: number } | null
+    ): number | null => {
+      if (value === null || value === undefined) return null;
+      if (typeof value === "number") return value;
+      if (typeof value === "object" && typeof value.mean === "number") {
+        return value.mean;
+      }
+      return null;
+    };
 
     for (const teamNum of teamNumbers) {
       try {
@@ -146,10 +158,10 @@ export async function POST(request: Request) {
         statsRows.push({
           team_number: teamNum,
           event_id: dbEvent.id,
-          epa: breakdown?.total_points?.mean ?? null,
-          auto_epa: breakdown?.auto_points?.mean ?? null,
-          teleop_epa: breakdown?.teleop_points?.mean ?? null,
-          endgame_epa: breakdown?.endgame_points?.mean ?? null,
+          epa: extractMean(breakdown?.total_points),
+          auto_epa: extractMean(breakdown?.auto_points),
+          teleop_epa: extractMean(breakdown?.teleop_points),
+          endgame_epa: extractMean(breakdown?.endgame_points),
           win_rate: totalGames > 0 ? (record?.wins ?? 0) / totalGames : null,
           last_synced_at: new Date().toISOString(),
         });

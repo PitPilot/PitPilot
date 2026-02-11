@@ -50,6 +50,104 @@ export default async function Home() {
       {/* Live Stats */}
       <LiveStats teams={stats.teams} entries={stats.entries} matches={stats.matches} />
 
+      {/* The Problem + Differentiator */}
+      <MotionSection id="problem" className="border-t border-white/5 py-24">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="text-center">
+            <p className="text-sm font-semibold uppercase tracking-widest text-blue-500">
+              The problem
+            </p>
+            <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
+              Scouting tools give stats, not strategy
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-gray-400">
+              Teams are stuck between raw numbers, clunky forms, and alliance
+              decisions based on gut feel. There isn&apos;t one place that
+              combines your observations with public data and turns it into
+              a clear game plan.
+            </p>
+          </div>
+
+          <div className="mt-14">
+            <div className="text-center">
+              <p className="text-sm font-semibold uppercase tracking-widest text-blue-500">
+                What makes this different
+              </p>
+              <h3 className="mt-3 text-2xl font-bold sm:text-3xl">
+                From scouting notes to match-winning decisions
+              </h3>
+              <p className="mx-auto mt-3 max-w-2xl text-sm text-gray-400">
+                ScoutAI is the only tool that fuses your scouting notes with
+                TBA + Statbotics and then delivers plain-English strategy briefs,
+                pick lists, and match plans.
+              </p>
+            </div>
+
+            <div className="mt-8 overflow-x-auto rounded-2xl border border-white/10 bg-gradient-to-b from-gray-900/70 to-gray-900/40 shadow-xl shadow-blue-500/5 standout-table">
+              <table className="min-w-full text-left text-sm text-gray-300">
+                <thead className="bg-white/5 text-xs uppercase tracking-wider text-gray-400">
+                  <tr>
+                    <th className="px-5 py-4">Tool</th>
+                    <th className="px-5 py-4">
+                      <span className="inline-flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                        What it does
+                      </span>
+                    </th>
+                    <th className="px-5 py-4">
+                      <span className="inline-flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-rose-400" />
+                        What it doesn&apos;t do
+                      </span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/10">
+                  <tr className="transition hover:bg-white/5">
+                    <td className="px-5 py-4 font-semibold text-white">
+                      TBA / Statbotics
+                    </td>
+                    <td className="px-5 py-4">
+                      Publishes match results, rankings, and EPA.
+                    </td>
+                    <td className="px-5 py-4 text-gray-400">
+                      Doesn&apos;t translate stats into match strategy.
+                    </td>
+                  </tr>
+                  <tr className="transition hover:bg-white/5">
+                    <td className="px-5 py-4 font-semibold text-white">
+                      Google Forms / Sheets
+                    </td>
+                    <td className="px-5 py-4">
+                      Collects raw scouting notes from your team.
+                    </td>
+                    <td className="px-5 py-4 text-gray-400">
+                      Doesn&apos;t merge with public data or generate insights.
+                    </td>
+                  </tr>
+                  <tr className="transition hover:bg-white/5">
+                    <td className="px-5 py-4 font-semibold text-white">
+                      Offline scouting apps
+                    </td>
+                    <td className="px-5 py-4">
+                      Helps capture data when Wi-Fi is unreliable.
+                    </td>
+                    <td className="px-5 py-4 text-gray-400">
+                      Doesn&apos;t build pick lists or AI strategy briefs.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <p className="mt-4 text-center text-sm text-gray-400">
+              ScoutAI combines everything above and adds AI strategy, like a
+              data analyst on your drive team.
+            </p>
+          </div>
+        </div>
+      </MotionSection>
+
       {/* Features */}
       <MotionSection id="features" className="relative border-t border-white/5 py-24">
         <div className="mx-auto max-w-6xl px-4">
@@ -89,12 +187,12 @@ export default async function Home() {
             <FeatureCard
               icon={<UsersIcon />}
               title="Team Management"
-              description="Invite scouts with a 6-character code. Assign rotations. Role-based access for scouts, strategists, and captains."
+              description="Invite scouts with a 6-character code. Assign rotations. Role-based access for scouts and captains."
             />
             <FeatureCard
               icon={<WifiOffIcon />}
               title="Offline-First PWA"
-              description="Install on your phone like a native app. Scout without WiFi. QR code backup for when connectivity fails."
+              description="Install on your phone like a native app. Scout without WiFi, and sync automatically once you reconnect."
             />
           </div>
         </div>
@@ -112,25 +210,63 @@ export default async function Home() {
             </h2>
           </div>
 
-          <div className="mt-16 grid gap-12 sm:grid-cols-3">
-            <StepCard
-              step={1}
-              icon={<TapIcon />}
-              title="Scout matches"
-              description="Your scouts tap counter buttons from the stands. Fast, no typing needed. Data flows into your dashboard instantly."
-            />
-            <StepCard
-              step={2}
-              icon={<CpuIcon />}
-              title="AI analyzes everything"
-              description="ScoutAI combines your observations with TBA results and Statbotics EPA to build a complete picture of every team."
-            />
-            <StepCard
-              step={3}
-              icon={<TrophyIcon />}
-              title="Win your matches"
-              description="Get AI-generated strategy briefs before each match. Know exactly where opponents are weak and how to exploit them."
-            />
+          <div className="relative mt-16 grid gap-12 sm:grid-cols-3">
+            {/* Connector lines (hidden on mobile) */}
+            <div className="pointer-events-none absolute top-16 left-[calc(16.67%+40px)] right-[calc(16.67%+40px)] hidden h-px sm:block">
+              <div className="h-full w-full bg-gradient-to-r from-blue-500/40 via-purple-500/40 to-cyan-500/40" />
+            </div>
+
+            <StepScene step={1} color="blue">
+              {/* Phone mockup with counter buttons */}
+              <div className="mx-auto h-20 w-14 rounded-lg border border-white/20 bg-gray-800/80 p-1.5">
+                <div className="h-full rounded-md bg-gray-900/80 p-1 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <div className="h-1.5 w-6 rounded-full bg-blue-500/40" />
+                    <div className="h-3 w-3 rounded bg-blue-500/60 text-[4px] leading-3 text-center font-bold text-white">3</div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="h-1.5 w-5 rounded-full bg-blue-500/30" />
+                    <div className="h-3 w-3 rounded bg-blue-500/40 text-[4px] leading-3 text-center font-bold text-white">1</div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="h-1.5 w-7 rounded-full bg-blue-500/20" />
+                    <div className="h-3 w-3 rounded bg-green-500/50 text-[4px] leading-3 text-center font-bold text-white">+</div>
+                  </div>
+                </div>
+              </div>
+            </StepScene>
+
+            <StepScene step={2} color="purple">
+              {/* Brain with data flowing in */}
+              <div className="relative mx-auto h-20 w-20">
+                {/* Data dots flowing in */}
+                <div className="absolute top-2 left-0 h-2 w-2 animate-pulse rounded-full bg-blue-400/60" />
+                <div className="absolute top-6 -left-1 h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-400/50" style={{ animationDelay: "0.5s" }} />
+                <div className="absolute top-10 left-1 h-2 w-2 animate-pulse rounded-full bg-purple-400/40" style={{ animationDelay: "1s" }} />
+                <div className="absolute top-3 right-0 h-1.5 w-1.5 animate-pulse rounded-full bg-blue-400/50" style={{ animationDelay: "0.3s" }} />
+                <div className="absolute top-8 -right-1 h-2 w-2 animate-pulse rounded-full bg-cyan-400/60" style={{ animationDelay: "0.7s" }} />
+                {/* Central brain icon */}
+                <div className="absolute inset-2 flex items-center justify-center rounded-xl border border-purple-500/30 bg-purple-500/10 text-purple-400">
+                  <BrainIcon />
+                </div>
+              </div>
+            </StepScene>
+
+            <StepScene step={3} color="cyan">
+              {/* Strategy brief mockup */}
+              <div className="mx-auto h-20 w-16 rounded-lg border border-white/20 bg-gray-800/80 p-1.5">
+                <div className="h-full space-y-1 rounded-md bg-gray-900/80 p-1.5">
+                  <div className="h-1 w-8 rounded-full bg-cyan-500/50" />
+                  <div className="flex gap-1">
+                    <div className="h-5 w-5 rounded bg-red-500/20 text-[4px] text-center leading-5 font-bold text-red-300">R</div>
+                    <div className="h-5 w-5 rounded bg-blue-500/20 text-[4px] text-center leading-5 font-bold text-blue-300">B</div>
+                  </div>
+                  <div className="h-1 w-full rounded-full bg-green-500/40" />
+                  <div className="h-1 w-6 rounded-full bg-white/10" />
+                  <div className="h-1 w-8 rounded-full bg-white/10" />
+                </div>
+              </div>
+            </StepScene>
           </div>
         </div>
       </MotionSection>
@@ -140,6 +276,77 @@ export default async function Home() {
 
       {/* Testimonials */}
       <Testimonials />
+
+      {/* Pricing */}
+      <MotionSection id="pricing" className="border-t border-white/5 py-24">
+        <div className="mx-auto max-w-5xl px-4">
+          <div className="text-center">
+            <p className="text-sm font-semibold uppercase tracking-widest text-blue-500">
+              Pricing
+            </p>
+            <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
+              Free to scout. Upgrade for AI.
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-gray-400">
+              Scouting, data sync, and team management are completely free. Unlock unlimited AI strategy with a simple upgrade.
+            </p>
+          </div>
+
+          <div className="mt-14 grid gap-6 sm:grid-cols-2 sm:gap-8 lg:mx-auto lg:max-w-3xl">
+            {/* Free Tier */}
+            <div className="rounded-2xl border border-white/10 bg-gray-900/50 p-8">
+              <p className="text-sm font-semibold uppercase tracking-widest text-gray-400">Free</p>
+              <p className="mt-4 text-4xl font-bold text-white">$0</p>
+              <p className="mt-1 text-sm text-gray-400">forever</p>
+              <ul className="mt-8 space-y-3 text-sm text-gray-300">
+                <PricingItem included>Unlimited scouting entries</PricingItem>
+                <PricingItem included>TBA &amp; Statbotics data sync</PricingItem>
+                <PricingItem included>Team management &amp; roles</PricingItem>
+                <PricingItem included>Offline PWA support</PricingItem>
+                <PricingItem included>Team Pulse chat</PricingItem>
+                <PricingItem included>3 AI strategy messages</PricingItem>
+                <PricingItem included>Standard rate limits</PricingItem>
+                <PricingItem>Unlimited AI chat</PricingItem>
+                <PricingItem>Alliance pick optimizer</PricingItem>
+              </ul>
+              <Link
+                href="/signup"
+                className="mt-8 block rounded-lg border border-white/10 py-2.5 text-center text-sm font-semibold text-gray-200 transition hover:bg-white/5"
+              >
+                Get started
+              </Link>
+            </div>
+
+            {/* Pro Tier */}
+            <div className="relative rounded-2xl border border-blue-500/40 bg-gray-900/80 p-8 shadow-xl shadow-blue-500/5">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-4 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-blue-600/30">
+                Recommended
+              </div>
+              <p className="text-sm font-semibold uppercase tracking-widest text-blue-400">Pro</p>
+              <p className="mt-4 text-4xl font-bold text-white">
+                $1<span className="text-2xl">.99</span>
+              </p>
+              <p className="mt-1 text-sm text-gray-400">per month</p>
+              <ul className="mt-8 space-y-3 text-sm text-gray-300">
+                <PricingItem included>Everything in Free</PricingItem>
+                <PricingItem included>Unlimited AI strategy chat</PricingItem>
+                <PricingItem included>Alliance pick optimizer</PricingItem>
+                <PricingItem included>Pre-match &amp; post-match briefs</PricingItem>
+                <PricingItem included>Natural language data queries</PricingItem>
+                <PricingItem included>2x higher rate limits</PricingItem>
+                <PricingItem included>Priority support</PricingItem>
+              </ul>
+              <Link
+                href="/signup"
+                className="mt-8 block rounded-lg bg-blue-600 py-2.5 text-center text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition hover:bg-blue-500"
+              >
+                Upgrade to Pro
+              </Link>
+            </div>
+          </div>
+
+        </div>
+      </MotionSection>
 
       {/* CTA */}
       <MotionSection className="relative overflow-hidden border-t border-white/5 py-24">
@@ -195,28 +402,57 @@ function FeatureCard({
   );
 }
 
-function StepCard({
+const stepMeta: Record<number, { title: string; description: string }> = {
+  1: {
+    title: "Scout matches",
+    description:
+      "Tap counters and toggles from the stands. Offline-ready, syncs when back online.",
+  },
+  2: {
+    title: "AI analyzes data",
+    description:
+      "Your scouting observations combine with TBA and Statbotics data for deep analysis.",
+  },
+  3: {
+    title: "Win with strategy",
+    description:
+      "Pre-match briefs, alliance pick lists, and game plans, all generated in seconds.",
+  },
+};
+
+const stepColors: Record<string, { badge: string; glow: string }> = {
+  blue: { badge: "bg-blue-600 shadow-blue-600/30", glow: "bg-blue-500/10 border-blue-500/20" },
+  purple: { badge: "bg-purple-600 shadow-purple-600/30", glow: "bg-purple-500/10 border-purple-500/20" },
+  cyan: { badge: "bg-cyan-600 shadow-cyan-600/30", glow: "bg-cyan-500/10 border-cyan-500/20" },
+};
+
+function StepScene({
   step,
-  icon,
-  title,
-  description,
+  color,
+  children,
 }: {
   step: number;
-  icon: React.ReactNode;
-  title: string;
-  description: string;
+  color: string;
+  children: React.ReactNode;
 }) {
+  const meta = stepMeta[step];
+  const palette = stepColors[color] ?? stepColors.blue;
+
   return (
-    <div className="text-center">
-      <div className="relative mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl border border-white/10 bg-gray-900/80 text-blue-400">
-        {icon}
-        <div className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white shadow-lg shadow-blue-600/30">
+    <div className="relative text-center">
+      <div
+        className={`relative mx-auto mb-5 flex h-28 w-28 items-center justify-center rounded-2xl border ${palette.glow}`}
+      >
+        {children}
+        <div
+          className={`absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white shadow-lg ${palette.badge}`}
+        >
           {step}
         </div>
       </div>
-      <h3 className="text-lg font-semibold text-white">{title}</h3>
+      <h3 className="text-lg font-semibold text-white">{meta.title}</h3>
       <p className="mt-2 text-sm leading-relaxed text-gray-400">
-        {description}
+        {meta.description}
       </p>
     </div>
   );
@@ -292,6 +528,48 @@ function WifiOffIcon() {
       <path d="M22 8.82a15 15 0 0 0-11.288-3.764" />
       <path d="m2 2 20 20" />
     </svg>
+  );
+}
+
+function PricingItem({
+  included,
+  children,
+}: {
+  included?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <li className="flex items-start gap-2.5">
+      {included ? (
+        <svg
+          className="mt-0.5 h-4 w-4 shrink-0 text-blue-400"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      ) : (
+        <svg
+          className="mt-0.5 h-4 w-4 shrink-0 text-gray-600"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      )}
+      <span className={included ? "" : "text-gray-500"}>{children}</span>
+    </li>
   );
 }
 

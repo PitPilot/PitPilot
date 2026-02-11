@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { resolveRateLimitMessage } from "@/lib/rate-limit-ui";
 
 export function GeneratePickListButton({
   eventId,
@@ -28,7 +29,12 @@ export function GeneratePickListButton({
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        setError(data.error ?? "Failed to generate pick list");
+        setError(
+          resolveRateLimitMessage(
+            res.status,
+            data.error ?? "Failed to generate pick list"
+          )
+        );
         return;
       }
 
@@ -45,8 +51,11 @@ export function GeneratePickListButton({
       <button
         onClick={handleGenerate}
         disabled={loading}
-        className="rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-purple-500 disabled:opacity-50"
+        className="inline-flex items-center justify-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-500 disabled:opacity-50"
       >
+        {loading && (
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/70 border-t-transparent" />
+        )}
         {loading ? "Generating... (this may take a moment)" : label}
       </button>
       {error && <p className="mt-2 text-sm text-red-400">{error}</p>}

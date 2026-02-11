@@ -15,7 +15,8 @@ export function PageTransition({
     <AnimatePresence mode="wait" initial={false}>
       <motion.div
         key={pathname}
-        className="min-h-screen bg-gray-950"
+        className="min-h-screen"
+        style={{ backgroundColor: "var(--background)" }}
         initial={
           prefersReducedMotion
             ? false

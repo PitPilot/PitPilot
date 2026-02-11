@@ -14,8 +14,8 @@ export default function DashboardError({
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-950 px-4 text-white">
-      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-gray-900/60 p-8 text-center shadow-sm">
+    <div className="flex min-h-screen items-center justify-center px-4 dashboard-page">
+      <div className="w-full max-w-md rounded-2xl dashboard-panel p-8 text-center">
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-500/20">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -43,13 +43,13 @@ export default function DashboardError({
         <div className="mt-6 flex items-center justify-center gap-3">
           <button
             onClick={reset}
-            className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
+            className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-blue-500"
           >
             Try again
           </button>
           <a
             href="/dashboard"
-            className="rounded-lg border border-white/10 px-5 py-2 text-sm font-medium text-gray-200 transition hover:bg-white/5"
+            className="back-button back-button-lg"
           >
             Go to Dashboard
           </a>

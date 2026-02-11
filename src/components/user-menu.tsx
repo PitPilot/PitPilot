@@ -53,36 +53,20 @@ export function UserMenu({ name, email, isStaff }: UserMenuProps) {
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white transition hover:border-white/30"
+        className="group relative flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 text-sm font-semibold text-white transition-all duration-200 hover:scale-110 hover:shadow-lg hover:shadow-blue-500/30 active:scale-95"
         aria-haspopup="menu"
         aria-expanded={open}
+        aria-label="Open account menu"
       >
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 text-sm font-semibold text-white">
-          {initials}
-        </div>
-        <span className="hidden text-sm font-medium text-gray-200 md:block">
-          {name || email || "Account"}
-        </span>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className={`text-gray-400 transition ${open ? "rotate-180" : ""}`}
-        >
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
+        <span className="absolute inset-0 rounded-full bg-white/20 opacity-0 transition-opacity duration-200 group-active:opacity-100" />
+        <span className="absolute inset-0 animate-ping rounded-full bg-blue-400 opacity-0 group-active:opacity-30" style={{ animationDuration: '0.4s', animationIterationCount: 1 }} />
+        {initials}
       </button>
 
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-3 w-72 max-w-[calc(100vw-24px)] max-h-[calc(100vh-120px)] overflow-hidden overflow-y-auto rounded-2xl border border-white/10 bg-gray-950/95 text-white shadow-2xl backdrop-blur"
+          className="absolute right-0 mt-2 w-72 max-h-[calc(100vh-120px)] max-w-[calc(100vw-24px)] overflow-hidden overflow-y-auto rounded-xl border border-white/10 bg-gray-950/95 text-white shadow-2xl backdrop-blur"
         >
           <div className="border-b border-white/10 px-5 py-4">
             <p className="text-sm font-semibold text-white">{name || "Account"}</p>
@@ -91,7 +75,7 @@ export function UserMenu({ name, email, isStaff }: UserMenuProps) {
 
           <div className="py-2">
             <Link
-              href="/dashboard/settings"
+              href="/dashboard/settings/account"
               className="flex items-center gap-3 px-5 py-2.5 text-sm font-medium text-gray-200 transition hover:bg-white/5"
               role="menuitem"
               onClick={() => setOpen(false)}

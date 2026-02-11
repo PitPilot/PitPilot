@@ -31,13 +31,13 @@ export default async function AssignmentsPage({
   // Get event
   const { data: event } = await supabase
     .from("events")
-    .select("id, name")
+    .select("id, name, year")
     .eq("tba_key", eventKey)
     .single();
 
   if (!event) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-950 text-white">
+      <div className="flex min-h-screen items-center justify-center dashboard-page">
         <p className="text-gray-400">Event not found.</p>
       </div>
     );
@@ -68,20 +68,22 @@ export default async function AssignmentsPage({
       (matches ?? []).map((m) => m.id)
     );
 
+  const eventTitle = event.year ? `${event.year} ${event.name}` : event.name;
+
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen dashboard-page">
       <Navbar />
       <main className="mx-auto max-w-7xl px-4 pb-12 pt-24">
         <div className="mb-6 flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
-              {event.name}
+              {eventTitle}
             </p>
             <h1 className="text-lg font-bold">Scout Assignments</h1>
           </div>
           <Link
             href={`/dashboard/events/${eventKey}`}
-            className="rounded-md border border-white/10 px-3 py-1.5 text-sm text-gray-200 hover:bg-white/5"
+            className="back-button"
           >
             Back
           </Link>

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Navbar } from "@/components/navbar";
 import { PulseClient } from "./pulse-client";
@@ -15,7 +16,7 @@ export default async function TeamPulsePage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, org_id, display_name, role")
+    .select("id, org_id, display_name, role, team_roles")
     .eq("id", user.id)
     .single();
 
@@ -25,13 +26,15 @@ export default async function TeamPulsePage() {
 
   const { data: messages } = await supabase
     .from("team_messages")
-    .select("id, content, message_type, match_key, created_at, author_id, profiles(display_name)")
+    .select(
+      "id, content, message_type, match_key, created_at, author_id, reply_to_id, profiles(display_name, team_roles)"
+    )
     .eq("org_id", profile.org_id)
     .order("created_at", { ascending: true })
     .limit(200);
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen dashboard-page">
       <Navbar />
       <main className="mx-auto max-w-6xl px-4 pb-16 pt-24">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
@@ -47,9 +50,8 @@ export default async function TeamPulsePage() {
           </div>
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm font-medium text-gray-200 transition hover:bg-white/5"
+            className="back-button"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
             Back to dashboard
           </Link>
         </div>
@@ -58,6 +60,7 @@ export default async function TeamPulsePage() {
           orgId={profile.org_id}
           userId={profile.id}
           displayName={profile.display_name}
+          teamRoles={profile.team_roles ?? []}
           initialMessages={messages ?? []}
         />
       </main>

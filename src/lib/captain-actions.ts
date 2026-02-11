@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
-const ROLE_OPTIONS = ["scout", "strategist", "captain"] as const;
+const ROLE_OPTIONS = ["scout", "captain"] as const;
 type UserRole = (typeof ROLE_OPTIONS)[number];
 
 async function requireCaptain() {
@@ -58,7 +58,7 @@ export async function updateMemberRole(formData: FormData) {
       .from("profiles")
       .select("id, role")
       .eq("id", memberId)
-      .eq("org_id", ctx.profile.org_id)
+      .eq("org_id", ctx.profile.org_id!)
       .single();
 
     if (!target) {
@@ -69,7 +69,7 @@ export async function updateMemberRole(formData: FormData) {
       const { count } = await ctx.supabase
         .from("profiles")
         .select("id", { count: "exact", head: true })
-        .eq("org_id", ctx.profile.org_id)
+        .eq("org_id", ctx.profile.org_id!)
         .eq("role", "captain");
 
       if ((count ?? 0) <= 1) {
@@ -82,7 +82,7 @@ export async function updateMemberRole(formData: FormData) {
     .from("profiles")
     .update({ role, updated_at: new Date().toISOString() })
     .eq("id", memberId)
-    .eq("org_id", ctx.profile.org_id);
+    .eq("org_id", ctx.profile.org_id!);
 
   if (error) {
     return { error: error.message } as const;

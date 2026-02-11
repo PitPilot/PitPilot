@@ -27,7 +27,7 @@ export function DashboardPreview() {
           className="mt-12"
         >
           {/* Browser chrome mockup */}
-          <div className="mx-auto max-w-4xl rounded-xl border border-white/10 bg-gray-900/60 shadow-2xl shadow-blue-500/5 overflow-hidden">
+          <div className="mx-auto max-w-4xl overflow-hidden rounded-lg border shadow-2xl shadow-blue-500/5 preview-surface">
             {/* Title bar */}
             <div className="flex items-center gap-2 border-b border-white/5 px-4 py-3">
               <div className="flex gap-1.5">
@@ -35,7 +35,7 @@ export function DashboardPreview() {
                 <div className="h-3 w-3 rounded-full bg-yellow-500/60" />
                 <div className="h-3 w-3 rounded-full bg-green-500/60" />
               </div>
-              <div className="ml-4 flex-1 rounded-md bg-white/5 px-3 py-1 text-xs text-gray-500">
+              <div className="preview-bar ml-4 flex-1 rounded px-3 py-1 text-xs">
                 scoutai.app/dashboard/events/2025miket
               </div>
             </div>
@@ -49,11 +49,14 @@ export function DashboardPreview() {
                   <div className="mt-1 h-3 w-32 rounded bg-white/5" />
                 </div>
                 <div className="flex gap-2">
-                  <div className="rounded-md bg-blue-500/20 px-3 py-1.5 text-xs text-blue-400 font-medium">
-                    Sync Matches
+                  <div className="rounded bg-sky-500/20 px-3 py-1.5 text-xs text-sky-300 font-medium">
+                    Scout Matches
                   </div>
-                  <div className="rounded-md bg-orange-500/20 px-3 py-1.5 text-xs text-orange-400 font-medium">
+                  <div className="rounded bg-orange-500/20 px-3 py-1.5 text-xs text-orange-300 font-medium">
                     Assignments
+                  </div>
+                  <div className="rounded bg-indigo-500/20 px-3 py-1.5 text-xs text-indigo-300 font-medium">
+                    Pick List
                   </div>
                 </div>
               </div>
@@ -116,7 +119,7 @@ function MatchMockup({
   hasBrief?: boolean;
 }) {
   return (
-    <div className="rounded-lg border border-white/5 bg-gray-800/50 p-3">
+    <div className="preview-card rounded-md border p-3">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-semibold text-gray-300">{label}</span>
         <div className="flex items-center gap-2">
@@ -130,7 +133,7 @@ function MatchMockup({
                 : "bg-white/5 text-gray-500"
             }`}
           >
-            {hasBrief ? "View Brief" : "AI Brief"}
+            {hasBrief ? "View Brief" : "Pre-Match Brief"}
           </span>
         </div>
       </div>
@@ -142,12 +145,12 @@ function MatchMockup({
               scouted.includes(t)
                 ? "bg-red-500/20 text-red-300 ring-1 ring-red-500/40"
                 : assigned.includes(t)
-                ? "bg-red-500/15 text-red-400 ring-1 ring-orange-500/40"
+                ? "bg-red-500/10 text-red-300 ring-1 ring-orange-500/50"
                 : "bg-red-500/10 text-red-400/70"
             }`}
           >
             {t}
-            {scouted.includes(t) ? " \u2713" : assigned.includes(t) ? " \u2605" : ""}
+            {scouted.includes(t) ? " \u2713" : ""}
           </span>
         ))}
       </div>
@@ -158,6 +161,8 @@ function MatchMockup({
             className={`flex-1 rounded px-1.5 py-1 text-center text-[10px] font-medium ${
               scouted.includes(t)
                 ? "bg-blue-500/20 text-blue-300 ring-1 ring-blue-500/40"
+                : assigned.includes(t)
+                ? "bg-blue-500/10 text-blue-300 ring-1 ring-orange-500/50"
                 : "bg-blue-500/10 text-blue-400/70"
             }`}
           >

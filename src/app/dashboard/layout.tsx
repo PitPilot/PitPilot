@@ -31,9 +31,12 @@ export default async function DashboardLayout({
   }
 
   return (
-    <>
-      {children}
-      <SiteFooter />
-    </>
+    <div className="dashboard-shell">
+      <div className="dashboard-backdrop" aria-hidden="true" />
+      <div className="dashboard-content">
+        {children}
+        <SiteFooter />
+      </div>
+    </div>
   );
 }

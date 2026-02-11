@@ -53,7 +53,7 @@ export function QRExport({ data }: QRExportProps) {
   }
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-4 shadow-sm">
+    <div className="scout-panel p-4">
       <button
         onClick={() => setExpanded(!expanded)}
         className="flex w-full items-center justify-between text-sm font-medium text-gray-200 transition hover:text-white"

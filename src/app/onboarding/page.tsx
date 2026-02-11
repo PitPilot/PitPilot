@@ -7,7 +7,6 @@ const ROLE_OPTIONS = [
   { value: "driver", label: "Driver" },
   { value: "coach", label: "Coach" },
   { value: "programmer", label: "Programmer" },
-  { value: "strategist", label: "Strategist" },
   { value: "scout", label: "Scout" },
   { value: "data", label: "Data / Analytics" },
   { value: "mechanical", label: "Mechanical" },

@@ -2,21 +2,24 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 
-type MotionSectionProps = React.ComponentPropsWithoutRef<"section"> & {
+interface MotionSectionProps {
+  children: React.ReactNode;
+  className?: string;
+  id?: string;
   delay?: number;
-};
+}
 
 export function MotionSection({
   children,
   delay = 0,
   className,
-  ...props
+  id,
 }: MotionSectionProps) {
   const prefersReducedMotion = useReducedMotion();
 
   return (
     <motion.section
-      {...props}
+      id={id}
       className={className}
       initial={
         prefersReducedMotion

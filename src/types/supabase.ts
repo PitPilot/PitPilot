@@ -85,6 +85,48 @@ export type Database = {
           },
         ]
       }
+      draft_sessions: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          org_id: string
+          state: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          org_id: string
+          state?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          org_id?: string
+          state?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "draft_sessions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "draft_sessions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           created_at: string
@@ -117,6 +159,35 @@ export type Database = {
           year?: number
         }
         Relationships: []
+      }
+      event_teams: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          team_number: number
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          team_number: number
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          team_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_teams_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       matches: {
         Row: {
@@ -188,6 +259,45 @@ export type Database = {
           team_number?: number | null
         }
         Relationships: []
+      }
+      org_events: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          is_attending: boolean
+          org_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          is_attending?: boolean
+          org_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          is_attending?: boolean
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_events_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "org_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pick_lists: {
         Row: {
@@ -501,6 +611,7 @@ export type Database = {
           match_key: string | null
           message_type: string
           org_id: string
+          reply_to_id: string | null
         }
         Insert: {
           author_id: string
@@ -510,6 +621,7 @@ export type Database = {
           match_key?: string | null
           message_type?: string
           org_id: string
+          reply_to_id?: string | null
         }
         Update: {
           author_id?: string
@@ -519,6 +631,7 @@ export type Database = {
           match_key?: string | null
           message_type?: string
           org_id?: string
+          reply_to_id?: string | null
         }
         Relationships: [
           {
@@ -533,6 +646,13 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "team_messages"
             referencedColumns: ["id"]
           },
         ]
@@ -615,7 +735,7 @@ export type Database = {
       }
     }
     Enums: {
-      user_role: "scout" | "strategist" | "captain"
+      user_role: "scout" | "captain"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -743,7 +863,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      user_role: ["scout", "strategist", "captain"],
+      user_role: ["scout", "captain"],
     },
   },
 } as const

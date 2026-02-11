@@ -51,34 +51,75 @@ export default async function AdminPage() {
     .select("id, email, subject, message, status, response, created_at, responded_at")
     .order("created_at", { ascending: false });
 
-  return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      <Navbar />
-      <main className="mx-auto max-w-7xl px-4 pb-16 pt-24">
-        <div className="mb-8">
-          <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
-            Website Admin
-          </p>
-          <h1 className="mt-2 text-3xl font-bold">Platform overview</h1>
-          <p className="mt-2 text-sm text-gray-300">
-            Manage teams, testimonials, announcements, and website analytics.
-          </p>
-        </div>
+  // Analytics: signups over time (last 30 days)
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const cutoff = thirtyDaysAgo.toISOString();
 
-        <AdminPanel
-          stats={{
-            organizations: orgsRes.data?.length ?? 0,
-            users: profilesRes.count ?? 0,
-            entries: entriesRes.count ?? 0,
-            matches: matchesRes.count ?? 0,
-            events: eventsRes.count ?? 0,
-          }}
-          organizations={orgsRes.data ?? []}
-          testimonials={testimonials ?? []}
-          announcements={announcements ?? []}
-          contactMessages={contactMessages ?? []}
-        />
-      </main>
-    </div>
+  const [signupsRes, orgsTimeRes, entriesTimeRes, messagesTimeRes] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("created_at")
+      .gte("created_at", cutoff)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("organizations")
+      .select("created_at")
+      .gte("created_at", cutoff)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("scouting_entries")
+      .select("created_at")
+      .gte("created_at", cutoff)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("team_messages")
+      .select("created_at")
+      .gte("created_at", cutoff)
+      .order("created_at", { ascending: true }),
+  ]);
+
+  // Aggregate by day
+  function aggregateByDay(rows: { created_at: string }[] | null): { date: string; count: number }[] {
+    const map = new Map<string, number>();
+    // Pre-fill last 30 days
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      map.set(key, 0);
+    }
+    for (const row of rows ?? []) {
+      const key = row.created_at.slice(0, 10);
+      map.set(key, (map.get(key) ?? 0) + 1);
+    }
+    return Array.from(map.entries()).map(([date, count]) => ({ date, count }));
+  }
+
+  const analytics = {
+    signups: aggregateByDay(signupsRes.data),
+    organizations: aggregateByDay(orgsTimeRes.data),
+    scoutingEntries: aggregateByDay(entriesTimeRes.data),
+    messages: aggregateByDay(messagesTimeRes.data),
+  };
+
+  return (
+    <>
+      <Navbar />
+      <AdminPanel
+        stats={{
+          organizations: orgsRes.data?.length ?? 0,
+          users: profilesRes.count ?? 0,
+          entries: entriesRes.count ?? 0,
+          matches: matchesRes.count ?? 0,
+          events: eventsRes.count ?? 0,
+        }}
+        organizations={orgsRes.data ?? []}
+        testimonials={testimonials ?? []}
+        announcements={announcements ?? []}
+        contactMessages={contactMessages ?? []}
+        analytics={analytics}
+      />
+    </>
   );
 }
