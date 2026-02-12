@@ -11,8 +11,10 @@ export function ContactForm() {
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+    setSent(false);
 
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
 
     startTransition(async () => {
       const result = await submitContactMessage(formData);
@@ -22,7 +24,7 @@ export function ContactForm() {
         return;
       }
       setSent(true);
-      e.currentTarget.reset();
+      form.reset();
     });
   }
 

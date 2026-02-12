@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { checkRateLimit, retryAfterSeconds } from "@/lib/rate-limit";
+import { getEventSyncMinYear } from "@/lib/platform-settings";
 import {
   fetchEvent,
   fetchEventTeams,
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
       .eq("id", profile.org_id)
       .single();
 
-    const limit = checkRateLimit(
+    const limit = await checkRateLimit(
       `events-sync:${profile.org_id}`,
       5 * 60_000,
       2
@@ -68,8 +69,42 @@ export async function POST(request: Request) {
       );
     }
 
-    // 1. Fetch and upsert event
+    const minSyncYear = await getEventSyncMinYear(supabase);
+    const minAllowedDate = `${minSyncYear}-01-01`;
+    const today = new Date().toISOString().slice(0, 10);
+
+    // 1. Fetch and validate event window
     const tbaEvent = await fetchEvent(eventKey);
+    const eventDate = tbaEvent.start_date ?? tbaEvent.end_date;
+
+    if (tbaEvent.year < minSyncYear) {
+      return NextResponse.json(
+        {
+          error: `This event is outside the available sync window. Allowed range: ${minAllowedDate} to ${today}.`,
+        },
+        { status: 400 }
+      );
+    }
+
+    if (eventDate) {
+      if (eventDate < minAllowedDate || eventDate > today) {
+        return NextResponse.json(
+          {
+            error: `This event is outside the available sync window. Allowed range: ${minAllowedDate} to ${today}.`,
+          },
+          { status: 400 }
+        );
+      }
+    } else if (tbaEvent.year > new Date().getFullYear()) {
+      return NextResponse.json(
+        {
+          error: `This event is outside the available sync window. Allowed range: ${minAllowedDate} to ${today}.`,
+        },
+        { status: 400 }
+      );
+    }
+
+    // 2. Upsert event
     const { error: eventError } = await supabase.from("events").upsert(
       {
         tba_key: tbaEvent.key,
@@ -89,7 +124,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // 2. Fetch and upsert teams
+    // 3. Fetch and upsert teams
     const tbaTeams = await fetchEventTeams(eventKey);
     const teamRows = tbaTeams.map((t) => ({
       team_number: t.team_number,
@@ -113,7 +148,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // 3. Get the event ID from our DB
+    // 4. Get the event ID from our DB
     const { data: dbEvent } = await supabase
       .from("events")
       .select("id")
@@ -169,7 +204,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // 4. Fetch and upsert matches
+    // 5. Fetch and upsert matches
     const tbaMatches = await fetchEventMatches(eventKey);
     const matchRows = tbaMatches.map((m) => ({
       event_id: dbEvent.id,

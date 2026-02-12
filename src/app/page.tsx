@@ -37,10 +37,12 @@ export default async function Home() {
       <section className="relative overflow-hidden pt-24">
         {/* Background gradient orbs */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 left-1/4 h-96 w-96 rounded-full bg-blue-600/20 blur-3xl" />
-          <div className="absolute top-20 right-1/4 h-72 w-72 rounded-full bg-purple-600/15 blur-3xl" />
-          <div className="absolute bottom-0 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-cyan-600/10 blur-3xl" />
+          <div className="absolute -top-40 left-1/4 h-[500px] w-[500px] rounded-full bg-blue-600/20 blur-[100px]" />
+          <div className="absolute top-20 right-1/4 h-80 w-80 rounded-full bg-purple-600/15 blur-[80px]" />
+          <div className="absolute bottom-0 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-cyan-600/10 blur-[100px]" />
         </div>
+        {/* Subtle grid overlay */}
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />
 
         <div className="relative mx-auto max-w-6xl px-4 py-20 sm:py-32">
           <HeroAnimations />
@@ -83,56 +85,56 @@ export default async function Home() {
               </p>
             </div>
 
-            <div className="mt-8 overflow-x-auto rounded-2xl border border-white/10 bg-gradient-to-b from-gray-900/70 to-gray-900/40 shadow-xl shadow-blue-500/5 standout-table">
+            <div className="mt-8 overflow-x-auto rounded-2xl border border-white/10 bg-gradient-to-b from-gray-900/70 to-gray-900/40 shadow-xl shadow-blue-500/5 standout-table backdrop-blur-sm">
               <table className="min-w-full text-left text-sm text-gray-300">
-                <thead className="bg-white/5 text-xs uppercase tracking-wider text-gray-400">
+                <thead className="border-b border-white/10 bg-white/[0.03] text-xs uppercase tracking-wider text-gray-400">
                   <tr>
-                    <th className="px-5 py-4">Tool</th>
-                    <th className="px-5 py-4">
+                    <th className="px-5 py-4 font-semibold">Tool</th>
+                    <th className="px-5 py-4 font-semibold">
                       <span className="inline-flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                        <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50" />
                         What it does
                       </span>
                     </th>
-                    <th className="px-5 py-4">
+                    <th className="px-5 py-4 font-semibold">
                       <span className="inline-flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-rose-400" />
+                        <span className="h-2 w-2 rounded-full bg-rose-400 shadow-sm shadow-rose-400/50" />
                         What it doesn&apos;t do
                       </span>
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/10">
-                  <tr className="transition hover:bg-white/5">
+                <tbody className="divide-y divide-white/5">
+                  <tr className="transition hover:bg-white/[0.03]">
                     <td className="px-5 py-4 font-semibold text-white">
                       TBA / Statbotics
                     </td>
                     <td className="px-5 py-4">
                       Publishes match results, rankings, and EPA.
                     </td>
-                    <td className="px-5 py-4 text-gray-400">
+                    <td className="px-5 py-4 text-gray-500">
                       Doesn&apos;t translate stats into match strategy.
                     </td>
                   </tr>
-                  <tr className="transition hover:bg-white/5">
+                  <tr className="transition hover:bg-white/[0.03]">
                     <td className="px-5 py-4 font-semibold text-white">
                       Google Forms / Sheets
                     </td>
                     <td className="px-5 py-4">
                       Collects raw scouting notes from your team.
                     </td>
-                    <td className="px-5 py-4 text-gray-400">
+                    <td className="px-5 py-4 text-gray-500">
                       Doesn&apos;t merge with public data or generate insights.
                     </td>
                   </tr>
-                  <tr className="transition hover:bg-white/5">
+                  <tr className="transition hover:bg-white/[0.03]">
                     <td className="px-5 py-4 font-semibold text-white">
                       Offline scouting apps
                     </td>
                     <td className="px-5 py-4">
                       Helps capture data when Wi-Fi is unreliable.
                     </td>
-                    <td className="px-5 py-4 text-gray-400">
+                    <td className="px-5 py-4 text-gray-500">
                       Doesn&apos;t build pick lists or AI strategy briefs.
                     </td>
                   </tr>
@@ -140,10 +142,14 @@ export default async function Home() {
               </table>
             </div>
 
-            <p className="mt-4 text-center text-sm text-gray-400">
-              ScoutAI combines everything above and adds AI strategy, like a
-              data analyst on your drive team.
-            </p>
+            <div className="mt-6 flex items-center justify-center gap-3">
+              <div className="h-px flex-1 max-w-16 bg-gradient-to-r from-transparent to-blue-500/30" />
+              <p className="text-center text-sm font-medium text-gray-400">
+                ScoutAI combines everything above and adds AI strategy, like a
+                data analyst on your drive team.
+              </p>
+              <div className="h-px flex-1 max-w-16 bg-gradient-to-l from-transparent to-blue-500/30" />
+            </div>
           </div>
         </div>
       </MotionSection>
@@ -168,31 +174,37 @@ export default async function Home() {
               icon={<ClipboardIcon />}
               title="Smart Scouting Forms"
               description="Mobile-first forms with big tap targets designed for the stands. Works offline at venues, syncs when you're back online."
+              color="blue"
             />
             <FeatureCard
               icon={<ChartIcon />}
               title="Unified Data Dashboard"
               description="Auto-imports TBA results and Statbotics EPA. Your scouting observations overlaid on public data in one powerful view."
+              color="cyan"
             />
             <FeatureCard
               icon={<BrainIcon />}
               title="AI Strategy Engine"
               description="Pre-match briefs, post-match analysis, and natural language queries. Ask anything about your event data."
+              color="purple"
             />
             <FeatureCard
               icon={<TargetIcon />}
               title="Alliance Pick Optimizer"
               description="Ranks every available team by complementarity with your robot. Pick partners based on data with true confidence that you've made the right choice."
+              color="orange"
             />
             <FeatureCard
               icon={<UsersIcon />}
               title="Team Management"
               description="Invite scouts with a 6-character code. Assign rotations. Role-based access for scouts and captains."
+              color="green"
             />
             <FeatureCard
               icon={<WifiOffIcon />}
               title="Offline-First PWA"
               description="Install on your phone like a native app. Scout without WiFi, and sync automatically once you reconnect."
+              color="rose"
             />
           </div>
         </div>
@@ -294,50 +306,57 @@ export default async function Home() {
 
           <div className="mt-14 grid gap-6 sm:grid-cols-2 sm:gap-8 lg:mx-auto lg:max-w-3xl">
             {/* Free Tier */}
-            <div className="rounded-2xl border border-white/10 bg-gray-900/50 p-8">
+            <div className="relative rounded-2xl border border-white/10 bg-gray-900/50 p-8 transition-all hover:border-white/15 hover:shadow-lg hover:shadow-blue-500/5">
+              <div className="mb-6 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </div>
               <p className="text-sm font-semibold uppercase tracking-widest text-gray-400">Free</p>
               <p className="mt-4 text-4xl font-bold text-white">$0</p>
               <p className="mt-1 text-sm text-gray-400">forever</p>
-              <ul className="mt-8 space-y-3 text-sm text-gray-300">
+              <div className="my-6 h-px bg-gradient-to-r from-white/10 via-white/5 to-transparent" />
+              <ul className="space-y-3 text-sm text-gray-300">
                 <PricingItem included>Unlimited scouting entries</PricingItem>
                 <PricingItem included>TBA &amp; Statbotics data sync</PricingItem>
                 <PricingItem included>Team management &amp; roles</PricingItem>
                 <PricingItem included>Offline PWA support</PricingItem>
                 <PricingItem included>Team Pulse chat</PricingItem>
-                <PricingItem included>Unlimited prompts (team usage capped)</PricingItem>
-                <PricingItem included>3 team AI interactions per 3 hours</PricingItem>
-                <PricingItem>13 team AI interactions per 3 hours</PricingItem>
+                <PricingItem included>Alliance pick optimizer</PricingItem>
+                <PricingItem included>Pre-match &amp; post-match briefs</PricingItem>
+                <PricingItem included>Unlimited prompts with usage limits</PricingItem>
+                <PricingItem>Higher AI usage limits</PricingItem>
               </ul>
               <Link
                 href="/signup"
-                className="mt-8 block rounded-lg border border-white/10 py-2.5 text-center text-sm font-semibold text-gray-200 transition hover:bg-white/5"
+                className="mt-8 block rounded-xl border border-white/10 py-3 text-center text-sm font-semibold text-gray-200 transition-all hover:bg-white/5 hover:-translate-y-0.5"
               >
                 Get started
               </Link>
             </div>
 
             {/* Supporter Tier */}
-            <div className="relative rounded-2xl border border-blue-500/40 bg-gray-900/80 p-8 shadow-xl shadow-blue-500/5">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-4 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-blue-600/30">
-                Recommended
+            <div className="relative rounded-2xl border border-emerald-500/40 bg-gradient-to-b from-emerald-500/[0.06] to-gray-900/80 p-8 shadow-xl shadow-emerald-500/10 transition-all hover:shadow-2xl hover:shadow-emerald-500/15 hover:-translate-y-0.5">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-emerald-600 px-4 py-1 text-xs font-bold tracking-wide text-white shadow-lg shadow-emerald-600/30">
+                Support us
               </div>
-              <p className="text-sm font-semibold uppercase tracking-widest text-blue-400">Supporter</p>
+              <div className="mb-6 flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+              </div>
+              <p className="text-sm font-semibold uppercase tracking-widest text-emerald-400">Supporter</p>
               <p className="mt-4 text-4xl font-bold text-white">
                 $5<span className="text-2xl">.99</span>
               </p>
               <p className="mt-1 text-sm text-gray-400">per team / month</p>
-              <ul className="mt-8 space-y-3 text-sm text-gray-300">
+              <div className="my-6 h-px bg-gradient-to-r from-emerald-500/20 via-emerald-500/10 to-transparent" />
+              <ul className="space-y-3 text-sm text-gray-300">
                 <PricingItem included>Everything in Free</PricingItem>
-                <PricingItem included>13 team AI interactions per 3 hours</PricingItem>
-                <PricingItem included>Alliance pick optimizer</PricingItem>
-                <PricingItem included>Pre-match &amp; post-match briefs</PricingItem>
+                <PricingItem included>Higher AI usage limits</PricingItem>
                 <PricingItem included>Natural language data queries</PricingItem>
                 <PricingItem included>Faster AI capacity for your team</PricingItem>
                 <PricingItem included>Helps fund shared token usage</PricingItem>
               </ul>
               <Link
                 href="/signup"
-                className="mt-8 block rounded-lg bg-blue-600 py-2.5 text-center text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition hover:bg-blue-500"
+                className="mt-8 block rounded-xl bg-emerald-600 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-emerald-600/25 transition-all hover:bg-emerald-500 hover:-translate-y-0.5"
               >
                 Upgrade to Supporter
               </Link>
@@ -350,9 +369,13 @@ export default async function Home() {
       {/* CTA */}
       <MotionSection className="relative overflow-hidden border-t border-white/5 py-24">
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute top-1/2 left-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-600/20 blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-600/20 blur-[100px]" />
+          <div className="absolute top-1/3 left-1/3 h-64 w-64 rounded-full bg-purple-600/10 blur-[80px]" />
         </div>
         <div className="relative mx-auto max-w-2xl px-4 text-center">
+          <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
           <h2 className="text-3xl font-bold sm:text-4xl">
             Ready to level up your scouting?
           </h2>
@@ -360,17 +383,22 @@ export default async function Home() {
             Join teams already using ScoutAI to make smarter alliance picks and
             win more matches.
           </p>
-          <div className="mt-10 flex items-center justify-center gap-4">
+          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link
               href="/signup"
-              className="group relative rounded-lg bg-blue-600 px-8 py-3 text-base font-semibold text-white shadow-lg shadow-blue-600/25 transition hover:bg-blue-500 hover:shadow-blue-500/30"
+              className="group relative overflow-hidden rounded-xl bg-blue-600 px-10 py-3.5 text-base font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-500 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5"
             >
-              Get Started Free
-              <span className="ml-2 inline-block transition-transform group-hover:translate-x-1">
-                &rarr;
+              <span className="relative z-10">
+                Get Started Free
+                <span className="ml-2 inline-block transition-transform group-hover:translate-x-1">
+                  &rarr;
+                </span>
               </span>
             </Link>
           </div>
+          <p className="mt-6 text-xs text-gray-500">
+            No credit card required. Free forever for every team.
+          </p>
         </div>
       </MotionSection>
 
@@ -379,18 +407,30 @@ export default async function Home() {
   );
 }
 
+const featureColors: Record<string, { icon: string; iconHover: string; glow: string; border: string }> = {
+  blue: { icon: "bg-blue-500/10 text-blue-400", iconHover: "group-hover:bg-blue-500/20", glow: "group-hover:shadow-blue-500/5", border: "group-hover:border-blue-500/20" },
+  cyan: { icon: "bg-cyan-500/10 text-cyan-400", iconHover: "group-hover:bg-cyan-500/20", glow: "group-hover:shadow-cyan-500/5", border: "group-hover:border-cyan-500/20" },
+  purple: { icon: "bg-purple-500/10 text-purple-400", iconHover: "group-hover:bg-purple-500/20", glow: "group-hover:shadow-purple-500/5", border: "group-hover:border-purple-500/20" },
+  orange: { icon: "bg-orange-500/10 text-orange-400", iconHover: "group-hover:bg-orange-500/20", glow: "group-hover:shadow-orange-500/5", border: "group-hover:border-orange-500/20" },
+  green: { icon: "bg-green-500/10 text-green-400", iconHover: "group-hover:bg-green-500/20", glow: "group-hover:shadow-green-500/5", border: "group-hover:border-green-500/20" },
+  rose: { icon: "bg-rose-500/10 text-rose-400", iconHover: "group-hover:bg-rose-500/20", glow: "group-hover:shadow-rose-500/5", border: "group-hover:border-rose-500/20" },
+};
+
 function FeatureCard({
   icon,
   title,
   description,
+  color = "blue",
 }: {
   icon: React.ReactNode;
   title: string;
   description: string;
+  color?: string;
 }) {
+  const palette = featureColors[color] ?? featureColors.blue;
   return (
-    <div className="group rounded-xl border border-white/10 bg-gray-900/50 p-6 transition-all hover:border-white/20 hover:bg-gray-900/80 hover:shadow-xl hover:shadow-blue-500/5">
-      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg border border-white/10 bg-blue-500/10 text-blue-400 transition-colors group-hover:bg-blue-500/20">
+    <div className={`group relative rounded-2xl border border-white/10 bg-gray-900/50 p-6 transition-all hover:bg-gray-900/80 hover:shadow-xl hover:-translate-y-0.5 ${palette.glow} ${palette.border}`}>
+      <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl ${palette.icon} transition-colors ${palette.iconHover}`}>
         {icon}
       </div>
       <h3 className="text-lg font-semibold text-white">{title}</h3>
@@ -538,34 +578,38 @@ function PricingItem({
   children: React.ReactNode;
 }) {
   return (
-    <li className="flex items-start gap-2.5">
+    <li className="flex items-start gap-3">
       {included ? (
-        <svg
-          className="mt-0.5 h-4 w-4 shrink-0 text-blue-400"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <polyline points="20 6 9 17 4 12" />
-        </svg>
+        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500/10">
+          <svg
+            className="h-3 w-3 text-blue-400"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </span>
       ) : (
-        <svg
-          className="mt-0.5 h-4 w-4 shrink-0 text-gray-600"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <line x1="18" y1="6" x2="6" y2="18" />
-          <line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
+        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gray-500/10">
+          <svg
+            className="h-3 w-3 text-gray-600"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </span>
       )}
       <span className={included ? "" : "text-gray-500"}>{children}</span>
     </li>

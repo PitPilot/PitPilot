@@ -27,16 +27,16 @@ export function DashboardPreview() {
           className="mt-12"
         >
           {/* Browser chrome mockup */}
-          <div className="mx-auto max-w-4xl overflow-hidden rounded-lg border shadow-2xl shadow-blue-500/5 preview-surface">
+          <div className="mx-auto max-w-4xl overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-blue-500/10 preview-surface backdrop-blur-sm">
             {/* Title bar */}
-            <div className="flex items-center gap-2 border-b border-white/5 px-4 py-3">
+            <div className="flex items-center gap-2 border-b border-white/5 bg-white/[0.02] px-4 py-3">
               <div className="flex gap-1.5">
                 <div className="h-3 w-3 rounded-full bg-red-500/60" />
                 <div className="h-3 w-3 rounded-full bg-yellow-500/60" />
                 <div className="h-3 w-3 rounded-full bg-green-500/60" />
               </div>
-              <div className="preview-bar ml-4 flex-1 rounded px-3 py-1 text-xs">
-                scoutai.app/dashboard/events/2025miket
+              <div className="preview-bar ml-4 flex-1 rounded-lg px-3 py-1.5 text-xs font-medium">
+                <span className="text-gray-500">scoutai.app</span>/dashboard/events/2025miket
               </div>
             </div>
 

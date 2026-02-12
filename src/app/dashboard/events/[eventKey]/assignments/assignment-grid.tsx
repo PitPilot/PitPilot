@@ -22,6 +22,7 @@ interface AssignmentGridProps {
   assignments: Assignment[];
   orgId: string;
   eventKey: string;
+  orgTeamNumber: number | null;
 }
 
 export function AssignmentGrid({
@@ -29,6 +30,7 @@ export function AssignmentGrid({
   members,
   assignments: initialAssignments,
   orgId,
+  orgTeamNumber,
 }: AssignmentGridProps) {
   const router = useRouter();
   const supabase = createClient();
@@ -44,6 +46,7 @@ export function AssignmentGrid({
   >(() => {
     const map: Record<string, string> = {};
     for (const a of initialAssignments) {
+      if (orgTeamNumber !== null && a.team_number === orgTeamNumber) continue;
       map[`${a.match_id}-${a.position}`] = a.assigned_to;
     }
     return map;
@@ -85,6 +88,11 @@ export function AssignmentGrid({
     return match.blue_teams[idx] ?? 0;
   }
 
+  function isOwnTeamPosition(match: Match, position: string): boolean {
+    if (orgTeamNumber === null) return false;
+    return getTeamForPosition(match, position) === orgTeamNumber;
+  }
+
   function setAssignment(matchId: string, position: string, scoutId: string) {
     setAssignmentMap((prev) => {
       const key = `${matchId}-${position}`;
@@ -116,6 +124,10 @@ export function AssignmentGrid({
       const assignedThisMatch = new Set<string>();
 
       for (const pos of POSITIONS) {
+        if (isOwnTeamPosition(match, pos)) {
+          continue;
+        }
+
         // Find next available scout
         let attempts = 0;
         let assigned = false;
@@ -199,6 +211,7 @@ export function AssignmentGrid({
 
     for (const match of filteredMatches) {
       for (const pos of POSITIONS) {
+        if (isOwnTeamPosition(match, pos)) continue;
         const key = `${match.id}-${pos}`;
         const scoutId = assignmentMap[key];
         if (scoutId) {
@@ -231,10 +244,20 @@ export function AssignmentGrid({
   }
 
   // Stats
-  const totalSlots = filteredMatches.length * 6;
-  const filledSlots = Object.keys(assignmentMap).filter((key) =>
-    filteredMatches.some((m) => key.startsWith(m.id))
-  ).length;
+  const totalSlots = filteredMatches.reduce((count, match) => {
+    return (
+      count +
+      POSITIONS.filter((pos) => !isOwnTeamPosition(match, pos)).length
+    );
+  }, 0);
+  const filledSlots = filteredMatches.reduce((count, match) => {
+    let matchCount = count;
+    for (const pos of POSITIONS) {
+      if (isOwnTeamPosition(match, pos)) continue;
+      if (assignmentMap[`${match.id}-${pos}`]) matchCount++;
+    }
+    return matchCount;
+  }, 0);
 
   return (
     <div className="space-y-4">
@@ -329,6 +352,7 @@ export function AssignmentGrid({
                 </td>
                 {POSITIONS.map((pos) => {
                   const teamNum = getTeamForPosition(match, pos);
+                  const isOwnTeam = isOwnTeamPosition(match, pos);
                   const key = `${match.id}-${pos}`;
                   const selectedScout = assignmentMap[key] ?? "";
 
@@ -345,20 +369,26 @@ export function AssignmentGrid({
                         <p className="text-[10px] text-gray-400 mb-0.5">
                           {teamNum}
                         </p>
-                        <select
-                          value={selectedScout}
-                          onChange={(e) =>
-                            setAssignment(match.id, pos, e.target.value)
-                          }
-                          className="w-full min-w-[80px] rounded border border-white/10 bg-white/5 px-1 py-0.5 text-xs text-gray-200 focus:border-blue-400 focus:outline-none dashboard-input"
-                        >
-                          <option value="">—</option>
-                          {members.map((m) => (
-                            <option key={m.id} value={m.id}>
-                              {m.display_name}
-                            </option>
-                          ))}
-                        </select>
+                        {isOwnTeam ? (
+                          <p className="rounded border border-amber-400/30 bg-amber-500/10 px-1 py-0.5 text-[10px] font-medium text-amber-200">
+                            Your team
+                          </p>
+                        ) : (
+                          <select
+                            value={selectedScout}
+                            onChange={(e) =>
+                              setAssignment(match.id, pos, e.target.value)
+                            }
+                            className="w-full min-w-[80px] rounded border border-white/10 bg-white/5 px-1 py-0.5 text-xs text-gray-200 focus:border-blue-400 focus:outline-none dashboard-input"
+                          >
+                            <option value="">—</option>
+                            {members.map((m) => (
+                              <option key={m.id} value={m.id}>
+                                {m.display_name}
+                              </option>
+                            ))}
+                          </select>
+                        )}
                       </div>
                     </td>
                   );

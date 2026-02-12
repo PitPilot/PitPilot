@@ -79,6 +79,9 @@ interface AdminPanelProps {
     scoutingEntries: TimePoint[];
     messages: TimePoint[];
   };
+  eventSyncMinYear: number;
+  adminName: string;
+  adminEmail: string;
 }
 
 type Tab = "overview" | "analytics" | "announcements" | "inbox" | "testimonials" | "teams";
@@ -168,6 +171,9 @@ export function AdminPanel({
   announcements,
   contactMessages,
   analytics,
+  eventSyncMinYear,
+  adminName,
+  adminEmail,
 }: AdminPanelProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -216,7 +222,7 @@ export function AdminPanel({
   function renderTab() {
     switch (activeTab) {
       case "overview":
-        return <OverviewTab stats={stats} />;
+        return <OverviewTab stats={stats} eventSyncMinYear={eventSyncMinYear} />;
       case "analytics":
         return <AnalyticsTab analytics={analytics} />;
       case "announcements":
@@ -231,12 +237,12 @@ export function AdminPanel({
   }
 
   return (
-    <div className="admin-shell dashboard-page flex min-h-screen pt-24">
+    <div className="admin-shell dashboard-page flex min-h-screen pt-14">
       {/* Mobile sidebar toggle */}
       <button
         type="button"
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="fixed top-24 left-4 z-40 flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-gray-900 text-gray-300 shadow-lg lg:hidden"
+        className="fixed top-16 left-4 z-40 flex h-10 w-10 items-center justify-center rounded-xl dashboard-panel text-gray-300 shadow-lg lg:hidden"
         aria-label="Toggle sidebar"
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -256,16 +262,15 @@ export function AdminPanel({
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-24 left-0 z-30 flex h-[calc(100vh-96px)] w-60 flex-col border-r border-white/10 bg-gray-950 transition-transform lg:translate-x-0 ${
+        className={`fixed top-14 left-0 z-30 flex h-[calc(100dvh-56px)] w-72 flex-col border-r border-white/10 bg-gray-950/95 backdrop-blur-xl transition-transform lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="border-b border-white/10 px-5 py-5">
-          <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
-            Website Admin
-          </p>
-          <p className="mt-1 text-sm text-gray-400">
-            Platform management
+        <div className="border-b border-white/10 px-5 py-4">
+          <p className="text-base font-semibold text-white">
+            <span className="text-blue-400">ScoutAI</span>
+            <span className="mx-2 text-gray-500">/</span>
+            <span className="text-gray-200">Admin</span>
           </p>
         </div>
 
@@ -279,9 +284,9 @@ export function AdminPanel({
                     setActiveTab(tab.key);
                     setSidebarOpen(false);
                   }}
-                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
+                  className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
                     activeTab === tab.key
-                      ? "bg-blue-600/15 text-blue-300"
+                      ? "bg-blue-500/15 text-blue-200 ring-1 ring-blue-400/30"
                       : "text-gray-400 hover:bg-white/5 hover:text-white"
                   }`}
                 >
@@ -298,7 +303,16 @@ export function AdminPanel({
           </ul>
         </nav>
 
-        <div className="border-t border-white/10 px-5 py-4">
+        <div className="mt-auto border-t border-white/10 p-4">
+          <div className="mb-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
+            <p className="truncate text-sm font-semibold text-white">{adminName}</p>
+            {adminEmail ? (
+              <p className="truncate text-xs text-gray-400">{adminEmail}</p>
+            ) : null}
+            <span className="mt-2 inline-flex rounded-md bg-blue-500/15 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-blue-300">
+              Admin
+            </span>
+          </div>
           <a
             href="/dashboard"
             className="back-button back-button-block"
@@ -309,18 +323,24 @@ export function AdminPanel({
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 lg:ml-60">
-        <div className="mx-auto max-w-5xl px-4 py-8 pl-16 lg:pl-4">
+      <main className="flex-1 lg:ml-72">
+        <div className="mx-auto max-w-5xl px-4 py-8 lg:pl-4">
           {/* Status toast */}
           {status && (
-            <div className="mb-4 rounded-lg border border-blue-500/30 bg-blue-500/10 px-4 py-2.5 text-sm font-medium text-blue-200">
-              {status}
+            <div className="mb-4 rounded-xl dashboard-panel px-4 py-3 text-sm font-medium text-blue-200 border-blue-500/30 bg-blue-500/10">
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-blue-400"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                {status}
+              </div>
             </div>
           )}
 
           {/* Loading */}
           {isPending && (
-            <div className="mb-4 text-xs text-gray-400 animate-pulse">Refreshing data...</div>
+            <div className="mb-4 flex items-center gap-2 text-xs text-gray-400 animate-pulse">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+              Refreshing data...
+            </div>
           )}
 
           {/* Active tab */}
@@ -331,11 +351,18 @@ export function AdminPanel({
       {/* Delete confirmation modal */}
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="mx-4 w-full max-w-md rounded-2xl border border-white/10 bg-gray-900 p-6 shadow-2xl">
-            <h3 className="text-lg font-semibold text-white">Confirm delete</h3>
-            <p className="mt-2 text-sm text-gray-300">
-              Are you sure you want to delete this {confirmDelete.label}? This action cannot be undone.
-            </p>
+          <div className="mx-4 w-full max-w-md rounded-2xl dashboard-panel p-6 shadow-2xl">
+            <div className="flex items-start gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-500/10 text-red-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-white">Confirm delete</h3>
+                <p className="mt-1 text-sm text-gray-300">
+                  Are you sure you want to delete this {confirmDelete.label}? This action cannot be undone.
+                </p>
+              </div>
+            </div>
             <div className="mt-6 flex items-center justify-end gap-3">
               <Button type="button" variant="secondary" onClick={() => setConfirmDelete(null)}>Cancel</Button>
               <Button type="button" variant="danger" onClick={executeDelete}>Delete</Button>

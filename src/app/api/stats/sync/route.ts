@@ -66,7 +66,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const limit = checkRateLimit(
+    const limit = await checkRateLimit(
       `stats-sync:${profile.org_id}`,
       5 * 60_000,
       1

@@ -28,6 +28,12 @@ export default async function AssignmentsPage({
 
   const isCaptain = profile.role === "captain";
 
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("team_number")
+    .eq("id", profile.org_id)
+    .single();
+
   // Get event
   const { data: event } = await supabase
     .from("events")
@@ -95,6 +101,7 @@ export default async function AssignmentsPage({
             assignments={assignments ?? []}
             orgId={profile.org_id}
             eventKey={eventKey}
+            orgTeamNumber={org?.team_number ?? null}
           />
         ) : (
           <MyAssignments

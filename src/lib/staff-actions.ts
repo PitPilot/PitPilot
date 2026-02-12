@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/types/supabase";
 
 async function requireStaff() {
   const supabase = await createClient();
@@ -312,5 +314,61 @@ export async function deleteContactMessage(formData: FormData) {
   }
 
   revalidatePath("/dashboard/admin");
+  return { success: true } as const;
+}
+
+export async function updateEventSyncMinYear(formData: FormData) {
+  const ctx = await requireStaff();
+  if ("error" in ctx) return ctx;
+
+  const yearRaw = (formData.get("eventSyncMinYear") as string | null)?.trim();
+  const parsedYear = yearRaw ? Number.parseInt(yearRaw, 10) : NaN;
+  const currentYear = new Date().getFullYear();
+
+  if (!yearRaw || Number.isNaN(parsedYear)) {
+    return { error: "Enter a valid year." } as const;
+  }
+
+  if (parsedYear < 1992 || parsedYear > currentYear) {
+    return {
+      error: `Year must be between 1992 and ${currentYear}.`,
+    } as const;
+  }
+
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) {
+    return {
+      error: "SUPABASE_SERVICE_ROLE_KEY is missing.",
+    } as const;
+  }
+
+  const admin = createAdminClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    serviceRoleKey
+  );
+
+  const { error } = await admin
+    .from("platform_settings")
+    .upsert(
+      {
+        id: 1,
+        event_sync_min_year: parsedYear,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "id" }
+    );
+
+  if (error) {
+    if (error.message.toLowerCase().includes("platform_settings")) {
+      return {
+        error:
+          "Platform settings table is missing. Run the new migration first.",
+      } as const;
+    }
+    return { error: error.message } as const;
+  }
+
+  revalidatePath("/dashboard/admin");
+  revalidatePath("/dashboard");
   return { success: true } as const;
 }

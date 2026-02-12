@@ -19,6 +19,29 @@ export function OnlineStatus() {
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
   const [offlineHidden, setOfflineHidden] = useState(false);
 
+  const checkConnectivity = useCallback(async () => {
+    if (typeof window === "undefined") return;
+    if (!navigator.onLine) {
+      setIsOnline(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 3500);
+    try {
+      await fetch("/favicon.ico", {
+        method: "HEAD",
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      setIsOnline(true);
+    } catch {
+      setIsOnline(false);
+    } finally {
+      window.clearTimeout(timeout);
+    }
+  }, []);
+
   const refreshCount = useCallback(async () => {
     try {
       const count = await getPendingCount();
@@ -32,28 +55,30 @@ export function OnlineStatus() {
     if (typeof window === "undefined") return;
 
     const handleOnline = () => {
-      setIsOnline(true);
       setOfflineHidden(false);
+      void checkConnectivity();
     };
     const handleOffline = () => setIsOnline(false);
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
 
-    const initialTimer = setTimeout(() => {
+    const initialTimer = window.setTimeout(() => {
+      void checkConnectivity();
       void refreshCount();
     }, 0);
-    const interval = setInterval(() => {
+    const interval = window.setInterval(() => {
+      void checkConnectivity();
       void refreshCount();
     }, 5000);
 
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
-      clearTimeout(initialTimer);
-      clearInterval(interval);
+      window.clearTimeout(initialTimer);
+      window.clearInterval(interval);
     };
-  }, [refreshCount]);
+  }, [checkConnectivity, refreshCount]);
 
   const syncPendingEntries = useCallback(async () => {
     setSyncing(true);
@@ -107,7 +132,7 @@ export function OnlineStatus() {
 
   return (
     <div
-      className={`fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-sm rounded-lg px-4 py-3 text-sm font-medium shadow-lg transition-colors duration-300 ${
+      className={`pointer-events-auto fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-sm rounded-lg px-4 py-3 text-sm font-medium shadow-lg transition-colors duration-300 ${
         !isOnline
           ? "bg-yellow-500 text-yellow-900"
           : syncErrors > 0
@@ -150,7 +175,7 @@ export function OnlineStatus() {
           {syncErrors > 0 && !syncing && (
             <button
               onClick={() => setSyncErrors(0)}
-              className="text-xs opacity-70 hover:opacity-100"
+              className="rounded bg-white/20 px-1.5 py-0.5 text-xs opacity-80 transition hover:opacity-100"
             >
               ✕
             </button>
@@ -158,7 +183,7 @@ export function OnlineStatus() {
           {!isOnline && (
             <button
               onClick={() => setOfflineHidden(true)}
-              className="text-xs opacity-70 hover:opacity-100"
+              className="rounded bg-white/20 px-1.5 py-0.5 text-xs opacity-80 transition hover:opacity-100"
               aria-label="Hide offline banner"
             >
               ✕

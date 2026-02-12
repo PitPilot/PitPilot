@@ -41,6 +41,7 @@ export default async function DashboardPage() {
   }
 
   const org = profile.organizations;
+  const isSupporter = org?.plan_tier === "supporter";
 
   const formatDate = (value?: string | null) => {
     if (!value) return "TBA";
@@ -139,9 +140,17 @@ export default async function DashboardPage() {
               <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
                 Team Overview
               </p>
-              <h2 className="mt-2 text-2xl font-bold text-white">
-                {org?.team_number ? `Team ${org.team_number}` : org?.name}
-              </h2>
+              <div className="mt-2 flex flex-wrap items-center gap-2.5">
+                <h2 className="text-2xl font-bold text-white">
+                  {org?.team_number ? `Team ${org.team_number}` : org?.name}
+                </h2>
+                {isSupporter && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-300 ring-1 ring-emerald-500/30">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
+                    Supporter
+                  </span>
+                )}
+              </div>
               {org?.team_number && org?.name && (
                 <p className="mt-1 text-sm text-gray-300">{org.name}</p>
               )}
@@ -156,6 +165,11 @@ export default async function DashboardPage() {
                 </span>
                 {org?.join_code && <CopyInviteLink joinCode={org.join_code} />}
               </div>
+              {isSupporter && (
+                <p className="mt-3 text-xs font-medium text-green-400">
+                  Thank you for supporting us.
+                </p>
+              )}
               <p className="mt-4 text-sm leading-relaxed text-gray-300">
                 Welcome back, <span className="font-medium text-white">{profile.display_name}</span>. Sync events and keep scouting data flowing for the next match.
               </p>

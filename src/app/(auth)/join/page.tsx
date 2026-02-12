@@ -241,7 +241,7 @@ function JoinPageContent() {
                     <div>
                       <p className="text-sm font-semibold text-white">Free</p>
                       <p className="text-xs text-gray-400">
-                        3 shared AI interactions every 3 hours.
+                        Unlimited prompts with usage limits.
                       </p>
                     </div>
                     <input
@@ -249,23 +249,23 @@ function JoinPageContent() {
                       name="planTier"
                       value="free"
                       defaultChecked
-                      className="mt-0.5 h-4 w-4 accent-blue-500"
+                      className="mt-0.5 h-4 w-4 accent-emerald-500"
                     />
                   </div>
                 </label>
-                <label className="block cursor-pointer rounded-lg border border-blue-500/30 bg-blue-500/10 p-3 transition hover:border-blue-500/50">
+                <label className="block cursor-pointer rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 transition hover:border-emerald-500/50">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-semibold text-blue-200">Supporter · $5.99/month per team</p>
-                      <p className="text-xs text-blue-100/80">
-                        13 shared AI interactions every 3 hours. Helps cover token costs for community access.
+                      <p className="text-sm font-semibold text-emerald-200">Supporter · $5.99/month per team</p>
+                      <p className="text-xs text-emerald-100/80">
+                        Higher shared AI usage limits. Helps cover token costs for community access.
                       </p>
                     </div>
                     <input
                       type="radio"
                       name="planTier"
                       value="supporter"
-                      className="mt-0.5 h-4 w-4 accent-blue-500"
+                      className="mt-0.5 h-4 w-4 accent-emerald-500"
                     />
                   </div>
                 </label>

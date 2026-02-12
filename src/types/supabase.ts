@@ -263,6 +263,27 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_settings: {
+        Row: {
+          created_at: string
+          event_sync_min_year: number
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_sync_min_year?: number
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_sync_min_year?: number
+          id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       org_events: {
         Row: {
           created_at: string

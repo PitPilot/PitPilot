@@ -276,15 +276,9 @@ a[class*="rounded-"][class*="px-"][class*="py-"]:not([class*="rounded-full"]):no
   box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
 }
 
-/* Footer offset for admin sidebar */
+/* Hide footer on admin dashboard */
 .admin-shell + footer {
-  margin-left: 0;
-}
-
-@media (min-width: 1024px) {
-  .admin-shell + footer {
-    margin-left: 15rem;
-  }
+  display: none;
 }
 
 /* Toast animations */

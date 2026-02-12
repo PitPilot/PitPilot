@@ -18,6 +18,34 @@ export const TEAM_AI_LIMITS: Record<PlanTier, number> = {
 };
 
 const storeKey = "__scoutaiRateLimitStore";
+const UPSTASH_REDIS_REST_URL = process.env.UPSTASH_REDIS_REST_URL?.trim();
+const UPSTASH_REDIS_REST_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
+const canUseUpstashRateLimit =
+  !!UPSTASH_REDIS_REST_URL && !!UPSTASH_REDIS_REST_TOKEN;
+
+const RATE_LIMIT_LUA = `
+local key = KEYS[1]
+local max = tonumber(ARGV[1])
+local window = tonumber(ARGV[2])
+
+local current = redis.call("INCR", key)
+if current == 1 then
+  redis.call("PEXPIRE", key, window)
+end
+
+local ttl = redis.call("PTTL", key)
+local allowed = 0
+if current <= max then
+  allowed = 1
+end
+
+local remaining = max - current
+if remaining < 0 then
+  remaining = 0
+end
+
+return {allowed, remaining, ttl}
+`;
 
 function getStore(): Map<string, RateLimitEntry> {
   const globalAny = globalThis as typeof globalThis & {
@@ -31,7 +59,7 @@ function getStore(): Map<string, RateLimitEntry> {
   return globalAny[storeKey] as Map<string, RateLimitEntry>;
 }
 
-export function checkRateLimit(
+function checkRateLimitInMemory(
   key: string,
   windowMs: number,
   max: number
@@ -57,6 +85,75 @@ export function checkRateLimit(
     remaining: Math.max(max - entry.count, 0),
     resetAt: entry.resetAt,
   };
+}
+
+async function checkRateLimitUpstash(
+  key: string,
+  windowMs: number,
+  max: number
+): Promise<RateLimitResult | null> {
+  if (!canUseUpstashRateLimit) return null;
+
+  try {
+    const response = await fetch(`${UPSTASH_REDIS_REST_URL}/pipeline`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${UPSTASH_REDIS_REST_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify([
+        ["EVAL", RATE_LIMIT_LUA, "1", key, String(max), String(windowMs)],
+      ]),
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Upstash response status ${response.status}`);
+    }
+
+    const payload = (await response.json()) as Array<{
+      result?: unknown;
+      error?: string | null;
+    }>;
+    const first = Array.isArray(payload) ? payload[0] : null;
+    if (!first) {
+      throw new Error("Invalid Upstash response");
+    }
+    if (first.error) {
+      throw new Error(first.error);
+    }
+
+    const result = Array.isArray(first.result)
+      ? first.result
+      : (first.result as { result?: unknown } | undefined)?.result;
+    if (!Array.isArray(result) || result.length < 3) {
+      throw new Error("Missing Upstash rate limit result");
+    }
+
+    const allowed = Number(result[0]) === 1;
+    const remaining = Math.max(0, Number(result[1]) || 0);
+    const ttl = Number(result[2]);
+    const resetAt = Date.now() + (Number.isFinite(ttl) && ttl > 0 ? ttl : windowMs);
+
+    return {
+      allowed,
+      remaining,
+      resetAt,
+    };
+  } catch (error) {
+    console.error("Upstash rate limit failed, falling back to in-memory store.", error);
+    return null;
+  }
+}
+
+export async function checkRateLimit(
+  key: string,
+  windowMs: number,
+  max: number
+): Promise<RateLimitResult> {
+  const distributed = await checkRateLimitUpstash(key, windowMs, max);
+  if (distributed) return distributed;
+  return checkRateLimitInMemory(key, windowMs, max);
 }
 
 export function retryAfterSeconds(resetAt: number): number {

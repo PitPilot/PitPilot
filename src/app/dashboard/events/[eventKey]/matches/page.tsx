@@ -143,7 +143,8 @@ export default async function MatchListPage({
       ? match.red_teams.includes(orgTeamNumber) ||
         match.blue_teams.includes(orgTeamNumber)
       : true;
-    const showBriefLink = isOurMatch && (hasBrief || !hasScore);
+    const canOpenBrief = isOurMatch && (hasBrief || !hasScore);
+    const showDisabledBrief = isOurMatch && hasScore && !hasBrief;
     return (
       <div className="rounded-2xl dashboard-panel p-3">
         <div className="mb-2 flex items-center justify-between">
@@ -155,7 +156,7 @@ export default async function MatchListPage({
             )}
           </span>
           <div className="flex items-center gap-2">
-            {showBriefLink && (
+            {canOpenBrief && (
               <Link
                 href={`/dashboard/events/${eventKey}/matches/${match.id}/brief`}
                 className={`rounded-md px-2 py-1 text-xs font-semibold transition ${
@@ -167,6 +168,11 @@ export default async function MatchListPage({
                 {hasBrief ? "View Brief" : "Pre-Match Brief"}
               </Link>
             )}
+            {showDisabledBrief && (
+              <span className="cursor-not-allowed rounded-md bg-white/5 px-2 py-1 text-xs font-semibold text-gray-500">
+                Pre-Match Brief
+              </span>
+            )}
           </div>
         </div>
 
@@ -175,6 +181,21 @@ export default async function MatchListPage({
           {match.red_teams.map((team) => {
             const scouted = scoutedSet.has(`${match.id}-${team}`);
             const assigned = assignedSet.has(`${match.id}-${team}`);
+            const isOwnTeam =
+              orgTeamNumber !== null && team === orgTeamNumber;
+
+            if (isOwnTeam) {
+              return (
+                <span
+                  key={team}
+                  className="match-chip match-chip-red flex-1 cursor-not-allowed rounded px-2 py-1.5 text-center text-xs font-medium bg-amber-500/20 text-amber-100 ring-1 ring-amber-400/40"
+                  title="Self-scouting is disabled for your team."
+                >
+                  {team} (Your Team)
+                </span>
+              );
+            }
+
             return (
               <Link
                 key={team}
@@ -199,6 +220,21 @@ export default async function MatchListPage({
           {match.blue_teams.map((team) => {
             const scouted = scoutedSet.has(`${match.id}-${team}`);
             const assigned = assignedSet.has(`${match.id}-${team}`);
+            const isOwnTeam =
+              orgTeamNumber !== null && team === orgTeamNumber;
+
+            if (isOwnTeam) {
+              return (
+                <span
+                  key={team}
+                  className="match-chip match-chip-blue flex-1 cursor-not-allowed rounded px-2 py-1.5 text-center text-xs font-medium bg-amber-500/20 text-amber-100 ring-1 ring-amber-400/40"
+                  title="Self-scouting is disabled for your team."
+                >
+                  {team} (Your Team)
+                </span>
+              );
+            }
+
             return (
               <Link
                 key={team}

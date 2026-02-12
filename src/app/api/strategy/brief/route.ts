@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Organization not found" }, { status: 404 });
   }
 
-  const limit = checkRateLimit(
+  const limit = await checkRateLimit(
     `ai-interactions:${profile.org_id}`,
     TEAM_AI_WINDOW_MS,
     getTeamAiLimit(org.plan_tier)

@@ -1,5 +1,9 @@
 "use client";
 
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { updateEventSyncMinYear } from "@/lib/staff-actions";
+import { Button } from "@/components/ui/button";
 import { StaggerGroup, StaggerChild } from "@/components/ui/animate-in";
 
 interface OverviewTabProps {
@@ -10,32 +14,145 @@ interface OverviewTabProps {
     matches: number;
     events: number;
   };
+  eventSyncMinYear: number;
 }
 
-export function OverviewTab({ stats }: OverviewTabProps) {
+export function OverviewTab({ stats, eventSyncMinYear }: OverviewTabProps) {
+  const router = useRouter();
+  const [status, setStatus] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  async function handleUpdateEventWindow(formData: FormData) {
+    const result = await updateEventSyncMinYear(formData);
+    if (result?.error) {
+      setStatus(result.error);
+      return;
+    }
+    setStatus("Event sync window updated.");
+    startTransition(() => router.refresh());
+  }
+
   const cards = [
-    { label: "Organizations", value: stats.organizations, sub: "Registered teams", color: "text-blue-400" },
-    { label: "Users", value: stats.users, sub: "Profiles created", color: "text-cyan-400" },
-    { label: "Scouting Entries", value: stats.entries, sub: "Total submissions", color: "text-purple-400" },
-    { label: "Matches", value: stats.matches, sub: "Synced matches", color: "text-green-400" },
-    { label: "Events", value: stats.events, sub: "Synced events", color: "text-amber-400" },
+    {
+      label: "Organizations",
+      value: stats.organizations,
+      sub: "Registered teams",
+      color: "text-blue-400",
+      bg: "bg-blue-500/10",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      ),
+    },
+    {
+      label: "Users",
+      value: stats.users,
+      sub: "Profiles created",
+      color: "text-cyan-400",
+      bg: "bg-cyan-500/10",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      ),
+    },
+    {
+      label: "Scouting Entries",
+      value: stats.entries,
+      sub: "Total submissions",
+      color: "text-purple-400",
+      bg: "bg-purple-500/10",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      ),
+    },
+    {
+      label: "Matches",
+      value: stats.matches,
+      sub: "Synced matches",
+      color: "text-green-400",
+      bg: "bg-green-500/10",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      ),
+    },
+    {
+      label: "Events",
+      value: stats.events,
+      sub: "Synced events",
+      color: "text-amber-400",
+      bg: "bg-amber-500/10",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      ),
+    },
   ];
 
   return (
     <div>
-      <h2 className="text-xl font-bold">Platform Overview</h2>
-      <p className="mt-1 text-sm text-gray-400">Key metrics at a glance.</p>
+      <div className="flex items-center gap-3">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        </div>
+        <div>
+          <h2 className="text-xl font-bold text-white">Platform Overview</h2>
+          <p className="text-sm text-gray-400">Key metrics at a glance.</p>
+        </div>
+      </div>
       <StaggerGroup className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((s) => (
           <StaggerChild key={s.label}>
-            <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-5">
-              <p className="text-xs uppercase tracking-widest text-gray-400">{s.label}</p>
-              <p className={`mt-2 text-3xl font-bold ${s.color}`}>{s.value}</p>
-              <p className="text-xs text-gray-400">{s.sub}</p>
+            <div className="rounded-2xl dashboard-panel dashboard-card p-5">
+              <div className="flex items-center gap-3">
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${s.bg} ${s.color}`}>
+                  {s.icon}
+                </div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">{s.label}</p>
+              </div>
+              <p className={`mt-3 text-3xl font-bold ${s.color}`}>{s.value.toLocaleString()}</p>
+              <p className="mt-0.5 text-xs text-gray-400">{s.sub}</p>
             </div>
           </StaggerChild>
         ))}
       </StaggerGroup>
+
+      <div className="mt-6 rounded-2xl dashboard-panel dashboard-card p-5">
+        <div className="flex items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3h18v18H3z"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-base font-semibold text-white">Event Sync Window</h3>
+            <p className="mt-1 text-sm text-gray-400">
+              Teams can sync events from January 1 of the selected year up to today.
+            </p>
+          </div>
+        </div>
+        <form action={handleUpdateEventWindow} className="mt-4 flex flex-wrap items-end gap-3">
+          <div>
+            <label htmlFor="eventSyncMinYear" className="block text-xs font-medium text-gray-400">
+              Earliest year
+            </label>
+            <input
+              id="eventSyncMinYear"
+              name="eventSyncMinYear"
+              type="number"
+              min={1992}
+              defaultValue={eventSyncMinYear}
+              className="dashboard-input mt-1 w-36 px-3 py-2 text-sm"
+              required
+            />
+          </div>
+          <Button type="submit" size="md" loading={isPending}>
+            Save window
+          </Button>
+        </form>
+        <p className="mt-2 text-xs text-gray-500">
+          Current window: {eventSyncMinYear}-01-01 to today.
+        </p>
+        {status && (
+          <p className="mt-3 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-gray-300">
+            {status}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

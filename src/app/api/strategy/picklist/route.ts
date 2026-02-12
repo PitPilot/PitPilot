@@ -178,7 +178,7 @@ export async function POST(request: NextRequest) {
     ? profile.organizations[0]
     : profile.organizations;
 
-  const limit = checkRateLimit(
+  const limit = await checkRateLimit(
     `ai-interactions:${profile.org_id}`,
     TEAM_AI_WINDOW_MS,
     getTeamAiLimit(orgMeta?.plan_tier)

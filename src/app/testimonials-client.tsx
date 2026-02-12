@@ -32,8 +32,12 @@ export function TestimonialsClient({ testimonials }: TestimonialsClientProps) {
         </div>
 
         {testimonials.length === 0 ? (
-          <div className="mt-16 rounded-xl border border-white/10 bg-gray-900/50 p-6 text-center text-sm text-gray-400">
-            No testimonials yet. Check back soon.
+          <div className="mt-16 rounded-2xl border border-dashed border-white/10 bg-gray-900/30 p-10 text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 text-gray-500">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21"/></svg>
+            </div>
+            <p className="text-sm font-medium text-gray-400">No testimonials yet</p>
+            <p className="mt-1 text-xs text-gray-500">Check back soon.</p>
           </div>
         ) : (
           <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -46,15 +50,18 @@ export function TestimonialsClient({ testimonials }: TestimonialsClientProps) {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-50px" }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
-                  className="rounded-xl border border-white/10 bg-gray-900/50 p-6"
+                  className="group relative rounded-2xl border border-white/10 bg-gray-900/50 p-6 transition-all hover:border-white/15 hover:shadow-lg hover:shadow-blue-500/5"
                 >
-                  <div className="mb-4 flex gap-0.5 text-yellow-500">
+                  {/* Quote mark accent */}
+                  <div className="absolute top-4 right-4 text-white/[0.04] text-4xl font-serif leading-none select-none">&ldquo;</div>
+
+                  <div className="mb-4 flex gap-0.5 text-amber-400">
                     {Array.from({ length: stars }).map((_, si) => (
                       <svg
                         key={si}
                         xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
+                        width="14"
+                        height="14"
                         viewBox="0 0 24 24"
                         fill="currentColor"
                       >
@@ -67,8 +74,8 @@ export function TestimonialsClient({ testimonials }: TestimonialsClientProps) {
                     &ldquo;{t.quote}&rdquo;
                   </p>
 
-                  <div className="mt-6 flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 text-sm font-bold text-white">
+                  <div className="mt-6 flex items-center gap-3 border-t border-white/5 pt-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 text-sm font-bold text-white shadow-md shadow-blue-500/20">
                       {t.name.charAt(0)}
                     </div>
                     <div>

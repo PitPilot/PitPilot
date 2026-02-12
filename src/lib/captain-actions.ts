@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 
 const ROLE_OPTIONS = ["scout", "captain"] as const;
 type UserRole = (typeof ROLE_OPTIONS)[number];
+const PLAN_TIER_OPTIONS = ["free", "supporter"] as const;
+type PlanTier = (typeof PLAN_TIER_OPTIONS)[number];
 
 async function requireCaptain() {
   const supabase = await createClient();
@@ -83,6 +85,28 @@ export async function updateMemberRole(formData: FormData) {
     .update({ role, updated_at: new Date().toISOString() })
     .eq("id", memberId)
     .eq("org_id", ctx.profile.org_id!);
+
+  if (error) {
+    return { error: error.message } as const;
+  }
+
+  revalidatePath("/dashboard/settings");
+  return { success: true } as const;
+}
+
+export async function updateOrganizationPlan(formData: FormData) {
+  const ctx = await requireCaptain();
+  if ("error" in ctx) return ctx;
+
+  const planTier = (formData.get("planTier") as string | null)?.trim() as PlanTier | null;
+  if (!planTier || !PLAN_TIER_OPTIONS.includes(planTier)) {
+    return { error: "Invalid plan tier" } as const;
+  }
+
+  const { error } = await ctx.supabase
+    .from("organizations")
+    .update({ plan_tier: planTier })
+    .eq("id", ctx.profile.org_id!);
 
   if (error) {
     return { error: error.message } as const;

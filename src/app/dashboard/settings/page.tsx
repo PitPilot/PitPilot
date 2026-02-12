@@ -75,6 +75,7 @@ export default async function SettingsPage() {
             name: org?.name ?? "",
             teamNumber: org?.team_number ?? null,
             joinCode: org?.join_code ?? "",
+            planTier: (org?.plan_tier as "free" | "supporter" | undefined) ?? "free",
           }}
           memberCount={memberCount ?? 0}
           isCaptain={profile.role === "captain"}

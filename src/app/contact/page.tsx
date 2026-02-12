@@ -46,7 +46,7 @@ export default function ContactPage() {
                 What you were trying to do and what happened.
               </li>
               <li className="rounded-lg border border-white/10 bg-white/5 px-4 py-3">
-                Screenshots or logs if something broke.
+                Your device/browser and the exact error message if something broke.
               </li>
             </ul>
             <p className="mt-6 text-xs text-gray-500">

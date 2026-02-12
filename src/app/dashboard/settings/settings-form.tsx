@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateOrganization } from "@/lib/auth-actions";
-import { updateMemberRole } from "@/lib/captain-actions";
+import { updateMemberRole, updateOrganizationPlan } from "@/lib/captain-actions";
 import { DeleteTeamButton } from "@/components/delete-team-button";
 
 interface TeamSettingsFormProps {
@@ -11,6 +11,7 @@ interface TeamSettingsFormProps {
     name: string;
     teamNumber: number | null;
     joinCode: string;
+    planTier: "free" | "supporter";
   };
   members: {
     id: string;
@@ -36,6 +37,8 @@ export function TeamSettingsForm({
   const [teamName, setTeamName] = useState(org.name);
   const [teamLoading, setTeamLoading] = useState(false);
   const [teamMessage, setTeamMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [planLoading, setPlanLoading] = useState(false);
+  const [planMessage, setPlanMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   async function handleTeamSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -68,6 +71,31 @@ export function TeamSettingsForm({
     }
 
     setMemberStatus("Member role updated.");
+    router.refresh();
+  }
+
+  async function handlePlanChange(nextPlan: "free" | "supporter") {
+    setPlanLoading(true);
+    setPlanMessage(null);
+
+    const formData = new FormData();
+    formData.set("planTier", nextPlan);
+    const result = await updateOrganizationPlan(formData);
+
+    if (result?.error) {
+      setPlanMessage({ type: "error", text: result.error });
+      setPlanLoading(false);
+      return;
+    }
+
+    setPlanMessage({
+      type: "success",
+      text:
+        nextPlan === "supporter"
+          ? "Team upgraded to Supporter."
+          : "Team moved to Free plan.",
+    });
+    setPlanLoading(false);
     router.refresh();
   }
 
@@ -216,6 +244,64 @@ export function TeamSettingsForm({
                 {memberCount} {memberCount === 1 ? "member" : "members"}
               </p>
             </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl dashboard-panel p-6">
+          <h3 className="text-lg font-semibold text-white">Plan</h3>
+          <p className="mt-1 text-sm text-gray-300">
+            Plans are shared by your whole team.
+          </p>
+
+          <div className="mt-4 space-y-3">
+            <div className="rounded-lg border border-white/10 bg-gray-950/60 p-4">
+              <p className="text-sm text-gray-300">Current plan</p>
+              <p className="mt-1 text-lg font-semibold text-white">
+                {org.planTier === "supporter" ? "Supporter ($5.99/team/month)" : "Free"}
+              </p>
+              <p className="mt-1 text-sm text-gray-400">
+                {org.planTier === "supporter"
+                  ? "Higher AI usage limits for your team."
+                  : "Unlimited prompts with usage limits."}
+              </p>
+            </div>
+
+            {isCaptain ? (
+              <div className="flex flex-wrap items-center gap-2">
+                {org.planTier !== "supporter" ? (
+                  <button
+                    type="button"
+                    disabled={planLoading}
+                    onClick={() => handlePlanChange("supporter")}
+                    className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500 disabled:opacity-50"
+                  >
+                    {planLoading ? "Updating..." : "Upgrade to Supporter"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={planLoading}
+                    onClick={() => handlePlanChange("free")}
+                    className="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold text-gray-200 transition hover:bg-white/10 disabled:opacity-50"
+                  >
+                    {planLoading ? "Updating..." : "Switch to Free"}
+                  </button>
+                )}
+                <p className="text-xs text-gray-400">
+                  Billing checkout is not connected yet; this toggles plan status directly for now.
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-400">
+                Only captains can change plans.
+              </p>
+            )}
+
+            {planMessage && (
+              <p className={`text-sm ${planMessage.type === "success" ? "text-green-400" : "text-red-400"}`}>
+                {planMessage.text}
+              </p>
+            )}
           </div>
         </div>
 
