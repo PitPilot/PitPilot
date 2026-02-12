@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { summarizeScouting } from "@/lib/scouting-summary";
-import { checkRateLimit, retryAfterSeconds } from "@/lib/rate-limit";
+import {
+  checkRateLimit,
+  getTeamAiLimit,
+  retryAfterSeconds,
+  TEAM_AI_WINDOW_MS,
+} from "@/lib/rate-limit";
 import { buildFrcGamePrompt } from "@/lib/frc-game-prompt";
 
 export async function POST(request: NextRequest) {
@@ -33,10 +38,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No organization found" }, { status: 400 });
   }
 
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("team_number, plan_tier")
+    .eq("id", profile.org_id)
+    .maybeSingle();
+
+  if (!org) {
+    return NextResponse.json({ error: "Organization not found" }, { status: 404 });
+  }
+
   const limit = checkRateLimit(
-    `strategy-chat:${profile.org_id}`,
-    60_000,
-    8
+    `ai-interactions:${profile.org_id}`,
+    TEAM_AI_WINDOW_MS,
+    getTeamAiLimit(org.plan_tier)
   );
   if (!limit.allowed) {
     const retryAfter = retryAfterSeconds(limit.resetAt);
@@ -64,12 +79,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Event not found" }, { status: 404 });
   }
 
-  const { data: org } = await supabase
-    .from("organizations")
-    .select("team_number")
-    .eq("id", profile.org_id)
-    .single();
-  const orgTeamNumber = org?.team_number ?? null;
+  const orgTeamNumber = org.team_number ?? null;
 
   const { data: eventTeams } = await supabase
     .from("event_teams")

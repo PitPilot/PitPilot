@@ -242,6 +242,7 @@ export type Database = {
           id: string
           join_code: string
           name: string
+          plan_tier: string
           team_number: number | null
         }
         Insert: {
@@ -249,6 +250,7 @@ export type Database = {
           id?: string
           join_code: string
           name: string
+          plan_tier?: string
           team_number?: number | null
         }
         Update: {
@@ -256,6 +258,7 @@ export type Database = {
           id?: string
           join_code?: string
           name?: string
+          plan_tier?: string
           team_number?: number | null
         }
         Relationships: []

@@ -3,7 +3,12 @@ import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { PickListContentSchema, type PickListContent } from "@/types/strategy";
 import { summarizeScouting } from "@/lib/scouting-summary";
-import { checkRateLimit, retryAfterSeconds } from "@/lib/rate-limit";
+import {
+  checkRateLimit,
+  getTeamAiLimit,
+  retryAfterSeconds,
+  TEAM_AI_WINDOW_MS,
+} from "@/lib/rate-limit";
 import { buildFrcGamePrompt } from "@/lib/frc-game-prompt";
 
 function parseAiJson(text: string): unknown {
@@ -161,7 +166,7 @@ export async function POST(request: NextRequest) {
   // Get user's org and team number
   const { data: profile } = await supabase
     .from("profiles")
-    .select("org_id, organizations(team_number)")
+    .select("org_id, organizations(team_number, plan_tier)")
     .eq("id", user.id)
     .single();
 
@@ -169,10 +174,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No organization found" }, { status: 400 });
   }
 
+  const orgMeta = Array.isArray(profile.organizations)
+    ? profile.organizations[0]
+    : profile.organizations;
+
   const limit = checkRateLimit(
-    `strategy-picklist:${profile.org_id}`,
-    5 * 60_000,
-    2
+    `ai-interactions:${profile.org_id}`,
+    TEAM_AI_WINDOW_MS,
+    getTeamAiLimit(orgMeta?.plan_tier)
   );
   if (!limit.allowed) {
     const retryAfter = retryAfterSeconds(limit.resetAt);
@@ -296,7 +305,7 @@ export async function POST(request: NextRequest) {
     scoutingSummary: scoutingSummaryMap[s.team_number] ?? null,
   }));
 
-  const orgTeamNumber = profile.organizations?.team_number ?? null;
+  const orgTeamNumber = orgMeta?.team_number ?? null;
 
   const sortedEventEpas = statsData
     .map((team) => team.epa)

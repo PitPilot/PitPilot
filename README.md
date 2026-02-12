@@ -1,6 +1,6 @@
 # ScoutAI
 
-ScoutAI is an FRC scouting and strategy platform built with Next.js + Supabase + Claude.
+ScoutAI is an FRC scouting and strategy platform built with Next.js + Supabase.
 
 ## Core Features
 
