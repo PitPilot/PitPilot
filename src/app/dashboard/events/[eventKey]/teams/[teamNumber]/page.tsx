@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Navbar } from "@/components/navbar";
+import { TeamAIBriefButton } from "./team-ai-brief-button";
 
 export default async function TeamDetailPage({
   params,
@@ -67,6 +68,29 @@ export default async function TeamDetailPage({
   const teamMatches = (allMatches ?? []).filter(
     (m) => m.red_teams.includes(teamNumber) || m.blue_teams.includes(teamNumber)
   );
+
+  // Fallback win-rate calculation from completed match results
+  const record = teamMatches.reduce(
+    (acc, match) => {
+      if (match.red_score === null || match.blue_score === null) return acc;
+      const onRed = match.red_teams.includes(teamNumber);
+      const redScore = match.red_score ?? 0;
+      const blueScore = match.blue_score ?? 0;
+
+      if (redScore === blueScore) {
+        acc.ties += 1;
+      } else {
+        const won = (onRed && redScore > blueScore) || (!onRed && blueScore > redScore);
+        if (won) acc.wins += 1;
+        else acc.losses += 1;
+      }
+      return acc;
+    },
+    { wins: 0, losses: 0, ties: 0 }
+  );
+  const totalPlayed = record.wins + record.losses + record.ties;
+  const calculatedWinRate = totalPlayed > 0 ? record.wins / totalPlayed : null;
+  const displayWinRate = stats?.win_rate ?? calculatedWinRate;
 
   const matchIds = teamMatches.map((m) => m.id);
 
@@ -175,12 +199,11 @@ export default async function TeamDetailPage({
             )}
           </div>
           <div className="flex gap-2">
-            <Link
-              href={`/dashboard/events/${eventKey}/picklist?ask=${teamNumber}`}
-              className="dashboard-action dashboard-action-alt"
-            >
-              AI Briefing
-            </Link>
+            <TeamAIBriefButton
+              eventKey={eventKey}
+              teamNumber={teamNumber}
+              teamName={team?.name ?? null}
+            />
             <Link
               href={`/dashboard/events/${eventKey}`}
               className="back-button"
@@ -223,8 +246,8 @@ export default async function TeamDetailPage({
               <div className="rounded-2xl bg-white/5 p-3 text-center">
                 <p className="text-xs text-gray-400">Win Rate</p>
                 <p className="text-xl font-semibold text-white">
-                  {stats.win_rate !== null
-                    ? `${(stats.win_rate * 100).toFixed(0)}%`
+                  {displayWinRate !== null
+                    ? `${(displayWinRate * 100).toFixed(0)}%`
                     : "—"}
                 </p>
               </div>

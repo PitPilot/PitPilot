@@ -23,6 +23,8 @@ export function AccountSettingsForm({ profile }: AccountSettingsFormProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, startDelete] = useTransition();
+  const maxRoles = 4;
+  const maxRolesReached = teamRoles.length >= maxRoles;
 
   const ROLE_OPTIONS = [
     { value: "driver", label: "Driver" },
@@ -110,16 +112,20 @@ export function AccountSettingsForm({ profile }: AccountSettingsFormProps) {
           <div>
             <p className="text-sm font-medium text-gray-300">Team Role</p>
             <p className="mt-1 text-xs text-gray-400">
-              Update the roles you selected during onboarding.
+              Update the roles you selected during onboarding. Select up to{" "}
+              {maxRoles}. {teamRoles.length}/{maxRoles} selected.
             </p>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               {ROLE_OPTIONS.map((roleOption) => {
                 const checked = teamRoles.includes(roleOption.value);
+                const disabled = !checked && maxRolesReached;
                 return (
                   <label
                     key={roleOption.value}
                     className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
-                      checked
+                      disabled
+                        ? "border-white/10 bg-white/5 text-gray-500 dark:text-gray-500"
+                        : checked
                         ? "border-blue-500/40 bg-blue-500/10 text-blue-600 dark:text-blue-100"
                         : "border-white/10 bg-white/5 text-gray-700 dark:text-gray-200"
                     }`}
@@ -129,6 +135,7 @@ export function AccountSettingsForm({ profile }: AccountSettingsFormProps) {
                       name="teamRoles"
                       value={roleOption.value}
                       checked={checked}
+                      disabled={disabled}
                       onChange={(e) => {
                         const next = e.target.checked
                           ? [...teamRoles, roleOption.value]
@@ -162,7 +169,7 @@ export function AccountSettingsForm({ profile }: AccountSettingsFormProps) {
 
       <div className="rounded-2xl border border-red-500/30 bg-red-500/5 p-6">
         <h3 className="text-lg font-semibold text-red-200">Danger Zone</h3>
-        <p className="mt-1 text-sm text-red-700 dark:text-red-200/80">
+        <p className="mt-1 text-sm text-red-700 dark:text-red-100/95">
           Deleting your account is permanent. You will lose access to your
           profile. Team data stays with your organization.
         </p>

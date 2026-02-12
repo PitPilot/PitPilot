@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { PickListContent } from "@/types/strategy";
 import { GeneratePickListButton } from "../picklist/generate-button";
@@ -83,6 +82,15 @@ function buildPickOrder(numAlliances: number, rounds: number): number[] {
     }
   }
   return order;
+}
+
+function ordinal(value: number): string {
+  const mod10 = value % 10;
+  const mod100 = value % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${value}st`;
+  if (mod10 === 2 && mod100 !== 12) return `${value}nd`;
+  if (mod10 === 3 && mod100 !== 13) return `${value}rd`;
+  return `${value}th`;
 }
 
 function buildInitialState(
@@ -176,7 +184,6 @@ function parseDrag(data: string | null): DragPayload | null {
 
 export function DraftRoom({
   eventId,
-  eventKey,
   orgId,
   rankings,
   teamNames,
@@ -185,7 +192,6 @@ export function DraftRoom({
   storageEnabled,
 }: {
   eventId: string;
-  eventKey: string;
   orgId: string;
   rankings: RankingEntry[];
   teamNames: Record<number, string>;
@@ -322,6 +328,27 @@ export function DraftRoom({
       : null;
   const draftComplete = currentAllianceIndex === null;
   const progressPercent = totalPicks > 0 ? Math.round((currentPickIndex / totalPicks) * 100) : 0;
+  const upcomingPicks = useMemo(() => {
+    if (draftComplete) return [];
+    const take = Math.min(10, totalPicks - currentPickIndex);
+    return Array.from({ length: take }, (_, offset) => {
+      const pickIndex = currentPickIndex + offset;
+      const allianceIndex = pickOrder[pickIndex];
+      const round =
+        Math.floor(pickIndex / state.settings.numAlliances) + 1;
+      return {
+        pickIndex,
+        allianceIndex,
+        round,
+      };
+    });
+  }, [
+    draftComplete,
+    totalPicks,
+    currentPickIndex,
+    pickOrder,
+    state.settings.numAlliances,
+  ]);
 
   const draftedTeams = useMemo(() => {
     const set = new Set<number>();
@@ -590,6 +617,21 @@ export function DraftRoom({
     applyMoveTeamToSlot(selectedTeam, allianceIndex, slotIndex);
   }
 
+  function draftTeamToCurrentPick(teamNumber: number) {
+    if (draftComplete || currentAllianceIndex === null || currentRound === null) {
+      return;
+    }
+    if (!state.pool.includes(teamNumber)) {
+      setSaveError(`Team ${teamNumber} is no longer in the available pool.`);
+      return;
+    }
+    applyMoveTeamToSlot(
+      { teamNumber, from: "pool" },
+      currentAllianceIndex,
+      currentRound
+    );
+  }
+
   const filledSlots = state.alliances.reduce(
     (count, a) => count + a.slots.filter((s, i) => i > 0 && s !== null).length,
     0
@@ -662,12 +704,6 @@ export function DraftRoom({
             >
               Reset
             </button>
-            <Link
-              href={`/dashboard/events/${eventKey}/ask`}
-              className="rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-xs font-medium text-blue-300 transition hover:bg-blue-500/20"
-            >
-              Ask ScoutAI
-            </Link>
           </div>
         </div>
 
@@ -711,6 +747,29 @@ export function DraftRoom({
           )}
           {saveError && <span className="text-red-300">{saveError}</span>}
         </div>
+
+        {upcomingPicks.length > 0 && (
+          <div className="mt-3 border-t border-white/5 pt-3">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-gray-500">
+              Upcoming Snake Order
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {upcomingPicks.map((pick, index) => (
+                <span
+                  key={pick.pickIndex}
+                  className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] ${
+                    index === 0
+                      ? "border-blue-500/40 bg-blue-500/15 text-blue-200"
+                      : "border-white/10 bg-white/5 text-gray-300"
+                  }`}
+                >
+                  A{pick.allianceIndex + 1}
+                  <span className="text-gray-500">R{pick.round}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Selected team banner (mobile tap-to-pick) */}
         {selectedTeam && (
@@ -841,9 +900,23 @@ export function DraftRoom({
                           </span>
                         </div>
                       </div>
-                      <span className="shrink-0 text-[10px] text-gray-500">
-                        #{rankMap.get(team.teamNumber) ?? "—"}
-                      </span>
+                      <div className="flex shrink-0 flex-col items-end gap-1">
+                        <span className="text-[10px] text-gray-500">
+                          #{rankMap.get(team.teamNumber) ?? "—"}
+                        </span>
+                        {!draftComplete && (
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              draftTeamToCurrentPick(team.teamNumber);
+                            }}
+                            className="rounded-md border border-blue-500/40 bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold text-blue-200 transition hover:bg-blue-500/20"
+                          >
+                            Pick Now
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <p className="mt-2 pl-7 text-xs leading-relaxed text-gray-400">
                       {team.pickReason}
@@ -852,101 +925,6 @@ export function DraftRoom({
                 ))}
               </div>
             )}
-          </div>
-
-          {/* Draft history */}
-          {state.history.length > 0 && (
-            <div className="rounded-2xl dashboard-panel p-5 space-y-2">
-              <h3 className="text-sm font-semibold text-white">Pick History</h3>
-              <div className="max-h-48 space-y-1 overflow-y-auto pr-1">
-                {[...state.history].reverse().map((entry, i) => (
-                  <div key={state.history.length - 1 - i} className="flex items-center justify-between rounded-lg bg-white/5 px-3 py-1.5 text-xs">
-                    <span className="text-gray-300">
-                      <span className="font-medium text-white">{entry.teamNumber}</span>
-                      {teamNames[entry.teamNumber] && (
-                        <span className="ml-1 text-gray-500">{teamNames[entry.teamNumber]}</span>
-                      )}
-                    </span>
-                    <span className="text-gray-500">
-                      A{entry.allianceIndex + 1} Pick {entry.slotIndex}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </section>
-
-        {/* Right: Draft board */}
-        <section className="space-y-4">
-          {/* Alliance grid */}
-          <div className="rounded-2xl dashboard-panel p-5 space-y-4">
-            <h2 className="text-sm font-semibold text-white">Alliance Board</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-white/10">
-                    <th className="pb-2 pl-2 text-left font-medium text-gray-500 w-16">Seed</th>
-                    <th className="pb-2 text-left font-medium text-gray-500">Captain</th>
-                    {Array.from({ length: state.settings.rounds }, (_, i) => (
-                      <th key={i} className="pb-2 text-left font-medium text-gray-500">
-                        Pick {i + 1}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {state.alliances.map((alliance, allianceIndex) => {
-                    const isOnClock = currentAllianceIndex === allianceIndex;
-                    return (
-                      <tr
-                        key={alliance.seed}
-                        className={isOnClock ? "bg-blue-500/5" : ""}
-                      >
-                        <td className="py-2 pl-2">
-                          <span className={`inline-flex h-6 w-6 items-center justify-center rounded-md text-xs font-bold ${
-                            isOnClock
-                              ? "bg-blue-500/20 text-blue-300"
-                              : "bg-white/5 text-gray-500"
-                          }`}>
-                            {alliance.seed}
-                          </span>
-                        </td>
-                        {alliance.slots.map((slotTeam, slotIndex) => {
-                          const isPickSlot = isOnClock && currentRound === slotIndex && slotIndex > 0;
-                          return (
-                            <td key={slotIndex} className="py-2 pr-2">
-                              <AllianceSlot
-                                teamNumber={slotTeam}
-                                teamName={slotTeam ? teamNames[slotTeam] : undefined}
-                                rank={slotTeam ? rankMap.get(slotTeam) : undefined}
-                                isCaptain={slotIndex === 0}
-                                isOnClock={isPickSlot}
-                                isSelected={slotTeam !== null && selectedTeam?.teamNumber === slotTeam}
-                                payload={
-                                  slotTeam
-                                    ? { teamNumber: slotTeam, from: "slot" as const, allianceIndex, slotIndex }
-                                    : null
-                                }
-                                onDrop={(payload) => applyMoveTeamToSlot(payload, allianceIndex, slotIndex)}
-                                onTap={() => {
-                                  if (selectedTeam) {
-                                    handleSlotTap(allianceIndex, slotIndex);
-                                  } else if (slotTeam) {
-                                    handleTeamTap({ teamNumber: slotTeam, from: "slot", allianceIndex, slotIndex });
-                                  }
-                                }}
-                                onDragStart={(payload) => serializeDrag(payload)}
-                              />
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
           </div>
 
           {/* Pool + Declined */}
@@ -1038,6 +1016,102 @@ export function DraftRoom({
               </div>
             </div>
           </div>
+
+          {/* Draft history */}
+          {state.history.length > 0 && (
+            <div className="rounded-2xl dashboard-panel p-5 space-y-2">
+              <h3 className="text-sm font-semibold text-white">Pick History</h3>
+              <div className="max-h-48 space-y-1 overflow-y-auto pr-1">
+                {[...state.history].reverse().map((entry, i) => (
+                  <div key={state.history.length - 1 - i} className="flex items-center justify-between rounded-lg bg-white/5 px-3 py-1.5 text-xs">
+                    <span className="text-gray-300">
+                      <span className="font-medium text-white">{entry.teamNumber}</span>
+                      {teamNames[entry.teamNumber] && (
+                        <span className="ml-1 text-gray-500">{teamNames[entry.teamNumber]}</span>
+                      )}
+                    </span>
+                    <span className="text-gray-500">
+                      A{entry.allianceIndex + 1} Pick {entry.slotIndex}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* Right: Draft board */}
+        <section className="space-y-4">
+          {/* Alliance grid */}
+          <div className="rounded-2xl dashboard-panel p-5 space-y-4">
+            <h2 className="text-sm font-semibold text-white">Alliance Board</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-white/10">
+                    <th className="pb-2 pl-2 text-left font-medium text-gray-500 w-16">Seed</th>
+                    <th className="pb-2 text-left font-medium text-gray-500">Captain</th>
+                    {Array.from({ length: state.settings.rounds }, (_, i) => (
+                      <th key={i} className="pb-2 text-left font-medium text-gray-500">
+                        {ordinal(i + 1)} pick
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {state.alliances.map((alliance, allianceIndex) => {
+                    const isOnClock = currentAllianceIndex === allianceIndex;
+                    return (
+                      <tr
+                        key={alliance.seed}
+                        className={isOnClock ? "bg-blue-500/5" : ""}
+                      >
+                        <td className="py-2 pl-2">
+                          <span className={`inline-flex h-6 w-6 items-center justify-center rounded-md text-xs font-bold ${
+                            isOnClock
+                              ? "bg-blue-500/20 text-blue-300"
+                              : "bg-white/5 text-gray-500"
+                          }`}>
+                            {alliance.seed}
+                          </span>
+                        </td>
+                        {alliance.slots.map((slotTeam, slotIndex) => {
+                          const isPickSlot = isOnClock && currentRound === slotIndex && slotIndex > 0;
+                          return (
+                            <td key={slotIndex} className="py-2 pr-2">
+                              <AllianceSlot
+                                teamNumber={slotTeam}
+                                teamName={slotTeam ? teamNames[slotTeam] : undefined}
+                                rank={slotTeam ? rankMap.get(slotTeam) : undefined}
+                                isCaptain={slotIndex === 0}
+                                isOnClock={isPickSlot}
+                                isSelected={slotTeam !== null && selectedTeam?.teamNumber === slotTeam}
+                                payload={
+                                  slotTeam
+                                    ? { teamNumber: slotTeam, from: "slot" as const, allianceIndex, slotIndex }
+                                    : null
+                                }
+                                onDrop={(payload) => applyMoveTeamToSlot(payload, allianceIndex, slotIndex)}
+                                onTap={() => {
+                                  if (selectedTeam) {
+                                    handleSlotTap(allianceIndex, slotIndex);
+                                  } else if (slotTeam) {
+                                    handleTeamTap({ teamNumber: slotTeam, from: "slot", allianceIndex, slotIndex });
+                                  }
+                                }}
+                                onDragStart={(payload) => serializeDrag(payload)}
+                              />
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
         </section>
       </div>
     </div>

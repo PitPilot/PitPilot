@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { resolveRateLimitMessage } from "@/lib/rate-limit-ui";
 
-export function SyncStatsButton({ eventKey }: { eventKey: string }) {
+export function SyncStatsButton({
+  eventKey,
+  compact = false,
+}: {
+  eventKey: string;
+  compact?: boolean;
+}) {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +44,7 @@ export function SyncStatsButton({ eventKey }: { eventKey: string }) {
   }
 
   return (
-    <div className="mt-4 space-y-2">
+    <div className={compact ? "space-y-2" : "mt-4 space-y-2"}>
       <button
         type="button"
         onClick={handleSync}

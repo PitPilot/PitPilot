@@ -7,9 +7,11 @@ import { resolveRateLimitMessage } from "@/lib/rate-limit-ui";
 export function GeneratePickListButton({
   eventId,
   label = "Generate Pick List",
+  showDataHint = true,
 }: {
   eventId: string;
   label?: string;
+  showDataHint?: boolean;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -58,6 +60,12 @@ export function GeneratePickListButton({
         )}
         {loading ? "Generating... (this may take a moment)" : label}
       </button>
+      {showDataHint && (
+        <p className="mt-2 text-xs text-gray-400">
+          For best suggestions, make sure your team has plenty of scouting data
+          logged before generating.
+        </p>
+      )}
       {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
     </div>
   );

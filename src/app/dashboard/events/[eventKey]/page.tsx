@@ -192,6 +192,11 @@ export default async function EventPage({
                 ? `Last stats sync ${lastSyncLabel}`
                 : "Stats not synced yet"}
             </p>
+            {profile?.role === "captain" && (
+              <div className="mt-3">
+                <SyncStatsButton eventKey={eventKey} compact />
+              </div>
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
             <Link

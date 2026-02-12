@@ -71,11 +71,6 @@ export default async function SettingsPage() {
         </div>
 
         <TeamSettingsForm
-          profile={{
-            displayName: profile.display_name,
-            email: user.email ?? "",
-            role: profile.role,
-          }}
           org={{
             name: org?.name ?? "",
             teamNumber: org?.team_number ?? null,

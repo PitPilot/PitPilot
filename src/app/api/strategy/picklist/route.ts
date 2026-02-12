@@ -23,21 +23,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  // Get user's org, role, and team number
+  // Get user's org and team number
   const { data: profile } = await supabase
     .from("profiles")
-    .select("org_id, role, organizations(team_number)")
+    .select("org_id, organizations(team_number)")
     .eq("id", user.id)
     .single();
 
   if (!profile?.org_id) {
     return NextResponse.json({ error: "No organization found" }, { status: 400 });
-  }
-  if (profile.role === "scout") {
-    return NextResponse.json(
-      { error: "Insufficient permissions" },
-      { status: 403 }
-    );
   }
 
   const limit = checkRateLimit(
@@ -214,6 +208,9 @@ IMPORTANT:
 - Rank EVERY team (exclude only the user's own team)
 - overallScore should be 0-100, with top pick around 90-100 and worst around 10-20
 - If no scouting data exists for a team, base analysis on EPA stats only
+- Do not list limited/missing scouting data as a team weakness.
+- Do not treat limited/missing scouting data as a risk factor.
+- When scouting is limited, use professional wording in scoutingSummary like: "Additional scouting entries would enable a more complete report."
 - Be specific in synergy reasons — reference actual stats
 - The user's team number may be null if not set; in that case, rank purely on individual team strength`;
 

@@ -106,7 +106,9 @@ export default async function PickListPage({
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            {!content && <GeneratePickListButton eventId={event.id} />}
+            {!content && (
+              <GeneratePickListButton eventId={event.id} showDataHint={false} />
+            )}
             <Link href={`/dashboard/events/${eventKey}`} className="back-button">
               Back
             </Link>
@@ -120,7 +122,8 @@ export default async function PickListPage({
             </h2>
             <p className="text-gray-400 mb-4">
               Generate an AI-powered pick list based on EPA stats and your team&apos;s
-              scouting data.
+              scouting data. For best suggestions, log plenty of scouting entries
+              before generating.
             </p>
             <GeneratePickListButton eventId={event.id} />
           </div>
@@ -330,6 +333,7 @@ export default async function PickListPage({
                   <GeneratePickListButton
                     eventId={event.id}
                     label="Regenerate Pick List"
+                    showDataHint={false}
                   />
                 </div>
               </section>

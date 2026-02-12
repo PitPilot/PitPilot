@@ -772,3 +772,28 @@ a[class*="rounded-"][class*="px-"][class*="py-"]:not([class*="rounded-full"]):no
   border-color: transparent;
   box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.4), 0 0 0 6px rgba(34, 211, 238, 0.12);
 }
+
+.ai-brief-markdown {
+  color: var(--dash-text);
+}
+
+.ai-brief-markdown ul,
+.ai-brief-markdown ol {
+  margin-left: 0.125rem;
+}
+
+.ai-brief-markdown li::marker {
+  color: var(--dash-accent);
+}
+
+.ai-brief-markdown blockquote {
+  color: var(--dash-muted);
+}
+
+.ai-brief-markdown > :first-child {
+  margin-top: 0 !important;
+}
+
+.ai-brief-markdown > :last-child {
+  margin-bottom: 0 !important;
+}

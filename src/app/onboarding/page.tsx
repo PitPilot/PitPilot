@@ -20,6 +20,9 @@ const ROLE_OPTIONS = [
 export default function OnboardingPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const maxRoles = 4;
+  const maxRolesReached = selectedRoles.length >= maxRoles;
 
   async function handleSubmit(formData: FormData) {
     setLoading(true);
@@ -74,23 +77,39 @@ export default function OnboardingPage() {
             <div>
               <p className="text-sm font-medium text-gray-200">Team roles</p>
               <p className="mt-1 text-xs text-gray-400">
-                Select all that apply.
+                Select up to {maxRoles}. {selectedRoles.length}/{maxRoles} selected.
               </p>
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                {ROLE_OPTIONS.map((role) => (
-                  <label
-                    key={role.value}
-                    className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-gray-200"
-                  >
-                    <input
-                      type="checkbox"
-                      name="teamRoles"
-                      value={role.value}
-                      className="h-4 w-4 rounded border-white/20 bg-white/5 text-blue-500 focus:ring-blue-500"
-                    />
-                    {role.label}
-                  </label>
-                ))}
+                {ROLE_OPTIONS.map((role) => {
+                  const checked = selectedRoles.includes(role.value);
+                  const disabled = !checked && maxRolesReached;
+                  return (
+                    <label
+                      key={role.value}
+                      className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
+                        disabled
+                          ? "border-white/10 bg-white/5 text-gray-500"
+                          : "border-white/10 bg-white/5 text-gray-200"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        name="teamRoles"
+                        value={role.value}
+                        checked={checked}
+                        disabled={disabled}
+                        onChange={(e) => {
+                          const next = e.target.checked
+                            ? [...selectedRoles, role.value]
+                            : selectedRoles.filter((item) => item !== role.value);
+                          setSelectedRoles(next);
+                        }}
+                        className="h-4 w-4 rounded border-white/20 bg-white/5 text-blue-500 focus:ring-blue-500"
+                      />
+                      {role.label}
+                    </label>
+                  );
+                })}
               </div>
             </div>
 

@@ -4,13 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateOrganization } from "@/lib/auth-actions";
 import { updateMemberRole } from "@/lib/captain-actions";
+import { DeleteTeamButton } from "@/components/delete-team-button";
 
 interface TeamSettingsFormProps {
-  profile: {
-    displayName: string;
-    email: string;
-    role: string;
-  };
   org: {
     name: string;
     teamNumber: number | null;
@@ -27,7 +23,6 @@ interface TeamSettingsFormProps {
 }
 
 export function TeamSettingsForm({
-  profile,
   org,
   members,
   memberCount,
@@ -223,6 +218,19 @@ export function TeamSettingsForm({
             </div>
           </div>
         </div>
+
+        {isCaptain && (
+          <div className="rounded-2xl border border-red-500/30 bg-red-500/5 p-6">
+            <h3 className="text-lg font-semibold text-red-200">Danger Zone</h3>
+            <p className="mt-1 text-sm text-red-700 dark:text-red-100/95">
+              Delete this team and remove every member from it. This action is
+              permanent.
+            </p>
+            <div className="mt-4">
+              <DeleteTeamButton />
+            </div>
+          </div>
+        )}
     </div>
   );
 }

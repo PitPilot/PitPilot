@@ -6,6 +6,31 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/supabase";
 
+const MAX_TEAM_ROLES = 4;
+const ALLOWED_TEAM_ROLES = new Set([
+  "driver",
+  "coach",
+  "programmer",
+  "scout",
+  "data",
+  "mechanical",
+  "electrical",
+  "cad",
+  "pit",
+  "mentor",
+  "other",
+]);
+
+function sanitizeTeamRoles(rawRoles: string[]) {
+  return Array.from(
+    new Set(
+      rawRoles
+        .map((role) => role.trim())
+        .filter((role) => ALLOWED_TEAM_ROLES.has(role))
+    )
+  );
+}
+
 export async function sendMagicLink(formData: FormData) {
   const supabase = await createClient();
   const email = formData.get("email") as string;
@@ -214,22 +239,13 @@ export async function updateProfile(formData: FormData) {
     return { error: "Display name cannot be empty." };
   }
 
-  const allowedRoles = new Set([
-    "driver",
-    "coach",
-    "programmer",
-    "scout",
-    "data",
-    "mechanical",
-    "electrical",
-    "cad",
-    "pit",
-    "mentor",
-    "other",
-  ]);
-  const teamRoles = (formData.getAll("teamRoles") as string[])
-    .map((role) => role.trim())
-    .filter((role) => allowedRoles.has(role));
+  const teamRoles = sanitizeTeamRoles(
+    (formData.getAll("teamRoles") as string[]).map((role) => String(role))
+  );
+
+  if (teamRoles.length > MAX_TEAM_ROLES) {
+    return { error: `Select up to ${MAX_TEAM_ROLES} team roles.` };
+  }
 
   const { error } = await supabase
     .from("profiles")
@@ -383,6 +399,92 @@ export async function leaveOrganization() {
   return { success: true } as const;
 }
 
+export async function deleteOrganizationAsCaptain() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Not authenticated" } as const;
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, org_id, role")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError || !profile) {
+    return { error: "Profile not found" } as const;
+  }
+
+  if (profile.role !== "captain") {
+    return { error: "Only captains can delete a team." } as const;
+  }
+
+  if (!profile.org_id) {
+    return { error: "No team found." } as const;
+  }
+
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) {
+    return { error: "Service role key not configured." } as const;
+  }
+
+  const admin = createAdminClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    serviceRoleKey,
+    { auth: { persistSession: false } }
+  );
+
+  const tablesToDelete = [
+    "team_messages",
+    "draft_sessions",
+    "scout_assignments",
+    "scouting_entries",
+    "strategy_briefs",
+    "pick_lists",
+    "org_events",
+  ] as const;
+
+  for (const table of tablesToDelete) {
+    const { error } = await admin.from(table).delete().eq("org_id", profile.org_id);
+    if (error) {
+      return { error: error.message } as const;
+    }
+  }
+
+  const { error: membersError } = await admin
+    .from("profiles")
+    .update({
+      org_id: null,
+      role: "scout",
+      team_roles: [],
+      onboarding_complete: false,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("org_id", profile.org_id);
+
+  if (membersError) {
+    return { error: membersError.message } as const;
+  }
+
+  const { error: orgError } = await admin
+    .from("organizations")
+    .delete()
+    .eq("id", profile.org_id);
+
+  if (orgError) {
+    return { error: orgError.message } as const;
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/settings");
+  revalidatePath("/join");
+  return { success: true } as const;
+}
+
 export async function joinOrganization(formData: FormData) {
   const supabase = await createClient();
 
@@ -450,15 +552,19 @@ export async function completeOnboarding(formData: FormData) {
   const displayName = (formData.get("displayName") as string | null)?.trim();
   const roles = formData
     .getAll("teamRoles")
-    .map((r) => String(r).trim())
-    .filter((r) => r.length > 0);
+    .map((r) => String(r));
+  const sanitizedRoles = sanitizeTeamRoles(roles);
 
   if (!displayName) {
     return { error: "Please enter your name." };
   }
 
-  if (roles.length === 0) {
+  if (sanitizedRoles.length === 0) {
     return { error: "Select at least one team role." };
+  }
+
+  if (sanitizedRoles.length > MAX_TEAM_ROLES) {
+    return { error: `Select up to ${MAX_TEAM_ROLES} team roles.` };
   }
 
   const { data: profile } = await supabase
@@ -475,7 +581,7 @@ export async function completeOnboarding(formData: FormData) {
     .from("profiles")
     .update({
       display_name: displayName,
-      team_roles: roles,
+      team_roles: sanitizedRoles,
       onboarding_complete: true,
       updated_at: new Date().toISOString(),
     })

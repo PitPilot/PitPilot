@@ -64,9 +64,7 @@ export function ConfirmDialog({
     setPortalRoot(root);
 
     return () => {
-      if (root.parentNode) {
-        root.parentNode.removeChild(root);
-      }
+      root.remove();
     };
   }, [mounted]);
 

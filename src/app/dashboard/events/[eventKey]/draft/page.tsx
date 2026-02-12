@@ -122,7 +122,6 @@ export default async function DraftRoomPage({
 
         <DraftRoom
           eventId={event.id}
-          eventKey={eventKey}
           orgId={profile.org_id}
           rankings={rankings}
           teamNames={teamNames}
