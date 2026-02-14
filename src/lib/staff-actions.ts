@@ -590,7 +590,9 @@ export async function updateTeamAiPromptLimits(formData: FormData) {
 
 export async function resetAllTeamAiCooldowns() {
   const ctx = await requireStaff();
-  if ("error" in ctx) return ctx;
+  if ("error" in ctx) {
+    return { error: ctx.error } as const;
+  }
 
   const result = await resetRateLimitPrefix("ai-interactions:");
 

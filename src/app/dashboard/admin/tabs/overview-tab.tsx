@@ -78,8 +78,12 @@ export function OverviewTab({
     formData.set("supporterAiLimit", String(supporterLimit));
 
     const result = await updateTeamAiPromptLimits(formData);
-    if ("error" in result) {
-      setStatus(result.error ?? "Failed to update AI prompt limits.");
+    if (!("success" in result)) {
+      const message =
+        "error" in result
+          ? result.error ?? "Failed to update AI prompt limits."
+          : "Website admin access required.";
+      setStatus(message);
       return;
     }
 
@@ -93,8 +97,12 @@ export function OverviewTab({
     }
 
     const result = await resetAllTeamAiCooldowns();
-    if ("error" in result) {
-      setStatus(result.error ?? "Failed to reset AI cooldowns.");
+    if (!("success" in result)) {
+      const message =
+        "error" in result
+          ? result.error ?? "Failed to reset AI cooldowns."
+          : "Website admin access required.";
+      setStatus(message);
       return;
     }
 
