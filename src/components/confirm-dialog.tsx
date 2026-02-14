@@ -25,12 +25,12 @@ const toneStyles: Record<
     button: "bg-red-600 hover:bg-red-500 text-white",
   },
   warning: {
-    icon: "bg-amber-500/20 text-amber-300",
-    button: "bg-amber-600 hover:bg-amber-500 text-white",
+    icon: "bg-teal-500/20 text-teal-300",
+    button: "bg-teal-600 hover:bg-teal-500 text-white",
   },
   info: {
-    icon: "bg-blue-500/20 text-blue-300",
-    button: "bg-blue-600 hover:bg-blue-500 text-white",
+    icon: "bg-teal-500/20 text-teal-300",
+    button: "bg-teal-500 hover:bg-teal-400 text-white",
   },
 };
 

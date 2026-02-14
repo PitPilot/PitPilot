@@ -37,8 +37,8 @@ export function OverviewTab({ stats, eventSyncMinYear }: OverviewTabProps) {
       label: "Organizations",
       value: stats.organizations,
       sub: "Registered teams",
-      color: "text-blue-400",
-      bg: "bg-blue-500/10",
+      color: "text-teal-400",
+      bg: "bg-teal-500/10",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       ),
@@ -77,8 +77,8 @@ export function OverviewTab({ stats, eventSyncMinYear }: OverviewTabProps) {
       label: "Events",
       value: stats.events,
       sub: "Synced events",
-      color: "text-amber-400",
-      bg: "bg-amber-500/10",
+      color: "text-teal-400",
+      bg: "bg-teal-500/10",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       ),
@@ -88,7 +88,7 @@ export function OverviewTab({ stats, eventSyncMinYear }: OverviewTabProps) {
   return (
     <div>
       <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-500/10 text-teal-400">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
         </div>
         <div>
@@ -115,7 +115,7 @@ export function OverviewTab({ stats, eventSyncMinYear }: OverviewTabProps) {
 
       <div className="mt-6 rounded-2xl dashboard-panel dashboard-card p-5">
         <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-500/10 text-teal-400">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3h18v18H3z"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
           </div>
           <div className="min-w-0">

@@ -152,7 +152,7 @@ export function TeamSettingsForm({
                 <button
                   type="submit"
                   disabled={teamLoading || teamName === org.name}
-                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-500 disabled:opacity-50"
+                  className="rounded-lg bg-teal-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-400 disabled:opacity-50"
                 >
                   {teamLoading ? "Saving..." : "Save team name"}
                 </button>
@@ -194,7 +194,7 @@ export function TeamSettingsForm({
                       </select>
                       <button
                         type="submit"
-                        className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-500"
+                        className="rounded-lg bg-teal-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-teal-400"
                       >
                         Update
                       </button>

@@ -22,10 +22,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-65px)] items-center justify-center px-4">
+    <div className="marketing-content flex min-h-[calc(100vh-65px)] items-center justify-center px-4">
       {/* Background gradient */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute top-1/3 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-blue-600/10 blur-3xl" />
+        <div className="absolute top-1/3 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-teal-500/10 blur-3xl" />
+        <div className="absolute -top-24 left-1/4 h-80 w-80 rounded-full bg-teal-500/10 blur-3xl" />
       </div>
 
       <div className="relative w-full max-w-md space-y-6">
@@ -39,7 +40,7 @@ export default function LoginPage() {
         </div>
 
         {sent ? (
-          <div className="rounded-xl border border-white/10 bg-gray-900/60 p-8 text-center">
+          <div className="marketing-card rounded-xl p-8 text-center">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-green-500/20 bg-green-500/10 text-green-400">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 13V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h8" />
@@ -53,13 +54,13 @@ export default function LoginPage() {
             </p>
             <button
               onClick={() => { setSent(false); setLoading(false); }}
-              className="mt-6 text-sm font-medium text-blue-400 transition hover:text-blue-300"
+              className="mt-6 text-sm font-medium text-teal-400 transition hover:text-teal-300"
             >
               Use a different email
             </button>
           </div>
         ) : (
-          <div className="rounded-xl border border-white/10 bg-gray-900/60 p-8">
+          <div className="marketing-card rounded-xl p-8">
             <form action={handleSubmit} className="space-y-5">
               {error && (
                 <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">
@@ -83,7 +84,7 @@ export default function LoginPage() {
                     name="email"
                     type="email"
                     required
-                    className="block w-full rounded-lg border border-white/10 bg-white/5 py-2.5 pl-10 pr-3 text-sm text-white placeholder-gray-500 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="marketing-input block w-full rounded-lg py-2.5 pl-10 pr-3 text-sm text-white placeholder-gray-500 shadow-sm focus:outline-none"
                     placeholder="you@example.com"
                   />
                 </div>
@@ -92,7 +93,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-950 disabled:opacity-50"
+                className="w-full rounded-lg bg-teal-500 px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-teal-500/20 transition hover:bg-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:ring-offset-gray-950 disabled:opacity-50"
               >
                 {loading ? "Sending..." : "Send Magic Link"}
               </button>

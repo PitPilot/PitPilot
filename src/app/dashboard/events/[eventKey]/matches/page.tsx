@@ -188,10 +188,10 @@ export default async function MatchListPage({
               return (
                 <span
                   key={team}
-                  className="match-chip match-chip-red flex-1 cursor-not-allowed rounded px-2 py-1.5 text-center text-xs font-medium bg-amber-500/20 text-amber-100 ring-1 ring-amber-400/40"
+                  className="match-chip match-chip-red flex-1 cursor-not-allowed rounded px-2 py-1.5 text-center text-xs font-medium bg-red-400/20 text-red-100 ring-1 ring-red-300/55"
                   title="Self-scouting is disabled for your team."
                 >
-                  {team} (Your Team)
+                  {team}
                 </span>
               );
             }
@@ -204,7 +204,7 @@ export default async function MatchListPage({
                   scouted
                     ? "bg-red-500/30 text-red-100 ring-2 ring-red-400/60"
                     : assigned
-                    ? "bg-red-500/10 text-red-200 ring-2 ring-orange-400/70 hover:bg-red-500/20"
+                    ? "bg-red-500/10 text-red-200 ring-2 ring-cyan-400/70 hover:bg-red-500/20"
                     : "bg-red-500/10 text-red-200 hover:bg-red-500/20"
                 }`}
               >
@@ -227,10 +227,10 @@ export default async function MatchListPage({
               return (
                 <span
                   key={team}
-                  className="match-chip match-chip-blue flex-1 cursor-not-allowed rounded px-2 py-1.5 text-center text-xs font-medium bg-amber-500/20 text-amber-100 ring-1 ring-amber-400/40"
+                  className="match-chip match-chip-blue flex-1 cursor-not-allowed rounded px-2 py-1.5 text-center text-xs font-medium bg-blue-400/20 text-blue-100 ring-1 ring-blue-300/55"
                   title="Self-scouting is disabled for your team."
                 >
-                  {team} (Your Team)
+                  {team}
                 </span>
               );
             }
@@ -243,7 +243,7 @@ export default async function MatchListPage({
                   scouted
                     ? "bg-blue-500/30 text-blue-100 ring-2 ring-blue-400/60"
                     : assigned
-                    ? "bg-blue-500/10 text-blue-200 ring-2 ring-orange-400/70 hover:bg-blue-500/20"
+                    ? "bg-blue-500/10 text-blue-200 ring-2 ring-cyan-400/70 hover:bg-blue-500/20"
                     : "bg-blue-500/10 text-blue-200 hover:bg-blue-500/20"
                 }`}
               >

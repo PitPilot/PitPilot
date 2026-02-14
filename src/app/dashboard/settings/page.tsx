@@ -6,8 +6,8 @@ import { Navbar } from "@/components/navbar";
 import { TeamSettingsForm } from "./settings-form";
 
 export const metadata: Metadata = {
-  title: "Settings | ScoutAI",
-  description: "Manage your ScoutAI team settings, join codes, and member roles.",
+  title: "Settings | PitPulse",
+  description: "Manage your PitPulse team settings, join codes, and member roles.",
 };
 
 export default async function SettingsPage() {
@@ -52,7 +52,7 @@ export default async function SettingsPage() {
       <main className="mx-auto max-w-4xl px-4 pb-12 pt-24">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
+            <p className="text-xs font-semibold uppercase tracking-widest text-teal-400">
               Settings
             </p>
             <h1 className="mt-2 text-3xl font-bold">Team settings</h1>

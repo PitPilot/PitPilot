@@ -2,7 +2,7 @@ import { forwardRef } from "react";
 
 const variants = {
   primary:
-    "bg-blue-600 text-white shadow-lg shadow-blue-600/20 hover:bg-blue-500 hover:shadow-blue-500/25 disabled:opacity-50",
+    "bg-teal-500 text-white shadow-lg shadow-teal-500/20 hover:bg-teal-400 hover:shadow-teal-400/25 disabled:opacity-50",
   secondary:
     "border border-white/10 text-gray-200 hover:bg-white/5 hover:border-white/20 disabled:opacity-50",
   danger:

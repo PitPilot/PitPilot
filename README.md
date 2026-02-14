@@ -1,6 +1,6 @@
-# ScoutAI
+# PitPulse
 
-ScoutAI is an FRC scouting and strategy platform built with Next.js + Supabase.
+PitPulse is an FRC scouting and strategy platform built with Next.js + Supabase.
 
 ## Core Features
 

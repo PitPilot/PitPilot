@@ -2,9 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { resolveRateLimitMessage } from "@/lib/rate-limit-ui";
+import { useToast } from "@/components/toast";
+import {
+  formatRateLimitUsageMessage,
+  readRateLimitSnapshot,
+  resolveRateLimitMessage,
+} from "@/lib/rate-limit-ui";
 
 export function SyncEventForm() {
+  const { toast } = useToast();
   const [eventKey, setEventKey] = useState("");
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -65,13 +71,18 @@ export function SyncEventForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ eventKey: eventKey.trim() }),
       });
+      const eventUsage = readRateLimitSnapshot(eventRes.headers);
+      if (eventUsage) {
+        toast(formatRateLimitUsageMessage(eventUsage, "sync"), "info");
+      }
 
       const eventData = await eventRes.json();
       if (!eventRes.ok) {
         throw new Error(
           resolveRateLimitMessage(
             eventRes.status,
-            eventData.error ?? "Failed to sync event"
+            eventData.error ?? "Failed to sync event",
+            "sync"
           )
         );
       }
@@ -90,13 +101,18 @@ export function SyncEventForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ eventKey: eventKey.trim() }),
       });
+      const statsUsage = readRateLimitSnapshot(statsRes.headers);
+      if (statsUsage) {
+        toast(formatRateLimitUsageMessage(statsUsage, "sync"), "info");
+      }
 
       const statsData = await statsRes.json();
       if (!statsRes.ok) {
         throw new Error(
           resolveRateLimitMessage(
             statsRes.status,
-            statsData.error ?? "Failed to sync stats"
+            statsData.error ?? "Failed to sync stats",
+            "sync"
           )
         );
       }
@@ -128,7 +144,7 @@ export function SyncEventForm() {
       <div className="rounded-xl border border-white/10 px-3 py-2 text-xs text-gray-400 dashboard-panel">
         <p className="font-semibold text-gray-300">Where to find the event key</p>
         <p className="mt-1">
-          Open the event on <a href="https://www.thebluealliance.com/events" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">The Blue Alliance</a> and copy the part after
+          Open the event on <a href="https://www.thebluealliance.com/events" target="_blank" rel="noopener noreferrer" className="text-teal-400 hover:underline">The Blue Alliance</a> and copy the part after
           <span className="font-mono text-gray-200"> /event/ </span>
           in the URL. Example:
           <span className="ml-1 font-mono text-gray-200">2025hiho</span>.
@@ -146,7 +162,7 @@ export function SyncEventForm() {
         <button
           onClick={handleSync}
           disabled={loading || !eventKey.trim()}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-500 disabled:opacity-50"
+          className="rounded-lg bg-teal-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-400 disabled:opacity-50"
         >
           {loading ? "Syncing..." : "Sync Event"}
         </button>
@@ -171,7 +187,7 @@ export function SyncEventForm() {
         </p>
       )}
       {warning && (
-        <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+        <p className="rounded-lg bg-teal-500/10 px-3 py-2 text-sm text-teal-200">
           {warning}
         </p>
       )}

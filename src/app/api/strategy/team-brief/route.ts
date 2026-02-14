@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { summarizeScouting } from "@/lib/scouting-summary";
 import {
+  buildRateLimitHeaders,
   checkRateLimit,
   getTeamAiLimit,
   retryAfterSeconds,
@@ -188,16 +189,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Organization not found" }, { status: 404 });
   }
 
+  const aiLimit = getTeamAiLimit(org.plan_tier);
   const limit = await checkRateLimit(
     `ai-interactions:${profile.org_id}`,
     TEAM_AI_WINDOW_MS,
-    getTeamAiLimit(org.plan_tier)
+    aiLimit
   );
+  const limitHeaders = buildRateLimitHeaders(limit, aiLimit);
   if (!limit.allowed) {
     const retryAfter = retryAfterSeconds(limit.resetAt);
     return NextResponse.json(
       { error: "Your team has exceeded the rate limit. Please try again soon." },
-      { status: 429, headers: { "Retry-After": retryAfter.toString() } }
+      {
+        status: 429,
+        headers: { ...limitHeaders, "Retry-After": retryAfter.toString() },
+      }
     );
   }
 
@@ -408,7 +414,7 @@ export async function POST(request: NextRequest) {
     },
   };
 
-  const systemPrompt = `You are ScoutAI Team Briefing for FRC.
+  const systemPrompt = `You are PitPulse Team Briefing for FRC.
 
 ${buildFrcGamePrompt(event.year)}
 
@@ -469,7 +475,10 @@ Rules:
       return NextResponse.json({ error: "No response from AI" }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, reply });
+    return NextResponse.json(
+      { success: true, reply },
+      { headers: limitHeaders }
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json({ error: message }, { status: 500 });

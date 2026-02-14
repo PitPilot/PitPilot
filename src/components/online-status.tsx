@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   getPendingEntries,
@@ -8,7 +8,34 @@ import {
   getPendingCount,
 } from "@/lib/offline-queue";
 
+const OFFLINE_BANNER_DISMISS_KEY = "pitpulse:offline-banner-dismissed";
+const ONLINE_BANNER_DISMISS_KEY = "pitpulse:online-sync-banner-dismissed";
+const CONNECTIVITY_POLL_MS = 10000;
+
+function readDismissed(key: string): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.sessionStorage.getItem(key) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function setDismissed(key: string, dismissed: boolean) {
+  if (typeof window === "undefined") return;
+  try {
+    if (dismissed) {
+      window.sessionStorage.setItem(key, "1");
+    } else {
+      window.sessionStorage.removeItem(key);
+    }
+  } catch {
+    // Ignore storage failures (private mode / blocked storage)
+  }
+}
+
 export function OnlineStatus() {
+  const probeVersion = useRef(0);
   const [isOnline, setIsOnline] = useState(() =>
     typeof navigator === "undefined" ? true : navigator.onLine
   );
@@ -17,28 +44,50 @@ export function OnlineStatus() {
   const [syncProgress, setSyncProgress] = useState({ current: 0, total: 0 });
   const [syncErrors, setSyncErrors] = useState(0);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
-  const [offlineHidden, setOfflineHidden] = useState(false);
+  const [offlineHidden, setOfflineHidden] = useState(() =>
+    readDismissed(OFFLINE_BANNER_DISMISS_KEY)
+  );
+  const [onlineHidden, setOnlineHidden] = useState(() =>
+    readDismissed(ONLINE_BANNER_DISMISS_KEY)
+  );
 
-  const checkConnectivity = useCallback(async () => {
+  const probeConnectivity = useCallback(async () => {
     if (typeof window === "undefined") return;
-    if (!navigator.onLine) {
-      setIsOnline(false);
+
+    const version = ++probeVersion.current;
+    const browserOnline = navigator.onLine;
+    if (browserOnline) {
+      if (version === probeVersion.current) {
+        setIsOnline(true);
+      }
       return;
     }
 
     const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 3500);
+    const timer = window.setTimeout(() => controller.abort(), 3000);
+
     try {
-      await fetch("/favicon.ico", {
-        method: "HEAD",
+      const res = await fetch(`/api/health?_t=${Date.now()}`, {
+        method: "GET",
         cache: "no-store",
         signal: controller.signal,
       });
-      setIsOnline(true);
+
+      // If app health endpoint responds, treat as online even if navigator state is stale.
+      if (res.ok) {
+        if (version === probeVersion.current) {
+          setIsOnline(true);
+        }
+        return;
+      }
     } catch {
-      setIsOnline(false);
+      // Ignore and fall back to browser connectivity signal.
     } finally {
-      window.clearTimeout(timeout);
+      window.clearTimeout(timer);
+    }
+
+    if (version === probeVersion.current) {
+      setIsOnline(typeof navigator === "undefined" ? true : navigator.onLine);
     }
   }, []);
 
@@ -55,22 +104,29 @@ export function OnlineStatus() {
     if (typeof window === "undefined") return;
 
     const handleOnline = () => {
+      setIsOnline(true);
       setOfflineHidden(false);
-      void checkConnectivity();
+      setOnlineHidden(false);
+      setDismissed(OFFLINE_BANNER_DISMISS_KEY, false);
+      setDismissed(ONLINE_BANNER_DISMISS_KEY, false);
+      void probeConnectivity();
     };
-    const handleOffline = () => setIsOnline(false);
+    const handleOffline = () => {
+      void probeConnectivity();
+    };
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
 
     const initialTimer = window.setTimeout(() => {
-      void checkConnectivity();
+      setIsOnline(navigator.onLine);
       void refreshCount();
+      void probeConnectivity();
     }, 0);
     const interval = window.setInterval(() => {
-      void checkConnectivity();
       void refreshCount();
-    }, 5000);
+      void probeConnectivity();
+    }, CONNECTIVITY_POLL_MS);
 
     return () => {
       window.removeEventListener("online", handleOnline);
@@ -78,7 +134,7 @@ export function OnlineStatus() {
       window.clearTimeout(initialTimer);
       window.clearInterval(interval);
     };
-  }, [checkConnectivity, refreshCount]);
+  }, [probeConnectivity, refreshCount]);
 
   const syncPendingEntries = useCallback(async () => {
     setSyncing(true);
@@ -109,7 +165,16 @@ export function OnlineStatus() {
     if (errors === 0 && total > 0) {
       setLastSyncTime(new Date());
     }
-    await refreshCount();
+    const remaining = await getPendingCount().catch(() => null);
+    if (typeof remaining === "number") {
+      setPendingCount(remaining);
+      if (errors === 0 && remaining === 0) {
+        setOnlineHidden(false);
+        setDismissed(ONLINE_BANNER_DISMISS_KEY, false);
+      }
+    } else {
+      await refreshCount();
+    }
     setSyncing(false);
   }, [refreshCount]);
 
@@ -126,13 +191,17 @@ export function OnlineStatus() {
 
   // Hidden when online with nothing pending and no errors
   if (isOnline && pendingCount === 0 && syncErrors === 0) return null;
+  if (isOnline && onlineHidden) return null;
+
+  // Hide offline banner unless there's pending local data to sync.
+  if (!isOnline && pendingCount === 0 && syncErrors === 0) return null;
 
   // Hidden when user dismissed offline banner
   if (!isOnline && offlineHidden) return null;
 
   return (
     <div
-      className={`pointer-events-auto fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-sm rounded-lg px-4 py-3 text-sm font-medium shadow-lg transition-colors duration-300 ${
+      className={`pointer-events-auto fixed bottom-4 left-4 right-4 z-[120] mx-auto max-w-sm rounded-lg px-4 py-3 text-sm font-medium shadow-lg transition-colors duration-300 ${
         !isOnline
           ? "bg-yellow-500 text-yellow-900"
           : syncErrors > 0
@@ -172,17 +241,24 @@ export function OnlineStatus() {
               {syncing ? "..." : syncErrors > 0 ? "Retry" : "Sync Now"}
             </button>
           )}
-          {syncErrors > 0 && !syncing && (
+          {isOnline && (
             <button
-              onClick={() => setSyncErrors(0)}
+              onClick={() => {
+                setOnlineHidden(true);
+                setDismissed(ONLINE_BANNER_DISMISS_KEY, true);
+              }}
               className="rounded bg-white/20 px-1.5 py-0.5 text-xs opacity-80 transition hover:opacity-100"
+              aria-label="Hide sync banner"
             >
               ✕
             </button>
           )}
           {!isOnline && (
             <button
-              onClick={() => setOfflineHidden(true)}
+              onClick={() => {
+                setOfflineHidden(true);
+                setDismissed(OFFLINE_BANNER_DISMISS_KEY, true);
+              }}
               className="rounded bg-white/20 px-1.5 py-0.5 text-xs opacity-80 transition hover:opacity-100"
               aria-label="Hide offline banner"
             >

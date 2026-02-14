@@ -126,7 +126,7 @@ export function AccountSettingsForm({ profile }: AccountSettingsFormProps) {
                       disabled
                         ? "border-white/10 bg-white/5 text-gray-500 dark:text-gray-500"
                         : checked
-                        ? "border-blue-500/40 bg-blue-500/10 text-blue-600 dark:text-blue-100"
+                        ? "border-teal-500/40 bg-teal-500/10 text-teal-600 dark:text-teal-100"
                         : "border-white/10 bg-white/5 text-gray-700 dark:text-gray-200"
                     }`}
                   >
@@ -142,7 +142,7 @@ export function AccountSettingsForm({ profile }: AccountSettingsFormProps) {
                           : teamRoles.filter((role) => role !== roleOption.value);
                         setTeamRoles(next);
                       }}
-                      className="h-4 w-4 rounded border-white/20 bg-white/5 text-blue-500 focus:ring-blue-500"
+                      className="h-4 w-4 rounded border-white/20 bg-white/5 text-teal-500 focus:ring-teal-500"
                     />
                     {roleOption.label}
                   </label>
@@ -160,7 +160,7 @@ export function AccountSettingsForm({ profile }: AccountSettingsFormProps) {
           <button
             type="submit"
             disabled={accountLoading || !hasChanges}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-500 disabled:opacity-50"
+            className="rounded-lg bg-teal-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-400 disabled:opacity-50"
           >
             {accountLoading ? "Saving..." : "Save profile"}
           </button>

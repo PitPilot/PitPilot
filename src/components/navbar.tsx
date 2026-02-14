@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { UserMenu } from "@/components/user-menu";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 export async function Navbar() {
   const supabase = await createClient();
@@ -26,26 +25,25 @@ export async function Navbar() {
     .maybeSingle();
 
   const bannerStyles: Record<string, string> = {
-    info: "border-blue-500/30 bg-blue-500/10 text-blue-100",
+    info: "border-teal-500/30 bg-teal-500/10 text-teal-100",
     success: "border-green-500/30 bg-green-500/10 text-green-100",
-    warning: "border-amber-500/30 bg-amber-500/10 text-amber-100",
+    warning: "border-teal-500/30 bg-teal-500/10 text-teal-100",
     danger: "border-red-500/30 bg-red-500/10 text-red-100",
   };
 
   return (
-    <nav className="fixed top-0 z-50 w-full border-b border-white/10 bg-gray-950/85 font-sans backdrop-blur-xl">
+    <nav className="fixed top-0 z-50 w-full border-b border-white/[0.06] bg-[#06080f]/80 backdrop-blur-2xl">
       {announcement?.message && (
         <div className={`border-b px-4 py-2 text-center text-xs font-medium ${bannerStyles[announcement.variant] ?? bannerStyles.info}`}>
           {announcement.message}
         </div>
       )}
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        <Link href="/" className="text-lg font-semibold tracking-tight text-white">
-          Scout<span className="text-blue-500">AI</span>
+        <Link href="/" className="font-outfit text-lg font-bold tracking-tight text-white">
+          Pit<span className="text-teal-400">Pulse</span>
         </Link>
 
         <div className="flex items-center gap-2">
-          <ThemeToggle />
           {user ? (
             <UserMenu
               name={profile?.display_name ?? user.email ?? "Account"}
@@ -55,21 +53,16 @@ export async function Navbar() {
           ) : (
             <>
               <Link
-                href="/signup"
-                className="rounded-md bg-blue-600 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-blue-500"
+                href="/login"
+                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-400 transition hover:bg-white/5 hover:text-white"
               >
-                Get Started
+                Sign In
               </Link>
               <Link
-                href="/login"
-                className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-gray-400 transition hover:bg-white/5 hover:text-white"
+                href="/signup"
+                className="rounded-lg bg-teal-500 px-4 py-1.5 text-sm font-semibold text-gray-950 transition hover:bg-teal-400"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-                  <polyline points="10 17 15 12 10 7" />
-                  <line x1="15" y1="12" x2="3" y2="12" />
-                </svg>
-                Sign In
+                Get Started
               </Link>
             </>
           )}

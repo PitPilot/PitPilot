@@ -1,4 +1,14 @@
 import Link from "next/link";
+import {
+  Bot,
+  Check,
+  ClipboardList,
+  Database,
+  GaugeCircle,
+  Handshake,
+  Smartphone,
+  Users,
+} from "lucide-react";
 import { HeroAnimations } from "./hero-animations";
 import { Navbar } from "@/components/navbar";
 import { LiveStats } from "./live-stats";
@@ -7,6 +17,78 @@ import { Testimonials } from "./testimonials";
 import { createClient } from "@/lib/supabase/server";
 import { MotionSection } from "@/components/motion-section";
 import { SiteFooter } from "@/components/site-footer";
+
+type Feature = {
+  title: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+};
+
+type Step = {
+  label: string;
+  title: string;
+  description: string;
+};
+
+const FEATURES: Feature[] = [
+  {
+    title: "Smart scouting forms",
+    description:
+      "Fast mobile forms made for the stands with touch-first controls and reliable offline capture.",
+    icon: ClipboardList,
+  },
+  {
+    title: "Unified event intelligence",
+    description:
+      "Bring together PitPulse entries, TBA schedules/results, and Statbotics context in one view.",
+    icon: Database,
+  },
+  {
+    title: "Pre-match AI briefs",
+    description:
+      "Generate concise match plans before each match with priorities, risks, and role focus.",
+    icon: Bot,
+  },
+  {
+    title: "Alliance pick optimizer",
+    description:
+      "Rank teams by complement fit, not just raw EPA, so your picks match your robot profile.",
+    icon: Handshake,
+  },
+  {
+    title: "Team operations",
+    description:
+      "Captains manage roles, assignments, and communication without leaving the dashboard.",
+    icon: Users,
+  },
+  {
+    title: "Competition-ready reliability",
+    description:
+      "Offline-first behavior, sync recovery, and resilient UX for real venue network conditions.",
+    icon: Smartphone,
+  },
+];
+
+const STEPS: Step[] = [
+  {
+    label: "Step 01",
+    title: "Capture",
+    description:
+      "Scouts submit structured match notes quickly from phones with low-friction tap controls.",
+  },
+  {
+    label: "Step 02",
+    title: "Contextualize",
+    description:
+      "PitPulse layers your scouting signal with event data to build a complete performance picture.",
+  },
+  {
+    label: "Step 03",
+    title: "Execute",
+    description:
+      "Drive team gets focused strategy briefs and pick recommendations in time for decisions.",
+  },
+];
 
 async function getStats() {
   try {
@@ -30,375 +112,212 @@ export default async function Home() {
   const stats = await getStats();
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="landing-noise min-h-screen bg-[#03070a] text-white">
       <Navbar />
 
-      {/* Hero */}
-      <section className="relative overflow-hidden pt-24">
-        {/* Background gradient orbs */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 left-1/4 h-[500px] w-[500px] rounded-full bg-blue-600/20 blur-[100px]" />
-          <div className="absolute top-20 right-1/4 h-80 w-80 rounded-full bg-purple-600/15 blur-[80px]" />
-          <div className="absolute bottom-0 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-cyan-600/10 blur-[100px]" />
+      <section className="relative overflow-hidden pt-20">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -top-36 left-1/2 h-[620px] w-[620px] -translate-x-1/2 rounded-full bg-teal-400/10 blur-[140px]" />
+          <div className="absolute top-24 right-[16%] h-[320px] w-[320px] rounded-full bg-cyan-400/10 blur-[120px]" />
+          <div className="absolute bottom-0 left-[8%] h-[260px] w-[260px] rounded-full bg-teal-300/10 blur-[120px]" />
         </div>
-        {/* Subtle grid overlay */}
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]" />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(30,41,59,0.5)_1px,transparent_1px),linear-gradient(to_bottom,rgba(30,41,59,0.5)_1px,transparent_1px)] bg-[size:56px_56px] [mask-image:radial-gradient(circle_at_center,black_40%,transparent_100%)]" />
 
-        <div className="relative mx-auto max-w-6xl px-4 py-20 sm:py-32">
+        <div className="relative mx-auto max-w-7xl px-4 py-24 md:py-28 lg:py-32">
           <HeroAnimations />
         </div>
+
+        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#03070a] to-transparent" />
       </section>
 
-      {/* Live Stats */}
       <LiveStats teams={stats.teams} entries={stats.entries} matches={stats.matches} />
 
-      {/* The Problem + Differentiator */}
-      <MotionSection id="problem" className="border-t border-white/5 py-24">
+      <MotionSection id="problem" className="relative py-24">
+        <div className="pointer-events-none absolute left-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
         <div className="mx-auto max-w-6xl px-4">
           <div className="text-center">
-            <p className="text-sm font-semibold uppercase tracking-widest text-blue-500">
-              The problem
-            </p>
-            <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
-              Scouting tools give stats, not strategy
+            <p className="section-label">Why teams switch</p>
+            <h2 className="font-outfit mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl">
+              Strategy is not a spreadsheet problem
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-gray-400">
-              Teams are stuck between raw numbers, clunky forms, and alliance
-              decisions based on gut feel. There isn&apos;t one place that
-              combines your observations with public data and turns it into
-              a clear game plan.
+            <p className="mx-auto mt-5 max-w-3xl text-base leading-relaxed text-slate-400 md:text-lg">
+              Most tools stop at data collection. PitPulse turns raw scouting signal into
+              match-ready decisions with clear priorities and confidence.
             </p>
           </div>
 
-          <div className="mt-14">
-            <div className="text-center">
-              <p className="text-sm font-semibold uppercase tracking-widest text-blue-500">
-                What makes this different
-              </p>
-              <h3 className="mt-3 text-2xl font-bold sm:text-3xl">
-                From scouting notes to match-winning decisions
-              </h3>
-              <p className="mx-auto mt-3 max-w-2xl text-sm text-gray-400">
-                ScoutAI is the only tool that fuses your scouting notes with
-                TBA + Statbotics and then delivers plain-English strategy briefs,
-                pick lists, and match plans.
-              </p>
-            </div>
-
-            <div className="mt-8 overflow-x-auto rounded-2xl border border-white/10 bg-gradient-to-b from-gray-900/70 to-gray-900/40 shadow-xl shadow-blue-500/5 standout-table backdrop-blur-sm">
-              <table className="min-w-full text-left text-sm text-gray-300">
-                <thead className="border-b border-white/10 bg-white/[0.03] text-xs uppercase tracking-wider text-gray-400">
-                  <tr>
-                    <th className="px-5 py-4 font-semibold">Tool</th>
-                    <th className="px-5 py-4 font-semibold">
-                      <span className="inline-flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50" />
-                        What it does
-                      </span>
-                    </th>
-                    <th className="px-5 py-4 font-semibold">
-                      <span className="inline-flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-rose-400 shadow-sm shadow-rose-400/50" />
-                        What it doesn&apos;t do
-                      </span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  <tr className="transition hover:bg-white/[0.03]">
-                    <td className="px-5 py-4 font-semibold text-white">
-                      TBA / Statbotics
-                    </td>
-                    <td className="px-5 py-4">
-                      Publishes match results, rankings, and EPA.
-                    </td>
-                    <td className="px-5 py-4 text-gray-500">
-                      Doesn&apos;t translate stats into match strategy.
-                    </td>
-                  </tr>
-                  <tr className="transition hover:bg-white/[0.03]">
-                    <td className="px-5 py-4 font-semibold text-white">
-                      Google Forms / Sheets
-                    </td>
-                    <td className="px-5 py-4">
-                      Collects raw scouting notes from your team.
-                    </td>
-                    <td className="px-5 py-4 text-gray-500">
-                      Doesn&apos;t merge with public data or generate insights.
-                    </td>
-                  </tr>
-                  <tr className="transition hover:bg-white/[0.03]">
-                    <td className="px-5 py-4 font-semibold text-white">
-                      Offline scouting apps
-                    </td>
-                    <td className="px-5 py-4">
-                      Helps capture data when Wi-Fi is unreliable.
-                    </td>
-                    <td className="px-5 py-4 text-gray-500">
-                      Doesn&apos;t build pick lists or AI strategy briefs.
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div className="mt-6 flex items-center justify-center gap-3">
-              <div className="h-px flex-1 max-w-16 bg-gradient-to-r from-transparent to-blue-500/30" />
-              <p className="text-center text-sm font-medium text-gray-400">
-                ScoutAI combines everything above and adds AI strategy, like a
-                data analyst on your drive team.
-              </p>
-              <div className="h-px flex-1 max-w-16 bg-gradient-to-l from-transparent to-blue-500/30" />
-            </div>
+          <div className="mt-14 overflow-hidden rounded-2xl border border-white/10 bg-[#0f1115]/85 backdrop-blur-xl shadow-[0_0_40px_-18px_rgba(67,217,162,0.35)]">
+            <table className="min-w-full text-left text-sm">
+              <thead className="border-b border-white/10 bg-white/5">
+                <tr>
+                  <th className="px-6 py-4 font-mono text-[11px] uppercase tracking-[0.16em] text-slate-400">Tool</th>
+                  <th className="px-6 py-4 font-mono text-[11px] uppercase tracking-[0.16em] text-slate-400">What it does</th>
+                  <th className="px-6 py-4 font-mono text-[11px] uppercase tracking-[0.16em] text-slate-400">What it misses</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/10">
+                <tr className="transition-colors duration-300 hover:bg-white/[0.03]">
+                  <td className="px-6 py-4 font-semibold text-white">TBA / Statbotics</td>
+                  <td className="px-6 py-4 text-slate-300">Publishes schedule, results, rankings, and EPA context.</td>
+                  <td className="px-6 py-4 text-slate-500">Does not give your drive team a match plan.</td>
+                </tr>
+                <tr className="transition-colors duration-300 hover:bg-white/[0.03]">
+                  <td className="px-6 py-4 font-semibold text-white">Forms / sheets workflows</td>
+                  <td className="px-6 py-4 text-slate-300">Collects team notes and subjective observations.</td>
+                  <td className="px-6 py-4 text-slate-500">Hard to convert into consistent strategy at speed.</td>
+                </tr>
+                <tr className="transition-colors duration-300 hover:bg-white/[0.03]">
+                  <td className="px-6 py-4 font-semibold text-white">PitPulse</td>
+                  <td className="px-6 py-4 text-slate-300">Combines both + generates tactical pre-match guidance.</td>
+                  <td className="px-6 py-4 text-slate-500">Does not replace your scouts; it amplifies them.</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </MotionSection>
 
-      {/* Features */}
-      <MotionSection id="features" className="relative border-t border-white/5 py-24">
-        <div className="mx-auto max-w-6xl px-4">
+      <MotionSection id="features" className="relative py-24">
+        <div className="pointer-events-none absolute left-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        <div className="mx-auto max-w-7xl px-4">
           <div className="text-center">
-            <p className="text-sm font-semibold uppercase tracking-widest text-blue-500">
-              Features
-            </p>
-            <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
-              Everything your team needs to win
+            <p className="section-label">Core capabilities</p>
+            <h2 className="font-outfit mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl">
+              Built for high-pressure match days
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-gray-400">
-              Stop guessing. Start winning with data-driven strategy powered by AI.
-            </p>
           </div>
 
-          <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <FeatureCard
-              icon={<ClipboardIcon />}
-              title="Smart Scouting Forms"
-              description="Mobile-first forms with big tap targets designed for the stands. Works offline at venues, syncs when you're back online."
-              color="blue"
-            />
-            <FeatureCard
-              icon={<ChartIcon />}
-              title="Unified Data Dashboard"
-              description="Auto-imports TBA results and Statbotics EPA. Your scouting observations overlaid on public data in one powerful view."
-              color="cyan"
-            />
-            <FeatureCard
-              icon={<BrainIcon />}
-              title="AI Strategy Engine"
-              description="Pre-match briefs, post-match analysis, and natural language queries. Ask anything about your event data."
-              color="purple"
-            />
-            <FeatureCard
-              icon={<TargetIcon />}
-              title="Alliance Pick Optimizer"
-              description="Ranks every available team by complementarity with your robot. Pick partners based on data with true confidence that you've made the right choice."
-              color="orange"
-            />
-            <FeatureCard
-              icon={<UsersIcon />}
-              title="Team Management"
-              description="Invite scouts with a 6-character code. Assign rotations. Role-based access for scouts and captains."
-              color="green"
-            />
-            <FeatureCard
-              icon={<WifiOffIcon />}
-              title="Offline-First PWA"
-              description="Install on your phone like a native app. Scout without WiFi, and sync automatically once you reconnect."
-              color="rose"
-            />
+          <div className="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {FEATURES.map((feature) => (
+              <FeatureCard key={feature.title} feature={feature} />
+            ))}
           </div>
         </div>
       </MotionSection>
 
-      {/* How It Works */}
-      <MotionSection id="how-it-works" className="border-t border-white/5 py-24">
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="text-center">
-            <p className="text-sm font-semibold uppercase tracking-widest text-blue-500">
-              How it works
-            </p>
-            <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
-              Three steps to smarter scouting
-            </h2>
-          </div>
-
-          <div className="relative mt-16 grid gap-12 sm:grid-cols-3">
-            {/* Connector lines (hidden on mobile) */}
-            <div className="pointer-events-none absolute top-16 left-[calc(16.67%+40px)] right-[calc(16.67%+40px)] hidden h-px sm:block">
-              <div className="h-full w-full bg-gradient-to-r from-blue-500/40 via-purple-500/40 to-cyan-500/40" />
-            </div>
-
-            <StepScene step={1} color="blue">
-              {/* Phone mockup with counter buttons */}
-              <div className="mx-auto h-20 w-14 rounded-lg border border-white/20 bg-gray-800/80 p-1.5">
-                <div className="h-full rounded-md bg-gray-900/80 p-1 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <div className="h-1.5 w-6 rounded-full bg-blue-500/40" />
-                    <div className="h-3 w-3 rounded bg-blue-500/60 text-[4px] leading-3 text-center font-bold text-white">3</div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="h-1.5 w-5 rounded-full bg-blue-500/30" />
-                    <div className="h-3 w-3 rounded bg-blue-500/40 text-[4px] leading-3 text-center font-bold text-white">1</div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="h-1.5 w-7 rounded-full bg-blue-500/20" />
-                    <div className="h-3 w-3 rounded bg-green-500/50 text-[4px] leading-3 text-center font-bold text-white">+</div>
-                  </div>
-                </div>
-              </div>
-            </StepScene>
-
-            <StepScene step={2} color="purple">
-              {/* Brain with data flowing in */}
-              <div className="relative mx-auto h-20 w-20">
-                {/* Data dots flowing in */}
-                <div className="absolute top-2 left-0 h-2 w-2 animate-pulse rounded-full bg-blue-400/60" />
-                <div className="absolute top-6 -left-1 h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-400/50" style={{ animationDelay: "0.5s" }} />
-                <div className="absolute top-10 left-1 h-2 w-2 animate-pulse rounded-full bg-purple-400/40" style={{ animationDelay: "1s" }} />
-                <div className="absolute top-3 right-0 h-1.5 w-1.5 animate-pulse rounded-full bg-blue-400/50" style={{ animationDelay: "0.3s" }} />
-                <div className="absolute top-8 -right-1 h-2 w-2 animate-pulse rounded-full bg-cyan-400/60" style={{ animationDelay: "0.7s" }} />
-                {/* Central brain icon */}
-                <div className="absolute inset-2 flex items-center justify-center rounded-xl border border-purple-500/30 bg-purple-500/10 text-purple-400">
-                  <BrainIcon />
-                </div>
-              </div>
-            </StepScene>
-
-            <StepScene step={3} color="cyan">
-              {/* Strategy brief mockup */}
-              <div className="mx-auto h-20 w-16 rounded-lg border border-white/20 bg-gray-800/80 p-1.5">
-                <div className="h-full space-y-1 rounded-md bg-gray-900/80 p-1.5">
-                  <div className="h-1 w-8 rounded-full bg-cyan-500/50" />
-                  <div className="flex gap-1">
-                    <div className="h-5 w-5 rounded bg-red-500/20 text-[4px] text-center leading-5 font-bold text-red-300">R</div>
-                    <div className="h-5 w-5 rounded bg-blue-500/20 text-[4px] text-center leading-5 font-bold text-blue-300">B</div>
-                  </div>
-                  <div className="h-1 w-full rounded-full bg-green-500/40" />
-                  <div className="h-1 w-6 rounded-full bg-white/10" />
-                  <div className="h-1 w-8 rounded-full bg-white/10" />
-                </div>
-              </div>
-            </StepScene>
-          </div>
-        </div>
-      </MotionSection>
-
-      {/* Dashboard Preview */}
-      <DashboardPreview />
-
-      {/* Testimonials */}
-      <Testimonials />
-
-      {/* Pricing */}
-      <MotionSection id="pricing" className="border-t border-white/5 py-24">
+      <MotionSection id="how-it-works" className="relative py-24">
+        <div className="pointer-events-none absolute left-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
         <div className="mx-auto max-w-5xl px-4">
           <div className="text-center">
-            <p className="text-sm font-semibold uppercase tracking-widest text-blue-500">
-              Pricing
-            </p>
-            <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
-              Community-first pricing for teams.
+            <p className="section-label">How it works</p>
+            <h2 className="font-outfit mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl">
+              One clean scouting loop
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-gray-400">
-              ScoutAI is built for teams, not individual seats. Free stays generous; Supporter helps cover real AI token costs so the platform stays sustainable for the community.
+          </div>
+
+          <div className="relative mt-14 space-y-5 md:grid md:grid-cols-3 md:gap-6 md:space-y-0">
+            <div className="pointer-events-none absolute left-5 top-8 hidden h-[calc(100%-80px)] w-px bg-gradient-to-b from-teal-400/60 to-transparent md:hidden" />
+            {STEPS.map((step, index) => (
+              <article
+                key={step.label}
+                className="relative rounded-2xl border border-white/10 bg-[#0f1115]/80 p-6 backdrop-blur-md shadow-[0_0_28px_-18px_rgba(67,217,162,0.35)] transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:border-teal-300/35 hover:shadow-[0_0_36px_-16px_rgba(67,217,162,0.58)]"
+              >
+                <div className="mb-4 inline-flex h-8 min-w-8 items-center justify-center rounded-full border border-teal-300/30 bg-teal-300/15 px-3 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-teal-200">
+                  {step.label}
+                </div>
+                <h3 className="font-outfit text-xl font-semibold text-blue-400">{step.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-slate-400">{step.description}</p>
+                <div className="pointer-events-none absolute right-4 top-4 font-mono text-xs text-slate-600">
+                  0{index + 1}
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </MotionSection>
+
+      <DashboardPreview />
+      <Testimonials />
+
+      <MotionSection id="pricing" className="relative py-24">
+        <div className="pointer-events-none absolute left-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        <div className="mx-auto max-w-5xl px-4">
+          <div className="text-center">
+            <p className="section-label">Pricing</p>
+            <h2 className="font-outfit mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl">
+              Community-first, team-friendly
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-sm text-slate-400 md:text-base">
+              Free gives your team everything needed to scout real events. Supporter adds
+              more AI headroom and helps us keep PitPulse fast and reliable for everyone.
             </p>
           </div>
 
-          <div className="mt-14 grid gap-6 sm:grid-cols-2 sm:gap-8 lg:mx-auto lg:max-w-3xl">
-            {/* Free Tier */}
-            <div className="relative rounded-2xl border border-white/10 bg-gray-900/50 p-8 transition-all hover:border-white/15 hover:shadow-lg hover:shadow-blue-500/5">
-              <div className="mb-6 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-              </div>
-              <p className="text-sm font-semibold uppercase tracking-widest text-gray-400">Free</p>
-              <p className="mt-4 text-4xl font-bold text-white">$0</p>
-              <p className="mt-1 text-sm text-gray-400">forever</p>
-              <div className="my-6 h-px bg-gradient-to-r from-white/10 via-white/5 to-transparent" />
-              <ul className="space-y-3 text-sm text-gray-300">
+          <div className="mt-14 grid gap-6 md:grid-cols-2">
+            <div className="rounded-2xl border border-white/10 bg-[#0f1115]/80 p-8 backdrop-blur-md transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-teal-300/30 hover:shadow-[0_0_34px_-18px_rgba(67,217,162,0.34)]">
+              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-slate-400">Free</p>
+              <p className="font-outfit mt-4 text-5xl font-bold">$0</p>
+              <p className="mt-1 text-sm text-slate-500">forever</p>
+              <div className="my-6 h-px bg-white/10" />
+              <ul className="space-y-3 text-sm text-slate-300">
                 <PricingItem included>Unlimited scouting entries</PricingItem>
-                <PricingItem included>TBA &amp; Statbotics data sync</PricingItem>
-                <PricingItem included>Team management &amp; roles</PricingItem>
-                <PricingItem included>Offline PWA support</PricingItem>
-                <PricingItem included>Team Pulse chat</PricingItem>
-                <PricingItem included>Alliance pick optimizer</PricingItem>
-                <PricingItem included>Pre-match &amp; post-match briefs</PricingItem>
+                <PricingItem included>TBA + Statbotics sync</PricingItem>
+                <PricingItem included>Pre-match briefs + pick optimizer</PricingItem>
+                <PricingItem included>Team Pulse + assignment workflows</PricingItem>
                 <PricingItem included>Unlimited prompts with usage limits</PricingItem>
-                <PricingItem>Higher AI usage limits</PricingItem>
               </ul>
               <Link
                 href="/signup"
-                className="mt-8 block rounded-xl border border-white/10 py-3 text-center text-sm font-semibold text-gray-200 transition-all hover:bg-white/5 hover:-translate-y-0.5"
+                className="mt-8 inline-flex w-full items-center justify-center rounded-full border border-white/15 px-5 py-3 text-sm font-semibold text-slate-200 transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-teal-300/45 hover:bg-teal-300/10"
               >
-                Get started
+                Start Free
               </Link>
             </div>
 
-            {/* Supporter Tier */}
-            <div className="relative rounded-2xl border border-emerald-500/40 bg-gradient-to-b from-emerald-500/[0.06] to-gray-900/80 p-8 shadow-xl shadow-emerald-500/10 transition-all hover:shadow-2xl hover:shadow-emerald-500/15 hover:-translate-y-0.5">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-emerald-600 px-4 py-1 text-xs font-bold tracking-wide text-white shadow-lg shadow-emerald-600/30">
+            <div className="relative rounded-2xl border border-teal-300/35 bg-gradient-to-b from-teal-300/15 to-transparent p-8 shadow-[0_0_40px_-20px_rgba(67,217,162,0.55)] transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-teal-200/60 hover:shadow-[0_0_44px_-18px_rgba(67,217,162,0.78)]">
+              <div className="absolute -top-3 left-6 rounded-full border border-teal-200/70 bg-teal-300 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.15em] text-[#042116] shadow-[0_8px_18px_-10px_rgba(67,217,162,0.8)]">
                 Support us
               </div>
-              <div className="mb-6 flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-              </div>
-              <p className="text-sm font-semibold uppercase tracking-widest text-emerald-400">Supporter</p>
-              <p className="mt-4 text-4xl font-bold text-white">
-                $5<span className="text-2xl">.99</span>
-              </p>
-              <p className="mt-1 text-sm text-gray-400">per team / month</p>
-              <div className="my-6 h-px bg-gradient-to-r from-emerald-500/20 via-emerald-500/10 to-transparent" />
-              <ul className="space-y-3 text-sm text-gray-300">
+              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-teal-200">Supporter</p>
+              <p className="font-outfit mt-4 text-5xl font-bold">$5.99</p>
+              <p className="mt-1 text-sm text-slate-300">per team / month</p>
+              <div className="my-6 h-px bg-teal-200/25" />
+              <ul className="space-y-3 text-sm text-slate-100">
                 <PricingItem included>Everything in Free</PricingItem>
                 <PricingItem included>Higher AI usage limits</PricingItem>
-                <PricingItem included>Natural language data queries</PricingItem>
-                <PricingItem included>Faster AI capacity for your team</PricingItem>
-                <PricingItem included>Helps fund shared token usage</PricingItem>
+                <PricingItem included>Priority model capacity</PricingItem>
+                <PricingItem included>Directly supports platform reliability</PricingItem>
               </ul>
               <Link
                 href="/signup"
-                className="mt-8 block rounded-xl bg-emerald-600 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-emerald-600/25 transition-all hover:bg-emerald-500 hover:-translate-y-0.5"
+                className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-teal-400 to-cyan-400 px-5 py-3 text-sm font-semibold text-[#042116] shadow-[0_0_28px_-12px_rgba(67,217,162,0.8)] transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:brightness-110 hover:shadow-[0_0_34px_-10px_rgba(67,217,162,0.88)]"
               >
                 Upgrade to Supporter
               </Link>
             </div>
           </div>
-
         </div>
       </MotionSection>
 
-      {/* CTA */}
-      <MotionSection className="relative overflow-hidden border-t border-white/5 py-24">
+      <MotionSection className="relative overflow-hidden py-24">
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute top-1/2 left-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-600/20 blur-[100px]" />
-          <div className="absolute top-1/3 left-1/3 h-64 w-64 rounded-full bg-purple-600/10 blur-[80px]" />
+          <div className="absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-teal-300/12 blur-[130px]" />
         </div>
+        <div className="pointer-events-none absolute left-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
         <div className="relative mx-auto max-w-2xl px-4 text-center">
-          <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-400">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          </div>
-          <h2 className="text-3xl font-bold sm:text-4xl">
-            Ready to level up your scouting?
+          <p className="section-label">Start scouting better</p>
+          <h2 className="font-outfit mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl">
+            Ready for cleaner decisions at your next event?
           </h2>
-          <p className="mt-4 text-lg text-gray-400">
-            Join teams already using ScoutAI to make smarter alliance picks and
-            win more matches.
+          <p className="mx-auto mt-5 max-w-xl text-sm text-slate-400 md:text-base">
+            PitPulse is designed to reduce chaos on match day and help your drive team
+            act with confidence.
           </p>
-          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               href="/signup"
-              className="group relative overflow-hidden rounded-xl bg-blue-600 px-10 py-3.5 text-base font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-500 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5"
+              className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-teal-400 to-cyan-400 px-8 py-3 text-sm font-semibold text-[#042116] shadow-[0_0_30px_-12px_rgba(67,217,162,0.8)] transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:brightness-110 hover:shadow-[0_0_36px_-10px_rgba(67,217,162,0.88)]"
             >
-              <span className="relative z-10">
-                Get Started Free
-                <span className="ml-2 inline-block transition-transform group-hover:translate-x-1">
-                  &rarr;
-                </span>
-              </span>
+              Create free account
+            </Link>
+            <Link
+              href="/contact"
+              className="inline-flex items-center justify-center rounded-full border border-white/15 px-8 py-3 text-sm font-semibold text-slate-200 transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-teal-300/50 hover:bg-teal-300/10"
+            >
+              Talk to us
             </Link>
           </div>
-          <p className="mt-6 text-xs text-gray-500">
-            No credit card required. Free forever for every team.
-          </p>
         </div>
       </MotionSection>
 
@@ -407,166 +326,19 @@ export default async function Home() {
   );
 }
 
-const featureColors: Record<string, { icon: string; iconHover: string; glow: string; border: string }> = {
-  blue: { icon: "bg-blue-500/10 text-blue-400", iconHover: "group-hover:bg-blue-500/20", glow: "group-hover:shadow-blue-500/5", border: "group-hover:border-blue-500/20" },
-  cyan: { icon: "bg-cyan-500/10 text-cyan-400", iconHover: "group-hover:bg-cyan-500/20", glow: "group-hover:shadow-cyan-500/5", border: "group-hover:border-cyan-500/20" },
-  purple: { icon: "bg-purple-500/10 text-purple-400", iconHover: "group-hover:bg-purple-500/20", glow: "group-hover:shadow-purple-500/5", border: "group-hover:border-purple-500/20" },
-  orange: { icon: "bg-orange-500/10 text-orange-400", iconHover: "group-hover:bg-orange-500/20", glow: "group-hover:shadow-orange-500/5", border: "group-hover:border-orange-500/20" },
-  green: { icon: "bg-green-500/10 text-green-400", iconHover: "group-hover:bg-green-500/20", glow: "group-hover:shadow-green-500/5", border: "group-hover:border-green-500/20" },
-  rose: { icon: "bg-rose-500/10 text-rose-400", iconHover: "group-hover:bg-rose-500/20", glow: "group-hover:shadow-rose-500/5", border: "group-hover:border-rose-500/20" },
-};
+function FeatureCard({ feature }: { feature: Feature }) {
+  const Icon = feature.icon;
 
-function FeatureCard({
-  icon,
-  title,
-  description,
-  color = "blue",
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  color?: string;
-}) {
-  const palette = featureColors[color] ?? featureColors.blue;
   return (
-    <div className={`group relative rounded-2xl border border-white/10 bg-gray-900/50 p-6 transition-all hover:bg-gray-900/80 hover:shadow-xl hover:-translate-y-0.5 ${palette.glow} ${palette.border}`}>
-      <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl ${palette.icon} transition-colors ${palette.iconHover}`}>
-        {icon}
+    <article className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#0f1115]/85 p-6 backdrop-blur-md transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:border-teal-300/40 hover:shadow-[0_0_34px_-18px_rgba(67,217,162,0.6)]">
+      <div className="pointer-events-none absolute right-0 top-0 h-16 w-16 border-r border-t border-teal-300/25 opacity-0 transition group-hover:opacity-100" />
+      <div className="pointer-events-none absolute bottom-0 left-0 h-16 w-16 border-b border-l border-teal-300/25 opacity-0 transition group-hover:opacity-100" />
+      <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-teal-300/25 bg-teal-300/10 text-teal-200 shadow-[0_0_20px_-12px_rgba(67,217,162,0.9)]">
+        <Icon className="h-5 w-5" />
       </div>
-      <h3 className="text-lg font-semibold text-white">{title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-gray-400">
-        {description}
-      </p>
-    </div>
-  );
-}
-
-const stepMeta: Record<number, { title: string; description: string }> = {
-  1: {
-    title: "Scout matches",
-    description:
-      "Tap counters and toggles from the stands. Offline-ready, syncs when back online.",
-  },
-  2: {
-    title: "AI analyzes data",
-    description:
-      "Your scouting observations combine with TBA and Statbotics data for deep analysis.",
-  },
-  3: {
-    title: "Win with strategy",
-    description:
-      "Pre-match briefs, alliance pick lists, and game plans, all generated in seconds.",
-  },
-};
-
-const stepColors: Record<string, { badge: string; glow: string }> = {
-  blue: { badge: "bg-blue-600 shadow-blue-600/30", glow: "bg-blue-500/10 border-blue-500/20" },
-  purple: { badge: "bg-purple-600 shadow-purple-600/30", glow: "bg-purple-500/10 border-purple-500/20" },
-  cyan: { badge: "bg-cyan-600 shadow-cyan-600/30", glow: "bg-cyan-500/10 border-cyan-500/20" },
-};
-
-function StepScene({
-  step,
-  color,
-  children,
-}: {
-  step: number;
-  color: string;
-  children: React.ReactNode;
-}) {
-  const meta = stepMeta[step];
-  const palette = stepColors[color] ?? stepColors.blue;
-
-  return (
-    <div className="relative text-center">
-      <div
-        className={`relative mx-auto mb-5 flex h-28 w-28 items-center justify-center rounded-2xl border ${palette.glow}`}
-      >
-        {children}
-        <div
-          className={`absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white shadow-lg ${palette.badge}`}
-        >
-          {step}
-        </div>
-      </div>
-      <h3 className="text-lg font-semibold text-white">{meta.title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-gray-400">
-        {meta.description}
-      </p>
-    </div>
-  );
-}
-
-/* ── SVG Icon Components ── */
-
-function ClipboardIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
-      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-      <path d="M12 11h4" />
-      <path d="M12 16h4" />
-      <path d="M8 11h.01" />
-      <path d="M8 16h.01" />
-    </svg>
-  );
-}
-
-function ChartIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 3v18h18" />
-      <path d="M7 16l4-8 4 4 4-6" />
-    </svg>
-  );
-}
-
-function BrainIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2a4 4 0 0 0-4 4v1a4 4 0 0 0-1 .5A3.5 3.5 0 0 0 4 11a3.5 3.5 0 0 0 1.5 2.9A4 4 0 0 0 8 18h1" />
-      <path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1 1 .5A3.5 3.5 0 0 1 20 11a3.5 3.5 0 0 1-1.5 2.9A4 4 0 0 1 16 18h-1" />
-      <path d="M12 2v20" />
-      <path d="M8 10h1" />
-      <path d="M15 10h1" />
-      <path d="M9 14h1" />
-      <path d="M14 14h1" />
-    </svg>
-  );
-}
-
-function TargetIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <circle cx="12" cy="12" r="6" />
-      <circle cx="12" cy="12" r="2" />
-    </svg>
-  );
-}
-
-function UsersIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  );
-}
-
-function WifiOffIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 20h.01" />
-      <path d="M8.5 16.429a5 5 0 0 1 7 0" />
-      <path d="M5 12.859a10 10 0 0 1 5.17-2.69" />
-      <path d="M19 12.859a10 10 0 0 0-2.007-1.523" />
-      <path d="M2 8.82a15 15 0 0 1 4.177-2.643" />
-      <path d="M22 8.82a15 15 0 0 0-11.288-3.764" />
-      <path d="m2 2 20 20" />
-    </svg>
+      <h3 className="font-outfit text-xl font-semibold text-blue-400">{feature.title}</h3>
+      <p className="mt-3 text-sm leading-relaxed text-slate-400">{feature.description}</p>
+    </article>
   );
 }
 
@@ -580,38 +352,15 @@ function PricingItem({
   return (
     <li className="flex items-start gap-3">
       {included ? (
-        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500/10">
-          <svg
-            className="h-3 w-3 text-blue-400"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
+        <span className="mt-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-teal-300/20 text-teal-200">
+          <Check className="h-3 w-3" />
         </span>
       ) : (
-        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gray-500/10">
-          <svg
-            className="h-3 w-3 text-gray-600"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
+        <span className="mt-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-slate-700/30 text-slate-500">
+          <GaugeCircle className="h-3 w-3" />
         </span>
       )}
-      <span className={included ? "" : "text-gray-500"}>{children}</span>
+      <span>{children}</span>
     </li>
   );
 }

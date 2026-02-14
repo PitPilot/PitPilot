@@ -106,7 +106,7 @@ export function TeamStatsTable({
   return (
     <div className="space-y-4">
       {showEpaNotice && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-yellow-300">
+        <div className="rounded-xl border border-teal-500/30 bg-teal-500/10 px-3 py-2 text-xs text-teal-700 dark:text-yellow-300">
           {missingEpaCount === data.length
             ? "EPA stats update once matches start or as the event gets closer."
             : `EPA stats are still missing for ${missingEpaCount} team${missingEpaCount === 1 ? "" : "s"}.`}

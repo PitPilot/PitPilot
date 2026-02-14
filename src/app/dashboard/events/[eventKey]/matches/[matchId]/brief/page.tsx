@@ -270,7 +270,7 @@ export default async function BriefPage({
                             team.role === "scorer"
                               ? "bg-green-500/20 text-green-200"
                               : team.role === "defender"
-                              ? "bg-orange-500/20 text-orange-200"
+                              ? "bg-cyan-500/20 text-cyan-200"
                               : "bg-white/10 text-gray-200"
                           }`}
                         >

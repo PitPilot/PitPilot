@@ -167,3 +167,14 @@ export function normalizePlanTier(value: string | null | undefined): PlanTier {
 export function getTeamAiLimit(planTier: string | null | undefined): number {
   return TEAM_AI_LIMITS[normalizePlanTier(planTier)];
 }
+
+export function buildRateLimitHeaders(
+  limit: Pick<RateLimitResult, "remaining" | "resetAt">,
+  max: number
+): HeadersInit {
+  return {
+    "X-RateLimit-Limit": String(Math.max(0, max)),
+    "X-RateLimit-Remaining": String(Math.max(0, limit.remaining)),
+    "X-RateLimit-Reset": String(limit.resetAt),
+  };
+}

@@ -29,7 +29,7 @@ export function ContactForm() {
   }
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-gray-900/60 p-6 shadow-sm">
+    <div className="marketing-card rounded-2xl p-6 shadow-sm">
       <h2 className="text-lg font-semibold">Leave a message</h2>
       <p className="mt-1 text-sm text-gray-300">
         Share your question or idea and we&apos;ll respond as soon as we can.
@@ -63,7 +63,7 @@ export function ContactForm() {
             name="email"
             type="email"
             required
-            className="mt-2 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="marketing-input mt-2 w-full rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none"
             placeholder="you@team.org"
           />
         </div>
@@ -75,8 +75,8 @@ export function ContactForm() {
             name="subject"
             type="text"
             required
-            className="mt-2 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            placeholder="What can ScoutAI do for my team?"
+            className="marketing-input mt-2 w-full rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none"
+            placeholder="What can PitPulse do for my team?"
           />
         </div>
         <div>
@@ -87,14 +87,14 @@ export function ContactForm() {
             name="message"
             rows={5}
             required
-            className="mt-2 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="marketing-input mt-2 w-full rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none"
             placeholder="Tell us about your team and what you need."
           />
         </div>
         <button
           type="submit"
           disabled={isPending}
-          className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:opacity-50"
+          className="w-full rounded-lg bg-teal-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-400 disabled:opacity-50"
         >
           {isPending ? "Sending..." : "Send message"}
         </button>

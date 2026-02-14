@@ -268,7 +268,7 @@ export function AdminPanel({
       >
         <div className="border-b border-white/10 px-5 py-4">
           <p className="text-base font-semibold text-white">
-            <span className="text-blue-400">ScoutAI</span>
+            <span className="text-teal-400">PitPulse</span>
             <span className="mx-2 text-gray-500">/</span>
             <span className="text-gray-200">Admin</span>
           </p>
@@ -286,7 +286,7 @@ export function AdminPanel({
                   }}
                   className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
                     activeTab === tab.key
-                      ? "bg-blue-500/15 text-blue-200 ring-1 ring-blue-400/30"
+                      ? "bg-teal-500/15 text-teal-200 ring-1 ring-blue-400/30"
                       : "text-gray-400 hover:bg-white/5 hover:text-white"
                   }`}
                 >
@@ -309,7 +309,7 @@ export function AdminPanel({
             {adminEmail ? (
               <p className="truncate text-xs text-gray-400">{adminEmail}</p>
             ) : null}
-            <span className="mt-2 inline-flex rounded-md bg-blue-500/15 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-blue-300">
+            <span className="mt-2 inline-flex rounded-md bg-teal-500/15 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-teal-300">
               Admin
             </span>
           </div>
@@ -327,9 +327,9 @@ export function AdminPanel({
         <div className="mx-auto max-w-5xl px-4 py-8 lg:pl-4">
           {/* Status toast */}
           {status && (
-            <div className="mb-4 rounded-xl dashboard-panel px-4 py-3 text-sm font-medium text-blue-200 border-blue-500/30 bg-blue-500/10">
+            <div className="mb-4 rounded-xl dashboard-panel px-4 py-3 text-sm font-medium text-teal-200 border-teal-500/30 bg-teal-500/10">
               <div className="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-blue-400"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-teal-400"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                 {status}
               </div>
             </div>

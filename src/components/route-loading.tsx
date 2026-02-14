@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { usePathname } from "next/navigation";
 
 export function RouteLoading() {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const pathname = usePathname();
 
   const startLoading = useCallback(() => {
     setLoading(true);
@@ -28,7 +30,7 @@ export function RouteLoading() {
 
     const tick = () => {
       // Fast at first, then slow down — never reaches 100 on its own
-      current += (90 - current) * 0.03;
+      current += (88 - current) * 0.06;
       setProgress(current);
       frame = requestAnimationFrame(tick);
     };
@@ -60,23 +62,32 @@ export function RouteLoading() {
       }
     };
 
-    // Detect when navigation completes (URL changes)
-    let lastUrl = window.location.href;
-    const observer = new MutationObserver(() => {
-      if (window.location.href !== lastUrl) {
-        lastUrl = window.location.href;
-        stopLoading();
-      }
-    });
-
-    observer.observe(document.body, { childList: true, subtree: true });
     document.addEventListener("click", handleClick, true);
 
     return () => {
       document.removeEventListener("click", handleClick, true);
-      observer.disconnect();
     };
   }, [startLoading, stopLoading]);
+
+  useEffect(() => {
+    // App Router route change completed
+    if (loading) {
+      const timer = window.setTimeout(() => {
+        stopLoading();
+      }, 0);
+      return () => window.clearTimeout(timer);
+    }
+    return undefined;
+  }, [pathname, loading, stopLoading]);
+
+  useEffect(() => {
+    if (!loading) return;
+    // Never leave the bar stuck around ~80%
+    const timer = window.setTimeout(() => {
+      stopLoading();
+    }, 4000);
+    return () => window.clearTimeout(timer);
+  }, [loading, stopLoading]);
 
   if (!loading && progress === 0) return null;
 

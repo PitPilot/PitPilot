@@ -36,7 +36,7 @@ export function CounterButton({
           type="button"
           onClick={() => onChange(Math.min(max, value + 1))}
           disabled={value >= max}
-          className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 via-sky-500 to-blue-600 text-lg font-bold text-white shadow-sm transition hover:from-cyan-400 hover:via-sky-400 hover:to-blue-500 active:from-cyan-600 active:to-blue-700 disabled:opacity-30"
+          className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 via-sky-500 to-cyan-500 text-lg font-bold text-white shadow-sm transition hover:from-cyan-400 hover:via-sky-400 hover:to-teal-500 active:from-cyan-600 active:to-blue-700 disabled:opacity-30"
         >
           +
         </button>

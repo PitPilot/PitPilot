@@ -1,6 +1,6 @@
 {
-  "name": "ScoutAI",
-  "short_name": "ScoutAI",
+  "name": "PitPulse",
+  "short_name": "PitPulse",
   "description": "AI-powered FRC/FTC scouting and strategy platform",
   "start_url": "/dashboard",
   "display": "standalone",

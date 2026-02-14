@@ -4,7 +4,12 @@ import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { resolveRateLimitMessage } from "@/lib/rate-limit-ui";
+import { useToast } from "@/components/toast";
+import {
+  formatRateLimitUsageMessage,
+  readRateLimitSnapshot,
+  resolveRateLimitMessage,
+} from "@/lib/rate-limit-ui";
 
 function renderInlineMarkdown(text: string, keyPrefix: string): ReactNode[] {
   const nodes: ReactNode[] = [];
@@ -228,6 +233,7 @@ export function TeamAIBriefButton({
   teamNumber: number;
   teamName?: string | null;
 }) {
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [brief, setBrief] = useState<string | null>(null);
@@ -304,12 +310,17 @@ export function TeamAIBriefButton({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ eventKey, teamNumber }),
       });
+      const usage = readRateLimitSnapshot(res.headers);
+      if (usage) {
+        toast(formatRateLimitUsageMessage(usage, "ai"), "info");
+      }
       const data = await res.json();
       if (!res.ok || !data.success) {
         throw new Error(
           resolveRateLimitMessage(
             res.status,
-            data.error || "Failed to generate AI briefing"
+            data.error || "Failed to generate AI briefing",
+            "ai"
           )
         );
       }

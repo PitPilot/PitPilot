@@ -17,51 +17,44 @@ interface TestimonialsClientProps {
 
 export function TestimonialsClient({ testimonials }: TestimonialsClientProps) {
   return (
-    <section id="testimonials" className="border-t border-white/5 py-24">
-      <div className="mx-auto max-w-6xl px-4">
+    <section id="testimonials" className="relative py-24">
+      <div className="pointer-events-none absolute left-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      <div className="mx-auto max-w-7xl px-4">
         <div className="text-center">
-          <p className="text-sm font-semibold uppercase tracking-widest text-blue-500">
-            Testimonials
-          </p>
-          <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
-            Teams love ScoutAI
+          <p className="section-label">Testimonials</p>
+          <h2 className="font-outfit mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl">
+            Trusted by teams in the stands
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-gray-400">
-            Hear from teams who use ScoutAI to gain an edge at events.
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-slate-400">
+            PitPulse is built from real event workflow pain points: speed, clarity,
+            and consistency under pressure.
           </p>
         </div>
 
         {testimonials.length === 0 ? (
-          <div className="mt-16 rounded-2xl border border-dashed border-white/10 bg-gray-900/30 p-10 text-center">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 text-gray-500">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21"/></svg>
-            </div>
-            <p className="text-sm font-medium text-gray-400">No testimonials yet</p>
-            <p className="mt-1 text-xs text-gray-500">Check back soon.</p>
+          <div className="mt-14 rounded-2xl border border-dashed border-white/20 bg-white/[0.02] p-10 text-center text-sm text-slate-500">
+            No testimonials yet. Check back soon.
           </div>
         ) : (
-          <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {testimonials.map((t, i) => {
-              const stars = Math.max(1, Math.min(5, t.rating ?? 5));
+          <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {testimonials.map((testimonial, index) => {
+              const stars = Math.max(1, Math.min(5, testimonial.rating ?? 5));
               return (
-                <motion.div
-                  key={t.id ?? `${t.name}-${i}`}
-                  initial={{ opacity: 0, y: 20 }}
+                <motion.article
+                  key={testimonial.id ?? `${testimonial.name}-${index}`}
+                  initial={{ opacity: 0, y: 18 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ duration: 0.5, delay: i * 0.1 }}
-                  className="group relative rounded-2xl border border-white/10 bg-gray-900/50 p-6 transition-all hover:border-white/15 hover:shadow-lg hover:shadow-blue-500/5"
+                  viewport={{ once: true, margin: "-70px" }}
+                  transition={{ duration: 0.45, delay: index * 0.06 }}
+                  className="group rounded-2xl border border-white/10 bg-[#0f1115]/85 p-6 backdrop-blur-md transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:border-teal-300/35 hover:shadow-[0_0_34px_-15px_rgba(67,217,162,0.58)]"
                 >
-                  {/* Quote mark accent */}
-                  <div className="absolute top-4 right-4 text-white/[0.04] text-4xl font-serif leading-none select-none">&ldquo;</div>
-
-                  <div className="mb-4 flex gap-0.5 text-amber-400">
-                    {Array.from({ length: stars }).map((_, si) => (
+                  <div className="mb-4 flex items-center gap-0.5 text-teal-200">
+                    {Array.from({ length: stars }).map((_, starIndex) => (
                       <svg
-                        key={si}
+                        key={starIndex}
                         xmlns="http://www.w3.org/2000/svg"
-                        width="14"
-                        height="14"
+                        width="13"
+                        height="13"
                         viewBox="0 0 24 24"
                         fill="currentColor"
                       >
@@ -70,22 +63,22 @@ export function TestimonialsClient({ testimonials }: TestimonialsClientProps) {
                     ))}
                   </div>
 
-                  <p className="text-sm leading-relaxed text-gray-300">
-                    &ldquo;{t.quote}&rdquo;
+                  <p className="text-sm leading-relaxed text-slate-300">
+                    &ldquo;{testimonial.quote}&rdquo;
                   </p>
 
-                  <div className="mt-6 flex items-center gap-3 border-t border-white/5 pt-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 text-sm font-bold text-white shadow-md shadow-blue-500/20">
-                      {t.name.charAt(0)}
+                  <div className="mt-6 flex items-center gap-3 border-t border-white/10 pt-4">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-teal-300 to-cyan-300 text-xs font-bold text-[#042116] shadow-[0_0_20px_-10px_rgba(67,217,162,0.8)]">
+                      {testimonial.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-white">{t.name}</p>
-                      <p className="text-xs text-gray-500">
-                        {t.role} &middot; {t.team}
+                      <p className="text-sm font-semibold text-white">{testimonial.name}</p>
+                      <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-slate-500">
+                        {testimonial.role} · {testimonial.team}
                       </p>
                     </div>
                   </div>
-                </motion.div>
+                </motion.article>
               );
             })}
           </div>

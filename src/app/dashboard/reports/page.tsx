@@ -10,7 +10,7 @@ import {
 } from "@/lib/scouting-report-actions";
 
 export const metadata: Metadata = {
-  title: "My Reports | ScoutAI",
+  title: "My Reports | PitPulse",
   description: "Review every scouting report you have submitted.",
 };
 
@@ -85,7 +85,7 @@ export default async function ReportsPage() {
       <main className="mx-auto max-w-5xl px-4 pb-12 pt-24 space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
+            <p className="text-xs font-semibold uppercase tracking-widest text-teal-400">
               Scouting history
             </p>
             <h1 className="text-2xl font-bold text-white">
@@ -163,7 +163,7 @@ export default async function ReportsPage() {
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
+                      <p className="text-xs font-semibold uppercase tracking-widest text-teal-400">
                         {eventTitle}
                       </p>
                       <h2 className="text-lg font-semibold text-white">
@@ -251,7 +251,7 @@ export default async function ReportsPage() {
                   <div className="mt-4 flex flex-wrap items-center gap-2">
                     <Link
                       href={`/scout/${report.match_id}/${report.team_number}`}
-                      className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-blue-300 dashboard-chip"
+                      className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-teal-300 dashboard-chip"
                     >
                       Review entry
                     </Link>

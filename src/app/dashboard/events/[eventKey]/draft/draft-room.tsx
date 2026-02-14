@@ -884,7 +884,7 @@ export function DraftRoom({
             3-round draft
           </label>
           {!storageEnabled && (
-            <span className="text-amber-300">Local-only mode</span>
+            <span className="text-teal-300">Local-only mode</span>
           )}
           {saving && (
             <span className="flex items-center gap-1 text-blue-300">
@@ -1003,7 +1003,7 @@ export function DraftRoom({
                             team.role === "scorer"
                               ? "bg-green-500/15 text-green-300"
                               : team.role === "defender"
-                              ? "bg-orange-500/15 text-orange-300"
+                              ? "bg-cyan-500/15 text-cyan-300"
                               : "bg-gray-500/15 text-gray-300"
                           }`}>
                             {team.role}

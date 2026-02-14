@@ -167,7 +167,7 @@ export async function createOrganization(formData: FormData) {
   // Update profile with org_id and captain role
   const { data: updatedProfile, error: profileError } = await supabase
     .from("profiles")
-    .update({ org_id: org.id, role: "captain", onboarding_complete: true })
+    .update({ org_id: org.id, role: "captain", onboarding_complete: false })
     .eq("id", user.id)
     .select("id, org_id, role")
     .single();
@@ -262,13 +262,15 @@ export async function updateProfile(formData: FormData) {
     return { error: `Select up to ${MAX_TEAM_ROLES} team roles.` };
   }
 
+  const updates: Database["public"]["Tables"]["profiles"]["Update"] = {
+    display_name: displayName,
+    team_roles: teamRoles,
+    updated_at: new Date().toISOString(),
+  };
+
   const { error } = await supabase
     .from("profiles")
-    .update({
-      display_name: displayName,
-      team_roles: teamRoles,
-      updated_at: new Date().toISOString(),
-    })
+    .update(updates)
     .eq("id", user.id);
 
   if (error) {

@@ -90,7 +90,7 @@ export default async function ScoutPage({
         </header>
 
         <main className="mx-auto max-w-lg px-4 py-6">
-          <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 p-4 text-sm text-amber-100">
+          <div className="rounded-xl border border-teal-400/30 bg-teal-500/10 p-4 text-sm text-teal-100">
             Self-scouting is disabled. Your team cannot submit scouting reports
             for Team {teamNumber}.
           </div>

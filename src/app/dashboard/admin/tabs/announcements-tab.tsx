@@ -21,9 +21,9 @@ interface AnnouncementsTabProps {
 }
 
 const variantColors: Record<string, { dot: string; border: string }> = {
-  info: { dot: "bg-blue-400", border: "border-l-blue-400" },
+  info: { dot: "bg-teal-400", border: "border-l-blue-400" },
   success: { dot: "bg-green-400", border: "border-l-green-400" },
-  warning: { dot: "bg-amber-400", border: "border-l-amber-400" },
+  warning: { dot: "bg-teal-400", border: "border-l-teal-400" },
   danger: { dot: "bg-red-400", border: "border-l-red-400" },
 };
 
@@ -53,7 +53,7 @@ export function AnnouncementsTab({ announcements, onStatus, onConfirmDelete }: A
   return (
     <div>
       <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-500/10 text-teal-400">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 11 18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
         </div>
         <div>
@@ -63,7 +63,7 @@ export function AnnouncementsTab({ announcements, onStatus, onConfirmDelete }: A
       </div>
 
       <form onSubmit={handleSubmit} className="mt-6 rounded-2xl dashboard-panel p-6">
-        <h3 className="text-xs font-semibold uppercase tracking-widest text-blue-400">New Announcement</h3>
+        <h3 className="text-xs font-semibold uppercase tracking-widest text-teal-400">New Announcement</h3>
         <div className="mt-4 grid gap-3 md:grid-cols-6">
           <div className="md:col-span-4">
             <label className="block text-xs font-medium text-gray-400">Message</label>

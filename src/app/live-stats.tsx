@@ -24,7 +24,6 @@ function AnimatedCounter({ target, label, suffix }: { target: number; label: str
           function tick(now: number) {
             const elapsed = now - start;
             const progress = Math.min(elapsed / duration, 1);
-            // ease-out cubic
             const eased = 1 - Math.pow(1 - progress, 3);
             setCount(Math.round(eased * target));
             if (progress < 1) requestAnimationFrame(tick);
@@ -42,39 +41,22 @@ function AnimatedCounter({ target, label, suffix }: { target: number; label: str
 
   return (
     <div ref={ref} className="text-center">
-      <div className="text-4xl font-extrabold tabular-nums sm:text-5xl">
-        <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent drop-shadow-sm">
-          {count.toLocaleString()}{suffix}
-        </span>
+      <div className="font-outfit text-4xl font-bold tabular-nums text-white sm:text-5xl">
+        {count.toLocaleString()}{suffix}
       </div>
-      <p className="mt-2 text-sm font-medium text-gray-400">{label}</p>
+      <p className="mt-2 text-[11px] font-medium uppercase tracking-[0.2em] text-gray-500">{label}</p>
     </div>
   );
 }
 
 export function LiveStats({ teams, entries, matches }: StatsProps) {
   return (
-    <section className="border-t border-white/5 py-16">
+    <section className="relative py-20">
       <div className="mx-auto max-w-4xl px-4">
-        <div className="grid grid-cols-3 gap-8">
-          <div className="relative rounded-2xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur-sm">
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-blue-500/5 to-transparent" />
-            <div className="relative">
-              <AnimatedCounter target={teams} label="Teams Registered" suffix="+" />
-            </div>
-          </div>
-          <div className="relative rounded-2xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur-sm">
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-purple-500/5 to-transparent" />
-            <div className="relative">
-              <AnimatedCounter target={entries} label="Scouting Entries" suffix="+" />
-            </div>
-          </div>
-          <div className="relative rounded-2xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur-sm">
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-cyan-500/5 to-transparent" />
-            <div className="relative">
-              <AnimatedCounter target={matches} label="Matches Tracked" suffix="+" />
-            </div>
-          </div>
+        <div className="grid grid-cols-3 divide-x divide-white/[0.06]">
+          <AnimatedCounter target={teams} label="Teams" suffix="+" />
+          <AnimatedCounter target={entries} label="Scouting Entries" suffix="+" />
+          <AnimatedCounter target={matches} label="Matches Tracked" suffix="+" />
         </div>
       </div>
     </section>

@@ -2,7 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { resolveRateLimitMessage } from "@/lib/rate-limit-ui";
+import { useToast } from "@/components/toast";
+import {
+  formatRateLimitUsageMessage,
+  readRateLimitSnapshot,
+  resolveRateLimitMessage,
+} from "@/lib/rate-limit-ui";
 
 type TeamProfile = {
   autoStartPositions: Array<"left" | "center" | "right">;
@@ -68,6 +73,7 @@ export function GeneratePickListButton({
   requireTeamProfile?: boolean;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -136,6 +142,10 @@ export function GeneratePickListButton({
           teamProfile: profile,
         }),
       });
+      const usage = readRateLimitSnapshot(res.headers);
+      if (usage) {
+        toast(formatRateLimitUsageMessage(usage, "ai"), "info");
+      }
 
       const data = await res.json();
 
@@ -143,7 +153,8 @@ export function GeneratePickListButton({
         setError(
           resolveRateLimitMessage(
             res.status,
-            data.error ?? "Failed to generate pick list"
+            data.error ?? "Failed to generate pick list",
+            "ai"
           )
         );
         return;

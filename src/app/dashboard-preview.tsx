@@ -4,66 +4,53 @@ import { motion } from "framer-motion";
 
 export function DashboardPreview() {
   return (
-    <section className="border-t border-white/5 py-24">
-      <div className="mx-auto max-w-6xl px-4">
+    <section className="relative py-24">
+      <div className="pointer-events-none absolute left-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      <div className="mx-auto max-w-7xl px-4">
         <div className="text-center">
-          <p className="text-sm font-semibold uppercase tracking-widest text-blue-500">
-            See It In Action
-          </p>
-          <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
-            A dashboard built for the stands
+          <p className="section-label">See it in action</p>
+          <h2 className="font-outfit mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl">
+            Interface built for match tempo
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-gray-400">
-            Mobile-first design means your scouts can work from their phones.
-            Big buttons, fast data entry, no fumbling.
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-slate-400">
+            Clear hierarchy, assignment controls, quick brief access, and high-contrast
+            team grids designed for noisy stands.
           </p>
         </div>
 
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 26 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="mt-12"
+          viewport={{ once: true, margin: "-120px" }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="mt-14"
         >
-          {/* Browser chrome mockup */}
-          <div className="mx-auto max-w-4xl overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-blue-500/10 preview-surface backdrop-blur-sm">
-            {/* Title bar */}
-            <div className="flex items-center gap-2 border-b border-white/5 bg-white/[0.02] px-4 py-3">
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0b1116] shadow-[0_0_50px_-20px_rgba(67,217,162,0.35)]">
+            <div className="flex items-center gap-3 border-b border-white/10 bg-white/5 px-4 py-3.5">
               <div className="flex gap-1.5">
-                <div className="h-3 w-3 rounded-full bg-red-500/60" />
-                <div className="h-3 w-3 rounded-full bg-yellow-500/60" />
-                <div className="h-3 w-3 rounded-full bg-green-500/60" />
+                <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
+                <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
+                <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
               </div>
-              <div className="preview-bar ml-4 flex-1 rounded-lg px-3 py-1.5 text-xs font-medium">
-                <span className="text-gray-500">scoutai.app</span>/dashboard/events/2025miket
+              <div className="ml-2 rounded-md border border-white/10 bg-black/35 px-3 py-1 font-mono text-[11px] text-slate-400">
+                pitpulse.app/dashboard/events/2026miket
               </div>
             </div>
 
-            {/* Dashboard content */}
             <div className="p-4 sm:p-6">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-4">
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <div className="h-5 w-48 rounded bg-white/10" />
-                  <div className="mt-1 h-3 w-32 rounded bg-white/5" />
+                  <div className="h-4 w-52 rounded-full bg-white/10" />
+                  <div className="mt-2 h-3 w-28 rounded-full bg-white/5" />
                 </div>
-                <div className="flex gap-2">
-                  <div className="rounded bg-sky-500/20 px-3 py-1.5 text-xs text-sky-300 font-medium">
-                    Scout Matches
-                  </div>
-                  <div className="rounded bg-orange-500/20 px-3 py-1.5 text-xs text-orange-300 font-medium">
-                    Assignments
-                  </div>
-                  <div className="rounded bg-indigo-500/20 px-3 py-1.5 text-xs text-indigo-300 font-medium">
-                    Pick List
-                  </div>
+                <div className="flex items-center gap-2">
+                  <Badge label="Scout" tone="teal" />
+                  <Badge label="Assignments" tone="cyan" />
+                  <Badge label="AI Brief" tone="slate" />
                 </div>
               </div>
 
-              {/* Match grid */}
-              <div className="grid gap-3 sm:grid-cols-2">
-                {/* Match card 1 */}
+              <div className="grid gap-4 sm:grid-cols-2">
                 <MatchMockup
                   label="Qual 14"
                   score="132 - 118"
@@ -72,20 +59,17 @@ export function DashboardPreview() {
                   scouted={["254", "118"]}
                   hasBrief
                 />
-                {/* Match card 2 */}
                 <MatchMockup
                   label="Qual 15"
                   redTeams={["971", "2443", "4414"]}
                   blueTeams={["2910", "148", "1323"]}
                   assigned={["2443"]}
                 />
-                {/* Match card 3 */}
                 <MatchMockup
                   label="Qual 16"
                   redTeams={["3357", "6328", "125"]}
                   blueTeams={["1986", "4481", "2614"]}
                 />
-                {/* Match card 4 */}
                 <MatchMockup
                   label="Semi 1"
                   redTeams={["2090", "254", "971"]}
@@ -98,6 +82,22 @@ export function DashboardPreview() {
         </motion.div>
       </div>
     </section>
+  );
+}
+
+function Badge({ label, tone }: { label: string; tone: "teal" | "cyan" | "slate" }) {
+  const tones: Record<typeof tone, string> = {
+    teal: "bg-teal-300/20 text-teal-200 border-teal-300/30",
+    cyan: "bg-cyan-300/20 text-cyan-200 border-cyan-300/30",
+    slate: "bg-white/10 text-slate-300 border-white/15",
+  };
+
+  return (
+    <span
+      className={`rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-[0.12em] ${tones[tone]}`}
+    >
+      {label}
+    </span>
   );
 }
 
@@ -119,58 +119,73 @@ function MatchMockup({
   hasBrief?: boolean;
 }) {
   return (
-    <div className="preview-card rounded-md border p-3">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-semibold text-gray-300">{label}</span>
+    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:border-teal-300/35 hover:shadow-[0_0_20px_-12px_rgba(67,217,162,0.55)]">
+      <div className="mb-2 flex items-center justify-between">
+        <span className="font-mono text-[11px] font-medium text-blue-400">{label}</span>
         <div className="flex items-center gap-2">
-          {score && (
-            <span className="text-xs text-gray-500">{score}</span>
-          )}
+          {score && <span className="font-mono text-[11px] text-slate-500">{score}</span>}
           <span
-            className={`rounded px-2 py-0.5 text-[10px] font-medium ${
+            className={`rounded-full px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.1em] ${
               hasBrief
-                ? "bg-purple-500/20 text-purple-400"
-                : "bg-white/5 text-gray-500"
+                ? "border border-teal-300/30 bg-teal-300/15 text-teal-200"
+                : "border border-white/15 bg-white/5 text-slate-500"
             }`}
           >
-            {hasBrief ? "View Brief" : "Pre-Match Brief"}
+            {hasBrief ? "Brief" : "Pending"}
           </span>
         </div>
       </div>
       <div className="mb-1 flex gap-1">
-        {redTeams.map((t) => (
-          <span
-            key={t}
-            className={`flex-1 rounded px-1.5 py-1 text-center text-[10px] font-medium ${
-              scouted.includes(t)
-                ? "bg-red-500/20 text-red-300 ring-1 ring-red-500/40"
-                : assigned.includes(t)
-                ? "bg-red-500/10 text-red-300 ring-1 ring-orange-500/50"
-                : "bg-red-500/10 text-red-400/70"
-            }`}
-          >
-            {t}
-            {scouted.includes(t) ? " \u2713" : ""}
-          </span>
+        {redTeams.map((team) => (
+          <TeamChip
+            key={team}
+            team={team}
+            tone="red"
+            scouted={scouted.includes(team)}
+            assigned={assigned.includes(team)}
+          />
         ))}
       </div>
       <div className="flex gap-1">
-        {blueTeams.map((t) => (
-          <span
-            key={t}
-            className={`flex-1 rounded px-1.5 py-1 text-center text-[10px] font-medium ${
-              scouted.includes(t)
-                ? "bg-blue-500/20 text-blue-300 ring-1 ring-blue-500/40"
-                : assigned.includes(t)
-                ? "bg-blue-500/10 text-blue-300 ring-1 ring-orange-500/50"
-                : "bg-blue-500/10 text-blue-400/70"
-            }`}
-          >
-            {t}
-            {scouted.includes(t) ? " \u2713" : ""}
-          </span>
+        {blueTeams.map((team) => (
+          <TeamChip
+            key={team}
+            team={team}
+            tone="blue"
+            scouted={scouted.includes(team)}
+            assigned={assigned.includes(team)}
+          />
         ))}
       </div>
     </div>
+  );
+}
+
+function TeamChip({
+  team,
+  tone,
+  scouted,
+  assigned,
+}: {
+  team: string;
+  tone: "red" | "blue";
+  scouted: boolean;
+  assigned: boolean;
+}) {
+  const base = tone === "red" ? "bg-red-400/8 text-red-200/70" : "bg-cyan-300/10 text-cyan-200/70";
+
+  const state = scouted
+    ? tone === "red"
+      ? "ring-1 ring-red-300/40 bg-red-400/20 text-red-100"
+      : "ring-1 ring-cyan-300/45 bg-cyan-300/20 text-cyan-100"
+    : assigned
+    ? "ring-1 ring-teal-300/40 bg-teal-300/14 text-teal-100"
+    : base;
+
+  return (
+    <span className={`flex-1 rounded-md px-1.5 py-1 text-center font-mono text-[10px] font-medium ${state}`}>
+      {team}
+      {scouted ? " ✓" : ""}
+    </span>
   );
 }

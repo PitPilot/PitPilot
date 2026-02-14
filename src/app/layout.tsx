@@ -1,12 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Inter, JetBrains_Mono } from "next/font/google";
+import { Geist, Inter, JetBrains_Mono, Outfit } from "next/font/google";
 import "./globals.css";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import { OnlineStatus } from "@/components/online-status";
 import { RouteLoading } from "@/components/route-loading";
 import { ToastProvider } from "@/components/toast";
 import { PageTransition } from "@/components/page-transition";
-import Script from "next/script";
+import { SmoothScroll } from "@/components/smooth-scroll";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -23,15 +23,21 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
+const outfit = Outfit({
+  variable: "--font-outfit",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+});
+
 export const metadata: Metadata = {
-  title: "ScoutAI - AI-Powered FRC/FTC Scouting",
+  title: "PitPulse - AI-Powered FRC/FTC Scouting",
   description:
     "AI-powered scouting and strategy platform for FRC and FTC robotics teams",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "ScoutAI",
+    title: "PitPulse",
   },
   icons: {
     icon: "/favicon.ico",
@@ -49,25 +55,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <Script id="theme-init" strategy="beforeInteractive">{`
-          (function() {
-            try {
-              var stored = localStorage.getItem('scoutai-theme');
-              var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-              var theme = stored === 'light' || stored === 'dark' ? stored : (prefersDark ? 'dark' : 'light');
-              document.documentElement.dataset.theme = theme;
-              document.documentElement.style.colorScheme = theme;
-            } catch (e) {}
-          })();
-        `}</Script>
-      </head>
+    <html lang="en" data-theme="dark" style={{ colorScheme: "dark" }}>
+      <head />
       <body
-        className={`${inter.variable} ${geist.variable} ${jetbrainsMono.variable} font-sans antialiased`}
+        className={`${inter.variable} ${geist.variable} ${jetbrainsMono.variable} ${outfit.variable} font-sans antialiased`}
       >
         <ToastProvider>
           <RouteLoading />
+          <SmoothScroll />
           <PageTransition>{children}</PageTransition>
           <ServiceWorkerRegister />
           <OnlineStatus />

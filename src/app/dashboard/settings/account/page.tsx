@@ -6,8 +6,8 @@ import { Navbar } from "@/components/navbar";
 import { AccountSettingsForm } from "./account-settings-form";
 
 export const metadata: Metadata = {
-  title: "Account Settings | ScoutAI",
-  description: "Manage your ScoutAI account profile and preferences.",
+  title: "Account Settings | PitPulse",
+  description: "Manage your PitPulse account profile and preferences.",
 };
 
 export default async function AccountSettingsPage() {
@@ -38,7 +38,7 @@ export default async function AccountSettingsPage() {
       <main className="mx-auto max-w-4xl px-4 pb-12 pt-24">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
+            <p className="text-xs font-semibold uppercase tracking-widest text-teal-400">
               Account
             </p>
             <h1 className="mt-2 text-3xl font-bold">Account settings</h1>

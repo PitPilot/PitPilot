@@ -10,7 +10,7 @@ import { SortableEvents } from "@/components/sortable-events";
 import { AnimateIn, StaggerGroup, StaggerChild } from "@/components/ui/animate-in";
 
 export const metadata: Metadata = {
-  title: "Dashboard | ScoutAI",
+  title: "Dashboard | PitPulse",
   description: "Your FRC scouting dashboard — manage events, view data, and access AI strategy tools.",
 };
 
@@ -135,7 +135,7 @@ export default async function DashboardPage() {
         <StaggerGroup className="mb-8 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
           <StaggerChild className="relative overflow-hidden rounded-3xl dashboard-panel dashboard-card p-6">
             {/* Subtle gradient accent */}
-            <div className="pointer-events-none absolute top-0 right-0 h-32 w-32 rounded-full bg-blue-500/10 blur-3xl" />
+            <div className="pointer-events-none absolute top-0 right-0 h-32 w-32 rounded-full bg-teal-500/10 blur-3xl" />
             <div className="relative">
               <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
                 Team Overview
@@ -155,7 +155,7 @@ export default async function DashboardPage() {
                 <p className="mt-1 text-sm text-gray-300">{org.name}</p>
               )}
               <div className="mt-4 flex flex-wrap items-center gap-2.5">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/15 px-3 py-1.5 text-xs font-semibold capitalize text-blue-400 dark:text-blue-300 ring-1 ring-blue-500/20">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-500/15 px-3 py-1.5 text-xs font-semibold capitalize text-teal-400 dark:text-teal-300 ring-1 ring-teal-500/20">
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
                   {profile.role}
                 </span>
@@ -218,7 +218,7 @@ export default async function DashboardPage() {
         <AnimateIn delay={0.2} className="mb-8 grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl dashboard-panel dashboard-card p-6">
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-500/10 text-teal-400">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
               </div>
               <div>
@@ -343,7 +343,7 @@ export default async function DashboardPage() {
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       <Link
                         href={`/scout/${report.match_id}/${report.team_number}`}
-                        className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold text-blue-300 dashboard-chip dashboard-chip-action"
+                        className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold text-teal-300 dashboard-chip dashboard-chip-action"
                       >
                         Review
                         <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
@@ -378,7 +378,7 @@ export default async function DashboardPage() {
         {/* ─── Events List ─── */}
         <AnimateIn delay={0.4} className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-500/10 text-teal-400">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             </div>
             <h3 className="text-lg font-semibold text-white">Your Events</h3>

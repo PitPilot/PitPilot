@@ -39,7 +39,7 @@ export default async function TeamPulsePage() {
       <main className="mx-auto max-w-6xl px-4 pb-16 pt-24">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
+            <p className="text-xs font-semibold uppercase tracking-widest text-teal-400">
               Team Pulse
             </p>
             <h1 className="mt-2 text-3xl font-bold">Stay synced in real time</h1>

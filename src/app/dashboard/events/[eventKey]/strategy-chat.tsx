@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { resolveRateLimitMessage } from "@/lib/rate-limit-ui";
+import { useToast } from "@/components/toast";
+import {
+  formatRateLimitUsageMessage,
+  readRateLimitSnapshot,
+  resolveRateLimitMessage,
+} from "@/lib/rate-limit-ui";
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -15,6 +20,7 @@ export function StrategyChat({
   eventKey: string;
   initialInput?: string;
 }) {
+  const { toast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
@@ -52,12 +58,17 @@ export function StrategyChat({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ eventKey, message: trimmed }),
       });
+      const usage = readRateLimitSnapshot(res.headers);
+      if (usage) {
+        toast(formatRateLimitUsageMessage(usage, "ai"), "info");
+      }
       const data = await res.json();
       if (!res.ok || !data.success) {
         throw new Error(
           resolveRateLimitMessage(
             res.status,
-            data.error || "Failed to get response"
+            data.error || "Failed to get response",
+            "ai"
           )
         );
       }
@@ -110,7 +121,7 @@ export function StrategyChat({
 
       <div className="rounded-2xl dashboard-panel p-4 space-y-3">
         <label className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-          Ask ScoutAI
+          Ask PitPulse
         </label>
         <textarea
           rows={3}

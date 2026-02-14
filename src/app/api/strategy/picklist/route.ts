@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PickListContentSchema, type PickListContent } from "@/types/strategy";
 import { summarizeScouting } from "@/lib/scouting-summary";
 import {
+  buildRateLimitHeaders,
   checkRateLimit,
   getTeamAiLimit,
   retryAfterSeconds,
@@ -178,16 +179,21 @@ export async function POST(request: NextRequest) {
     ? profile.organizations[0]
     : profile.organizations;
 
+  const aiLimit = getTeamAiLimit(orgMeta?.plan_tier);
   const limit = await checkRateLimit(
     `ai-interactions:${profile.org_id}`,
     TEAM_AI_WINDOW_MS,
-    getTeamAiLimit(orgMeta?.plan_tier)
+    aiLimit
   );
+  const limitHeaders = buildRateLimitHeaders(limit, aiLimit);
   if (!limit.allowed) {
     const retryAfter = retryAfterSeconds(limit.resetAt);
     return NextResponse.json(
       { error: "Your team has exceeded the rate limit. Please try again soon." },
-      { status: 429, headers: { "Retry-After": retryAfter.toString() } }
+      {
+        status: 429,
+        headers: { ...limitHeaders, "Retry-After": retryAfter.toString() },
+      }
     );
   }
 
@@ -461,11 +467,14 @@ IMPORTANT:
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      pickList: pickListContent,
-      pickListId: pickList.id,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        pickList: pickListContent,
+        pickListId: pickList.id,
+      },
+      { headers: limitHeaders }
+    );
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json({ error: message }, { status: 500 });

@@ -94,7 +94,7 @@ export function TeamsTab({ organizations, onStatus, onConfirmDelete }: TeamsTabP
                     <div className="flex items-center gap-2.5">
                       <p className="text-sm font-semibold text-white">{org.name}</p>
                       {org.team_number && (
-                        <span className="inline-flex items-center rounded-full bg-blue-500/15 px-2.5 py-0.5 text-xs font-bold text-blue-400 ring-1 ring-blue-500/20">
+                        <span className="inline-flex items-center rounded-full bg-teal-500/15 px-2.5 py-0.5 text-xs font-bold text-teal-400 ring-1 ring-teal-500/20">
                           #{org.team_number}
                         </span>
                       )}

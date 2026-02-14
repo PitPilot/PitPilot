@@ -37,15 +37,15 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="marketing-shell text-white">
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 left-1/3 h-96 w-96 rounded-full bg-blue-600/20 blur-3xl" />
-        <div className="absolute top-10 right-1/4 h-72 w-72 rounded-full bg-purple-600/10 blur-3xl" />
+        <div className="absolute -top-40 left-1/3 h-96 w-96 rounded-full bg-teal-500/20 blur-3xl" />
+        <div className="absolute top-10 right-1/4 h-72 w-72 rounded-full bg-teal-500/10 blur-3xl" />
       </div>
 
-      <div className="relative mx-auto flex min-h-screen max-w-lg items-center px-4 pb-16 pt-28">
-        <div className="w-full rounded-2xl border border-white/10 bg-gray-900/70 p-8 shadow-xl">
-          <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
+      <div className="marketing-content mx-auto flex min-h-screen max-w-lg items-center px-4 pb-16 pt-28">
+        <div className="marketing-card w-full rounded-2xl p-8">
+          <p className="text-xs font-semibold uppercase tracking-widest text-teal-400">
             Team onboarding
           </p>
           <h1 className="mt-2 text-2xl font-bold">Tell us about your role</h1>
@@ -69,7 +69,7 @@ export default function OnboardingPage() {
                 name="displayName"
                 type="text"
                 required
-                className="mt-2 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="marketing-input mt-2 w-full rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-gray-500 focus:outline-none"
                 placeholder="e.g. Jamie Chen"
               />
             </div>
@@ -104,7 +104,7 @@ export default function OnboardingPage() {
                             : selectedRoles.filter((item) => item !== role.value);
                           setSelectedRoles(next);
                         }}
-                        className="h-4 w-4 rounded border-white/20 bg-white/5 text-blue-500 focus:ring-blue-500"
+                        className="h-4 w-4 rounded border-white/20 bg-white/5 text-teal-500 focus:ring-teal-500"
                       />
                       {role.label}
                     </label>
@@ -116,7 +116,7 @@ export default function OnboardingPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 transition hover:bg-blue-500 disabled:opacity-50"
+              className="w-full rounded-lg bg-teal-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-teal-500/30 transition hover:bg-teal-400 disabled:opacity-50"
             >
               {loading ? "Saving..." : "Continue to dashboard"}
             </button>

@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Tables } from "@/types/supabase";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 type Match = Tables<"matches">;
 type Assignment = Tables<"scout_assignments">;
@@ -34,6 +35,7 @@ export function AssignmentGrid({
 }: AssignmentGridProps) {
   const router = useRouter();
   const supabase = createClient();
+  const prefersReducedMotion = useReducedMotion();
 
   const [filter, setFilter] = useState<"all" | "qm" | "playoff">("qm");
   const [saving, setSaving] = useState(false);
@@ -263,7 +265,7 @@ export function AssignmentGrid({
     <div className="space-y-4">
       {/* Controls */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex rounded-lg border border-white/10 bg-white/5 dashboard-chip">
+        <div className="inline-flex rounded-xl border border-white/15 bg-[#0d1424]/80 p-1 shadow-[0_10px_24px_-18px_rgba(56,189,248,0.35)] backdrop-blur-md">
           {(
             [
               ["qm", "Quals"],
@@ -274,10 +276,10 @@ export function AssignmentGrid({
             <button
               key={value}
               onClick={() => setFilter(value)}
-              className={`px-3 py-1.5 text-sm font-medium ${
+              className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-200 ${
                 filter === value
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-300 hover:bg-white/10"
+                  ? "border border-sky-300/45 bg-sky-400/20 text-sky-100 shadow-[0_8px_20px_-14px_rgba(56,189,248,0.85)]"
+                  : "border border-transparent text-slate-300 hover:border-white/10 hover:bg-white/8 hover:text-white"
               }`}
             >
               {label}
@@ -287,25 +289,25 @@ export function AssignmentGrid({
 
         <button
           onClick={autoRotate}
-          className="rounded-lg bg-purple-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-500"
+          className="rounded-xl border border-violet-300/35 bg-violet-500/85 px-4 py-2 text-sm font-semibold text-white shadow-[0_12px_28px_-14px_rgba(167,139,250,0.6)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-violet-400 hover:shadow-[0_16px_32px_-14px_rgba(167,139,250,0.85)] active:translate-y-0 active:scale-[0.98]"
         >
           Auto-Rotate
         </button>
         <button
           onClick={clearAll}
-          className="rounded-lg border border-white/10 px-3 py-1.5 text-sm text-gray-200 hover:bg-white/5 dashboard-chip"
+          className="rounded-xl border border-slate-400/25 bg-slate-900/50 px-4 py-2 text-sm font-medium text-slate-200 transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300/45 hover:bg-slate-800/55 hover:text-white active:translate-y-0 active:scale-[0.98]"
         >
           Clear All
         </button>
         <button
           onClick={handleSave}
           disabled={saving}
-          className="rounded-lg bg-green-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-green-500 disabled:opacity-50"
+          className="rounded-xl border border-emerald-300/45 bg-gradient-to-r from-teal-500 to-emerald-500 px-5 py-2 text-sm font-semibold text-[#032419] shadow-[0_14px_32px_-14px_rgba(16,185,129,0.75)] transition-all duration-200 hover:-translate-y-0.5 hover:brightness-110 hover:shadow-[0_16px_36px_-12px_rgba(16,185,129,0.92)] active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-55"
         >
           {saving ? "Saving..." : "Save Assignments"}
         </button>
 
-        <span className="ml-auto text-xs text-gray-400">
+        <span className="ml-auto rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-gray-300">
           {filledSlots}/{totalSlots} slots filled &middot;{" "}
           {members.length} scouts
         </span>
@@ -323,81 +325,90 @@ export function AssignmentGrid({
       )}
 
       {/* Grid */}
-      <div className="overflow-x-auto rounded-2xl dashboard-table">
-        <table className="min-w-full divide-y divide-white/10 text-sm">
-          <thead className="bg-white/5">
-            <tr>
-              <th className="sticky left-0 z-10 bg-white/5 px-3 py-2 text-left text-xs font-medium uppercase text-gray-400 assignment-header-label">
-                Match
-              </th>
-              {POSITIONS.map((pos) => (
-                <th
-                  key={pos}
-                  className={`px-2 py-2 text-center text-xs font-medium uppercase ${
-                    pos.startsWith("red")
-                      ? "bg-red-500/10 text-red-200 assignment-header-red"
-                      : "bg-blue-500/10 text-blue-200 assignment-header-blue"
-                  }`}
-                >
-                  {pos.replace("red", "R").replace("blue", "B")}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={filter}
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={prefersReducedMotion ? {} : { opacity: 0, y: -6 }}
+          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+          className="overflow-x-auto rounded-2xl dashboard-table"
+        >
+          <table className="min-w-full divide-y divide-white/10 text-sm">
+            <thead className="bg-white/5">
+              <tr>
+                <th className="sticky left-0 z-10 bg-white/5 px-3 py-2 text-left text-xs font-medium uppercase text-gray-400 assignment-header-label">
+                  Match
                 </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/10">
-            {filteredMatches.map((match) => (
-              <tr key={match.id} className="hover:bg-white/5">
-                <td className="sticky left-0 z-10 bg-gray-900/80 whitespace-nowrap px-3 py-1.5 font-medium text-white">
-                  {compLabel(match)}
-                </td>
-                {POSITIONS.map((pos) => {
-                  const teamNum = getTeamForPosition(match, pos);
-                  const isOwnTeam = isOwnTeamPosition(match, pos);
-                  const key = `${match.id}-${pos}`;
-                  const selectedScout = assignmentMap[key] ?? "";
-
-                  return (
-                    <td
-                      key={pos}
-                      className={`px-1 py-1 ${
-                        pos.startsWith("red")
-                          ? "bg-red-500/5"
-                          : "bg-blue-500/5"
-                      }`}
-                    >
-                      <div className="text-center">
-                        <p className="text-[10px] text-gray-400 mb-0.5">
-                          {teamNum}
-                        </p>
-                        {isOwnTeam ? (
-                          <p className="rounded border border-amber-400/30 bg-amber-500/10 px-1 py-0.5 text-[10px] font-medium text-amber-200">
-                            Your team
-                          </p>
-                        ) : (
-                          <select
-                            value={selectedScout}
-                            onChange={(e) =>
-                              setAssignment(match.id, pos, e.target.value)
-                            }
-                            className="w-full min-w-[80px] rounded border border-white/10 bg-white/5 px-1 py-0.5 text-xs text-gray-200 focus:border-blue-400 focus:outline-none dashboard-input"
-                          >
-                            <option value="">—</option>
-                            {members.map((m) => (
-                              <option key={m.id} value={m.id}>
-                                {m.display_name}
-                              </option>
-                            ))}
-                          </select>
-                        )}
-                      </div>
-                    </td>
-                  );
-                })}
+                {POSITIONS.map((pos) => (
+                  <th
+                    key={pos}
+                    className={`px-2 py-2 text-center text-xs font-medium uppercase ${
+                      pos.startsWith("red")
+                        ? "bg-red-500/10 text-red-200 assignment-header-red"
+                        : "bg-blue-500/10 text-blue-200 assignment-header-blue"
+                    }`}
+                  >
+                    {pos.replace("red", "R").replace("blue", "B")}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-white/10">
+              {filteredMatches.map((match) => (
+                <tr key={match.id} className="hover:bg-white/5">
+                  <td className="sticky left-0 z-10 bg-gray-900/80 whitespace-nowrap px-3 py-1.5 font-medium text-white">
+                    {compLabel(match)}
+                  </td>
+                  {POSITIONS.map((pos) => {
+                    const teamNum = getTeamForPosition(match, pos);
+                    const isOwnTeam = isOwnTeamPosition(match, pos);
+                    const key = `${match.id}-${pos}`;
+                    const selectedScout = assignmentMap[key] ?? "";
+
+                    return (
+                      <td
+                        key={pos}
+                        className={`px-1 py-1 ${
+                          pos.startsWith("red")
+                            ? "bg-red-500/5"
+                            : "bg-blue-500/5"
+                        }`}
+                      >
+                        <div className="text-center">
+                          <p className="mb-0.5 text-[10px] text-gray-400">
+                            {teamNum}
+                          </p>
+                          {isOwnTeam ? (
+                            <p className="rounded border border-teal-400/30 bg-teal-500/10 px-1 py-0.5 text-[10px] font-medium text-teal-200">
+                              Your team
+                            </p>
+                          ) : (
+                            <select
+                              value={selectedScout}
+                              onChange={(e) =>
+                                setAssignment(match.id, pos, e.target.value)
+                              }
+                              className="w-full min-w-[80px] rounded border border-white/10 bg-white/5 px-1 py-0.5 text-xs text-gray-200 focus:border-blue-400 focus:outline-none dashboard-input"
+                            >
+                              <option value="">—</option>
+                              {members.map((m) => (
+                                <option key={m.id} value={m.id}>
+                                  {m.display_name}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </motion.div>
+      </AnimatePresence>
 
       {filteredMatches.length === 0 && (
         <div className="rounded-2xl dashboard-panel p-8 text-center">

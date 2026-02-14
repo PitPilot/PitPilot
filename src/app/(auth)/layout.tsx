@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Navbar } from "@/components/navbar";
 
 export const metadata: Metadata = {
-  title: "Sign In | ScoutAI",
+  title: "Sign In | PitPulse",
   description: "Sign in or create an account to start scouting with AI-powered strategy tools.",
 };
 
@@ -12,9 +12,9 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className="marketing-shell">
       <Navbar />
-      <div className="pt-16">
+      <div className="marketing-content pt-16">
         {children}
       </div>
     </div>

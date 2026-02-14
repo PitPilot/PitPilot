@@ -53,13 +53,13 @@ export function UserMenu({ name, email, isStaff }: UserMenuProps) {
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="group relative flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 text-sm font-semibold text-white transition-all duration-200 hover:scale-110 hover:shadow-lg hover:shadow-blue-500/30 active:scale-95"
+        className="group relative flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 text-sm font-semibold text-white transition-all duration-200 hover:scale-110 hover:shadow-lg hover:shadow-blue-500/30 active:scale-95"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Open account menu"
       >
         <span className="absolute inset-0 rounded-full bg-white/20 opacity-0 transition-opacity duration-200 group-active:opacity-100" />
-        <span className="absolute inset-0 animate-ping rounded-full bg-blue-400 opacity-0 group-active:opacity-30" style={{ animationDuration: '0.4s', animationIterationCount: 1 }} />
+        <span className="absolute inset-0 animate-ping rounded-full bg-teal-400 opacity-0 group-active:opacity-30" style={{ animationDuration: '0.4s', animationIterationCount: 1 }} />
         {initials}
       </button>
 

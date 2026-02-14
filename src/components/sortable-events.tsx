@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { ConfirmButton } from "@/components/confirm-button";
 import { removeOrgEvent } from "@/lib/org-event-actions";
 
@@ -142,17 +143,19 @@ export function SortableEvents({
       swapId,
       direction: delta === -1 ? "up" : "down",
     });
-
-    // Apply the reorder after a short delay so the animation plays
-    setTimeout(() => {
-      const next = [...orderedEvents];
-      const [moved] = next.splice(index, 1);
-      next.splice(nextIndex, 0, moved);
-      commitOrder(next);
-      // Clear animation after the swap completes
-      setTimeout(() => setArrowAnim(null), 50);
-    }, 280);
+    const next = [...orderedEvents];
+    const [moved] = next.splice(index, 1);
+    next.splice(nextIndex, 0, moved);
+    commitOrder(next);
   }
+
+  useEffect(() => {
+    if (!arrowAnim) return;
+    const timer = window.setTimeout(() => {
+      setArrowAnim(null);
+    }, 220);
+    return () => window.clearTimeout(timer);
+  }, [arrowAnim]);
 
   // --- Pointer-based drag system ---
 
@@ -453,28 +456,25 @@ export function SortableEvents({
   return (
     <div className="space-y-3">
       <style>{`
-        @keyframes card-pop-up {
-          0% { transform: translateY(0) scale(1); opacity: 1; }
-          30% { transform: translateY(-8px) scale(1.02) rotate(-1deg); opacity: 0.9; }
-          60% { transform: translateY(4px) scale(0.99); }
-          100% { transform: translateY(0) scale(1); opacity: 1; }
+        @keyframes card-nudge-up {
+          0% { transform: translateY(0); }
+          45% { transform: translateY(-8px); }
+          100% { transform: translateY(0); }
         }
-        @keyframes card-pop-down {
-          0% { transform: translateY(0) scale(1); opacity: 1; }
-          30% { transform: translateY(8px) scale(1.02) rotate(1deg); opacity: 0.9; }
-          60% { transform: translateY(-4px) scale(0.99); }
-          100% { transform: translateY(0) scale(1); opacity: 1; }
+        @keyframes card-nudge-down {
+          0% { transform: translateY(0); }
+          45% { transform: translateY(8px); }
+          100% { transform: translateY(0); }
         }
-        @keyframes card-squish {
-          0% { transform: scale(1, 1); }
-          20% { transform: scale(1.03, 0.97); }
-          40% { transform: scale(0.98, 1.02); }
-          60% { transform: scale(1.01, 0.99); }
-          100% { transform: scale(1, 1); }
+        .anim-nudge-up { animation: card-nudge-up 0.22s ease-out; }
+        .anim-nudge-down { animation: card-nudge-down 0.22s ease-out; }
+        .anim-swap-up { animation: card-nudge-up 0.22s ease-out reverse; }
+        .anim-swap-down { animation: card-nudge-down 0.22s ease-out reverse; }
+        @media (prefers-reduced-motion: reduce) {
+          .anim-nudge-up, .anim-nudge-down, .anim-swap-up, .anim-swap-down {
+            animation: none;
+          }
         }
-        .anim-pop-up { animation: card-pop-up 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        .anim-pop-down { animation: card-pop-down 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        .anim-squish { animation: card-squish 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
       `}</style>
       <p className="text-xs text-gray-400">
         Drag cards to reorder. On touch devices, use the arrow controls.
@@ -485,7 +485,7 @@ export function SortableEvents({
             return (
               <div
                 key="drop-placeholder"
-                className="rounded-2xl border-2 border-dashed border-blue-400/40 bg-blue-500/5 transition-all duration-200"
+                className="rounded-2xl border-2 border-dashed border-blue-400/40 bg-teal-500/5 transition-all duration-200"
                 style={{
                   minHeight: `${draggedCardSizeRef.current.height || 140}px`,
                 }}
@@ -503,15 +503,23 @@ export function SortableEvents({
           if (arrowAnim) {
             if (arrowAnim.id === orgEvent.id) {
               animClass =
-                arrowAnim.direction === "up" ? "anim-pop-up" : "anim-pop-down";
+                arrowAnim.direction === "up" ? "anim-nudge-up" : "anim-nudge-down";
             } else if (arrowAnim.swapId === orgEvent.id) {
-              animClass = "anim-squish";
+              animClass =
+                arrowAnim.direction === "up" ? "anim-swap-up" : "anim-swap-down";
             }
           }
 
           return (
-            <div
+            <motion.div
               key={`card-${orgEvent.id}`}
+              layout
+              transition={{
+                type: "spring",
+                stiffness: 440,
+                damping: 34,
+                mass: 0.65,
+              }}
               ref={(el) => {
                 if (el) cardRefsMap.current.set(orgEvent.id, el);
                 else cardRefsMap.current.delete(orgEvent.id);
@@ -690,7 +698,7 @@ export function SortableEvents({
               <div className="mt-3 flex items-center gap-2">
                 <Link
                   href={`/dashboard/events/${event.tba_key}`}
-                  className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold text-blue-300 dashboard-chip dashboard-chip-action"
+                  className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold text-teal-300 dashboard-chip dashboard-chip-action"
                   draggable={false}
                 >
                   Open event
@@ -709,12 +717,12 @@ export function SortableEvents({
                   </svg>
                 </Link>
                 {!orgEvent.is_attending && (
-                  <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-300">
+                  <span className="rounded-full bg-teal-500/20 px-2 py-0.5 text-[10px] font-medium text-teal-600 dark:text-teal-300">
                     Not Attending
                   </span>
                 )}
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>

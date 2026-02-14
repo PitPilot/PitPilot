@@ -54,7 +54,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                   ? "border-green-400/30 bg-green-500/10 text-green-100"
                   : t.type === "error"
                   ? "border-red-400/30 bg-red-500/10 text-red-100"
-                  : "border-blue-400/30 bg-blue-500/10 text-blue-100"
+                  : "border-blue-400/30 bg-teal-500/10 text-teal-100"
               }`}
             >
               {t.type === "success" && (

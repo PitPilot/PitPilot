@@ -25,7 +25,7 @@ interface TestimonialsTabProps {
 
 function Stars({ rating }: { rating: number }) {
   return (
-    <span className="inline-flex gap-0.5 text-amber-400">
+    <span className="inline-flex gap-0.5 text-teal-400">
       {[1, 2, 3, 4, 5].map((i) => (
         <span key={i} className={i <= rating ? "opacity-100" : "opacity-20"}>★</span>
       ))}
@@ -69,7 +69,7 @@ export function TestimonialsTab({ testimonials, onStatus, onConfirmDelete }: Tes
       </div>
 
       <form onSubmit={handleSubmit} className="mt-6 rounded-2xl dashboard-panel p-6">
-        <h3 className="text-xs font-semibold uppercase tracking-widest text-blue-400">New Testimonial</h3>
+        <h3 className="text-xs font-semibold uppercase tracking-widest text-teal-400">New Testimonial</h3>
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           <div className="md:col-span-2">
             <label className="block text-xs font-medium text-gray-400">Quote</label>

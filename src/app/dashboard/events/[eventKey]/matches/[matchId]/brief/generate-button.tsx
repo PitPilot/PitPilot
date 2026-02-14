@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { resolveRateLimitMessage } from "@/lib/rate-limit-ui";
+import { useToast } from "@/components/toast";
+import {
+  formatRateLimitUsageMessage,
+  readRateLimitSnapshot,
+  resolveRateLimitMessage,
+} from "@/lib/rate-limit-ui";
 
 export function GenerateBriefButton({
   matchId,
@@ -12,6 +17,7 @@ export function GenerateBriefButton({
   label?: string;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,6 +31,10 @@ export function GenerateBriefButton({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ matchId }),
       });
+      const usage = readRateLimitSnapshot(res.headers);
+      if (usage) {
+        toast(formatRateLimitUsageMessage(usage, "ai"), "info");
+      }
 
       const data = await res.json();
 
@@ -32,7 +42,8 @@ export function GenerateBriefButton({
         setError(
           resolveRateLimitMessage(
             res.status,
-            data.error ?? "Failed to generate brief"
+            data.error ?? "Failed to generate brief",
+            "ai"
           )
         );
         return;

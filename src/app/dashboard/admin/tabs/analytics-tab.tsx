@@ -36,7 +36,7 @@ export function AnalyticsTab({ analytics }: AnalyticsTabProps) {
   const totalMessages = analytics.messages.reduce((s, d) => s + d.count, 0);
 
   const summaryChips = [
-    { label: "Signups", value: totalSignups, color: "text-blue-400", bg: "bg-blue-500/10" },
+    { label: "Signups", value: totalSignups, color: "text-teal-400", bg: "bg-teal-500/10" },
     { label: "Orgs", value: totalOrgs, color: "text-cyan-400", bg: "bg-cyan-500/10" },
     { label: "Entries", value: totalEntries, color: "text-purple-400", bg: "bg-purple-500/10" },
     { label: "Messages", value: totalMessages, color: "text-green-400", bg: "bg-green-500/10" },

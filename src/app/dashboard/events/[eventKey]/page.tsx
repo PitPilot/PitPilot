@@ -186,7 +186,7 @@ export default async function EventPage({
             <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
               <h1 className="text-2xl font-bold leading-tight">{eventTitle}</h1>
               {orgTeamNumber !== null && !isOrgInEvent && (
-                <span className="inline-flex rounded-full bg-amber-500/20 px-3 py-1 text-xs font-medium text-amber-600 dark:text-amber-300">
+                <span className="inline-flex rounded-full bg-teal-500/20 px-3 py-1 text-xs font-medium text-teal-600 dark:text-teal-300">
                   Not Attending
                 </span>
               )}
@@ -209,7 +209,7 @@ export default async function EventPage({
           <div className="flex flex-wrap gap-2">
             <Link
               href={`/dashboard/events/${eventKey}/matches`}
-              className="dashboard-action dashboard-action-primary"
+              className="dashboard-action dashboard-action-primary dashboard-action-holo"
             >
               Scout Matches
             </Link>
@@ -239,14 +239,11 @@ export default async function EventPage({
         </div>
 
         {tableData.length === 0 ? (
-          <div className="rounded-3xl border border-amber-500/30 bg-amber-500/10 p-8 text-center">
-            <p className="text-amber-700 dark:text-yellow-300">
+          <div className="rounded-3xl border border-teal-500/30 bg-teal-500/10 p-8 text-center">
+            <p className="text-teal-700 dark:text-yellow-300">
               Team stats update once matches start or as the event gets closer.
               You can sync again later to pull the latest EPA.
             </p>
-            {profile?.role === "captain" && (
-              <SyncStatsButton eventKey={eventKey} />
-            )}
           </div>
         ) : (
           <TeamStatsTable

@@ -209,14 +209,14 @@ export function ScoutingForm({
         <div
           className={`flex flex-col items-center justify-center gap-3 rounded-2xl border p-8 backdrop-blur-sm ${
             savedOffline
-              ? "border-amber-400/30 bg-amber-500/10"
+              ? "border-teal-400/30 bg-teal-500/10"
               : "border-emerald-400/30 bg-emerald-500/10"
           }`}
         >
           <div className="text-4xl">{savedOffline ? "📱" : "✓"}</div>
           <p
             className={`text-lg font-semibold ${
-              savedOffline ? "text-amber-200" : "text-emerald-200"
+              savedOffline ? "text-teal-200" : "text-emerald-200"
             }`}
           >
             {savedOffline
@@ -227,11 +227,11 @@ export function ScoutingForm({
           </p>
           {savedOffline && (
             <>
-              <p className="text-sm text-amber-200/80 text-center">
+              <p className="text-sm text-teal-200/80 text-center">
                 Your entry is saved on this device and will sync automatically
                 when you reconnect.
               </p>
-              <p className="text-xs text-amber-200/70">
+              <p className="text-xs text-teal-200/70">
                 {pendingCount} {pendingCount === 1 ? "entry" : "entries"} queued
               </p>
             </>
@@ -242,7 +242,7 @@ export function ScoutingForm({
         </div>
 
         {savedOffline && (
-          <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 p-4 text-sm text-amber-200">
+          <div className="rounded-xl border border-teal-400/30 bg-teal-500/10 p-4 text-sm text-teal-200">
             Offline mode is active. You can keep scouting and we&apos;ll sync your
             entries when the connection returns. Some pages (like the dashboard)
             won&apos;t load until you&apos;re back online.
@@ -317,7 +317,7 @@ export function ScoutingForm({
         onMouseDown={() => setActiveStep(0)}
         className="scout-panel p-4"
       >
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-blue-300">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-teal-300">
           Autonomous
         </h2>
         <div className="space-y-4">
@@ -411,7 +411,7 @@ export function ScoutingForm({
         onMouseDown={() => setActiveStep(3)}
         className="scout-panel p-4"
       >
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-amber-300">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-teal-300">
           Ratings
         </h2>
         <div className="space-y-4">

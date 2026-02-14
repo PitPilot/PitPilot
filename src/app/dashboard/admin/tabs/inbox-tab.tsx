@@ -37,7 +37,7 @@ function formatDateTime(value: string | null) {
 
 const statusColors: Record<string, string> = {
   new: "bg-green-500/15 text-green-400 ring-green-500/20",
-  in_progress: "bg-blue-500/15 text-blue-400 ring-blue-500/20",
+  in_progress: "bg-teal-500/15 text-teal-400 ring-teal-500/20",
   replied: "bg-gray-500/15 text-gray-300 ring-gray-500/20",
   closed: "bg-gray-800/50 text-gray-500 ring-gray-600/20",
 };

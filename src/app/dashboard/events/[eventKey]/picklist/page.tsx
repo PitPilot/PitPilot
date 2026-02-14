@@ -74,7 +74,7 @@ export default async function PickListPage({
 
   function roleColor(role: string) {
     if (role === "scorer") return "bg-blue-500/20 text-blue-200";
-    if (role === "defender") return "bg-orange-500/20 text-orange-200";
+    if (role === "defender") return "bg-cyan-500/20 text-cyan-200";
     if (role === "versatile") return "bg-purple-500/20 text-purple-200";
     return "bg-white/10 text-gray-200";
   }
@@ -307,7 +307,7 @@ export default async function PickListPage({
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
-                      Ask ScoutAI
+                      Ask PitPulse
                     </p>
                     <h2 className="text-lg font-bold text-white">
                       Strategy chat for this event

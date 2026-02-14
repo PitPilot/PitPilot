@@ -1,7 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { resolveRateLimitMessage } from "@/lib/rate-limit-ui";
+import { useToast } from "@/components/toast";
+import {
+  formatRateLimitUsageMessage,
+  readRateLimitSnapshot,
+  resolveRateLimitMessage,
+} from "@/lib/rate-limit-ui";
 
 export function SyncStatsButton({
   eventKey,
@@ -10,6 +15,7 @@ export function SyncStatsButton({
   eventKey: string;
   compact?: boolean;
 }) {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -25,12 +31,17 @@ export function SyncStatsButton({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ eventKey }),
       });
+      const usage = readRateLimitSnapshot(res.headers);
+      if (usage) {
+        toast(formatRateLimitUsageMessage(usage, "sync"), "info");
+      }
       const data = await res.json();
       if (!res.ok) {
         throw new Error(
           resolveRateLimitMessage(
             res.status,
-            data.error || "Failed to sync stats"
+            data.error || "Failed to sync stats",
+            "sync"
           )
         );
       }
