@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { unstable_noStore as noStore } from "next/cache";
+import { createClient as createAdminClient, type SupabaseClient } from "@supabase/supabase-js";
 import {
   Bot,
   Check,
@@ -18,6 +20,7 @@ import { Testimonials } from "./testimonials";
 import { createClient } from "@/lib/supabase/server";
 import { MotionSection } from "@/components/motion-section";
 import { SiteFooter } from "@/components/site-footer";
+import type { Database } from "@/types/supabase";
 
 type Feature = {
   title: string;
@@ -92,18 +95,47 @@ const STEPS: Step[] = [
 ];
 
 async function getStats() {
-  try {
-    const supabase = await createClient();
+  noStore();
+
+  async function countFrom(client: SupabaseClient<Database>) {
     const [orgsRes, entriesRes, matchesRes] = await Promise.all([
-      supabase.from("organizations").select("id", { count: "exact", head: true }),
-      supabase.from("scouting_entries").select("id", { count: "exact", head: true }),
-      supabase.from("matches").select("id", { count: "exact", head: true }),
+      client.from("organizations").select("id", { count: "exact", head: true }),
+      client.from("scouting_entries").select("id", { count: "exact", head: true }),
+      client.from("matches").select("id", { count: "exact", head: true }),
     ]);
+
+    if (orgsRes.error || entriesRes.error || matchesRes.error) {
+      return null;
+    }
+
     return {
       teams: orgsRes.count ?? 0,
       entries: entriesRes.count ?? 0,
       matches: matchesRes.count ?? 0,
     };
+  }
+
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (supabaseUrl && serviceRoleKey) {
+      const admin = createAdminClient<Database>(supabaseUrl, serviceRoleKey, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+      const globalStats = await countFrom(admin);
+      if (globalStats) {
+        return globalStats;
+      }
+    }
+
+    const supabase = await createClient();
+    const scopedStats = await countFrom(supabase);
+    if (scopedStats) {
+      return scopedStats;
+    }
+
+    return { teams: 0, entries: 0, matches: 0 };
   } catch {
     return { teams: 0, entries: 0, matches: 0 };
   }
