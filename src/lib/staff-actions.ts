@@ -42,7 +42,7 @@ async function requireStaff() {
 
 export async function updateOrganizationTeamNumber(formData: FormData) {
   const ctx = await requireStaff();
-  if ("error" in ctx) return ctx;
+  if ("error" in ctx) return { error: ctx.error } as const;
 
   const orgId = (formData.get("orgId") as string | null)?.trim();
   if (!orgId) {
@@ -71,7 +71,7 @@ export async function updateOrganizationTeamNumber(formData: FormData) {
 
 export async function clearOrganizationTeamNumber(formData: FormData) {
   const ctx = await requireStaff();
-  if ("error" in ctx) return ctx;
+  if ("error" in ctx) return { error: ctx.error } as const;
 
   const orgId = (formData.get("orgId") as string | null)?.trim();
   if (!orgId) {
@@ -93,7 +93,7 @@ export async function clearOrganizationTeamNumber(formData: FormData) {
 
 export async function deleteOrganization(formData: FormData) {
   const ctx = await requireStaff();
-  if ("error" in ctx) return ctx;
+  if ("error" in ctx) return { error: ctx.error } as const;
 
   const orgId = (formData.get("orgId") as string | null)?.trim();
   if (!orgId) {
@@ -149,7 +149,7 @@ export async function deleteOrganization(formData: FormData) {
 
 export async function upsertAnnouncement(formData: FormData) {
   const ctx = await requireStaff();
-  if ("error" in ctx) return ctx;
+  if ("error" in ctx) return { error: ctx.error } as const;
 
   const id = (formData.get("id") as string | null)?.trim() || null;
   const message = (formData.get("message") as string | null)?.trim();
@@ -183,7 +183,7 @@ export async function upsertAnnouncement(formData: FormData) {
 
 export async function deleteAnnouncement(formData: FormData) {
   const ctx = await requireStaff();
-  if ("error" in ctx) return ctx;
+  if ("error" in ctx) return { error: ctx.error } as const;
 
   const id = (formData.get("id") as string | null)?.trim();
   if (!id) {
@@ -202,7 +202,7 @@ export async function deleteAnnouncement(formData: FormData) {
 
 export async function upsertTestimonial(formData: FormData) {
   const ctx = await requireStaff();
-  if ("error" in ctx) return ctx;
+  if ("error" in ctx) return { error: ctx.error } as const;
 
   const id = (formData.get("id") as string | null)?.trim() || null;
   const quote = (formData.get("quote") as string | null)?.trim();
@@ -248,7 +248,7 @@ export async function upsertTestimonial(formData: FormData) {
 
 export async function deleteTestimonial(formData: FormData) {
   const ctx = await requireStaff();
-  if ("error" in ctx) return ctx;
+  if ("error" in ctx) return { error: ctx.error } as const;
 
   const id = (formData.get("id") as string | null)?.trim();
   if (!id) {
@@ -267,7 +267,7 @@ export async function deleteTestimonial(formData: FormData) {
 
 export async function respondContactMessage(formData: FormData) {
   const ctx = await requireStaff();
-  if ("error" in ctx) return ctx;
+  if ("error" in ctx) return { error: ctx.error } as const;
 
   const id = (formData.get("id") as string | null)?.trim();
   if (!id) {
@@ -307,7 +307,7 @@ export async function respondContactMessage(formData: FormData) {
 
 export async function deleteContactMessage(formData: FormData) {
   const ctx = await requireStaff();
-  if ("error" in ctx) return ctx;
+  if ("error" in ctx) return { error: ctx.error } as const;
 
   const id = (formData.get("id") as string | null)?.trim();
   if (!id) {
@@ -364,7 +364,7 @@ function extractQuestionSettings(raw: unknown): {
 
 export async function updateEventSyncMinYear(formData: FormData) {
   const ctx = await requireStaff();
-  if ("error" in ctx) return ctx;
+  if ("error" in ctx) return { error: ctx.error } as const;
 
   const yearRaw = (formData.get("eventSyncMinYear") as string | null)?.trim();
   const parsedYear = yearRaw ? Number.parseInt(yearRaw, 10) : NaN;
@@ -420,7 +420,7 @@ export async function updateEventSyncMinYear(formData: FormData) {
 
 export async function updateScoutingAbilityQuestions(formData: FormData) {
   const ctx = await requireStaff();
-  if ("error" in ctx) return ctx;
+  if ("error" in ctx) return { error: ctx.error } as const;
 
   const raw = (formData.get("questionsJson") as string | null)?.trim();
   if (!raw) {
@@ -497,7 +497,7 @@ export async function updateScoutingAbilityQuestions(formData: FormData) {
 
 export async function updateTeamAiPromptLimits(formData: FormData) {
   const ctx = await requireStaff();
-  if ("error" in ctx) return ctx;
+  if ("error" in ctx) return { error: ctx.error } as const;
 
   const freeRaw = (formData.get("freeAiLimit") as string | null)?.trim();
   const supporterRaw = (formData.get("supporterAiLimit") as string | null)?.trim();

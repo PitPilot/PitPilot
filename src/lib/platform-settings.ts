@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/types/supabase";
+import type { Database, Json } from "@/types/supabase";
 import { TEAM_AI_LIMITS, type PlanTier, normalizePlanTier } from "@/lib/rate-limit";
 
 const DEFAULT_EVENT_SYNC_MIN_YEAR = 2025;
@@ -135,7 +135,7 @@ export function serializeQuestionSettingsPayload({
 }: {
   questions: string[];
   aiPromptLimits: TeamAiPromptLimits;
-}): Record<string, unknown> {
+}): Json {
   return {
     questions: normalizeScoutingAbilityQuestions(questions),
     aiPromptLimits: normalizeTeamAiPromptLimits(aiPromptLimits),
