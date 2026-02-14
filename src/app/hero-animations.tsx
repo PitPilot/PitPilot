@@ -41,8 +41,8 @@ export function HeroAnimations() {
           transition={{ duration: 0.5, delay: 0.16, ease: EASE }}
           className="mt-5 max-w-2xl text-base leading-relaxed text-slate-300 md:text-lg"
         >
-          PitPulse blends live scouting observations with public event context so your
-          drive team gets fast, structured, and actionable match strategy.
+          We blend your live scouting observations with public event context so your
+          drive team gets fast, structured, actionable match strategy.
         </motion.p>
 
         <motion.div
@@ -84,14 +84,33 @@ export function HeroAnimations() {
         className="relative mx-auto h-[360px] w-full max-w-[430px]"
       >
         <div className="absolute inset-0 rounded-[30px] border border-white/10 bg-[#0f1115]/70 backdrop-blur-xl" />
+        <motion.div
+          className="pointer-events-none absolute inset-2 rounded-[26px] bg-[radial-gradient(circle_at_30%_20%,rgba(45,212,191,0.2),transparent_40%),radial-gradient(circle_at_80%_30%,rgba(34,211,238,0.2),transparent_45%)]"
+          animate={{ opacity: [0.35, 0.6, 0.35] }}
+          transition={{ duration: 7.5, ease: "easeInOut", repeat: Infinity }}
+        />
+        <motion.div
+          className="pointer-events-none absolute left-6 right-6 h-px bg-gradient-to-r from-transparent via-cyan-200/60 to-transparent"
+          animate={{ y: [26, 328, 26], opacity: [0, 0.85, 0] }}
+          transition={{ duration: 5.2, ease: "easeInOut", repeat: Infinity }}
+        />
 
         <div className="absolute left-1/2 top-1/2 h-52 w-52 -translate-x-1/2 -translate-y-1/2">
           <div className="absolute inset-0 rounded-full border border-teal-300/30 animate-[spin_18s_linear_infinite]" />
           <div className="absolute inset-4 rounded-full border border-cyan-300/30 animate-[spin_14s_linear_infinite_reverse]" />
           <div className="absolute inset-8 rounded-full bg-gradient-to-br from-teal-300/25 via-cyan-300/20 to-transparent blur-[1px]" />
-          <div className="absolute inset-12 flex items-center justify-center rounded-full border border-teal-200/35 bg-[#07141a] text-teal-100">
+          <motion.div
+            className="absolute inset-9 rounded-full border border-cyan-300/30"
+            animate={{ scale: [0.96, 1.04, 0.96], opacity: [0.25, 0.6, 0.25] }}
+            transition={{ duration: 3.2, ease: "easeInOut", repeat: Infinity }}
+          />
+          <motion.div
+            className="absolute inset-12 flex items-center justify-center rounded-full border border-teal-200/35 bg-[#07141a] text-teal-100"
+            animate={{ scale: [1, 1.05, 1] }}
+            transition={{ duration: 3.6, ease: "easeInOut", repeat: Infinity }}
+          >
             <Bot className="h-8 w-8" />
-          </div>
+          </motion.div>
         </div>
 
         <FloatingCard
@@ -141,8 +160,8 @@ function FloatingCard({
 }) {
   return (
     <motion.div
-      animate={{ y: [0, -8, 0] }}
-      transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut", delay }}
+      animate={{ y: [0, -8, 0], x: [0, 2, 0], opacity: [0.9, 1, 0.9] }}
+      transition={{ duration: 5.8, repeat: Infinity, ease: "easeInOut", delay }}
       className={`absolute rounded-xl border border-white/10 bg-black/50 px-3 py-2 backdrop-blur ${className}`}
     >
       <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-slate-400">{title}</p>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/toast";
 import {
@@ -77,11 +78,16 @@ export function GeneratePickListButton({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [teamProfile, setTeamProfile] = useState<TeamProfile>(defaultTeamProfile);
   const storageKey = useMemo(
     () => `scoutai:picklist-team-profile:v1:${eventId}`,
     [eventId]
   );
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -203,13 +209,19 @@ export function GeneratePickListButton({
       )}
       {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
 
-      {showProfileModal && (
-        <div className="fixed inset-0 z-[1100] flex items-center justify-center px-4">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowProfileModal(false)}
-          />
-          <div className="relative z-[1101] w-full max-w-xl rounded-2xl dashboard-panel p-5 shadow-2xl">
+      {mounted &&
+        showProfileModal &&
+        createPortal(
+          <div className="fixed inset-0 z-[2200] flex items-center justify-center px-4">
+            <div
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setShowProfileModal(false)}
+            />
+            <div
+              role="dialog"
+              aria-modal="true"
+              className="relative w-full max-w-xl rounded-2xl dashboard-panel p-5 shadow-2xl"
+            >
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
@@ -219,7 +231,7 @@ export function GeneratePickListButton({
                   We need a bit more info about your robot
                 </h3>
                 <p className="mt-1 text-xs text-gray-400">
-                  This helps Claude judge alliance synergy more accurately.
+                  This helps judge alliance synergy more accurately.
                 </p>
               </div>
               <button
@@ -363,9 +375,10 @@ export function GeneratePickListButton({
                 {loading ? "Generating..." : "Generate AI Suggestions"}
               </button>
             </div>
-          </div>
-        </div>
-      )}
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

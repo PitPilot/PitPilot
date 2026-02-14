@@ -390,13 +390,24 @@ export async function leaveOrganization() {
     }
   }
 
-  await supabase
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) {
+    return { error: "Service role key not configured." } as const;
+  }
+
+  const admin = createAdminClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    serviceRoleKey,
+    { auth: { persistSession: false } }
+  );
+
+  await admin
     .from("scout_assignments")
     .delete()
     .eq("org_id", profile.org_id)
     .eq("assigned_to", user.id);
 
-  const { error } = await supabase
+  const { error } = await admin
     .from("profiles")
     .update({
       org_id: null,

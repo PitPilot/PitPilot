@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getScoutingAbilityQuestions } from "@/lib/platform-settings";
 import { ScoutingForm } from "./scouting-form";
 
 export default async function ScoutPage({
@@ -133,6 +134,7 @@ export default async function ScoutPage({
     match.events?.year && match.events?.name
       ? `${match.events.year} ${match.events.name}`
       : match.events?.name ?? "Event";
+  const scoutingAbilityQuestions = await getScoutingAbilityQuestions(supabase);
 
   return (
     <div className="min-h-screen">
@@ -166,6 +168,7 @@ export default async function ScoutPage({
           orgId={profile.org_id}
           userId={user.id}
           eventKey={match.events?.tba_key ?? null}
+          abilityQuestions={scoutingAbilityQuestions}
           existing={existing}
         />
       </main>

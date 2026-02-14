@@ -8,13 +8,155 @@ import { StarRating } from "@/components/star-rating";
 import { saveOffline, getPendingCount } from "@/lib/offline-queue";
 import type { Tables } from "@/types/supabase";
 
+const INTAKE_OPTIONS = [
+  { key: "depot", label: "Ground Intake" },
+  { key: "human_intake", label: "Human Intake" },
+] as const;
+
+type IntakeMethod = (typeof INTAKE_OPTIONS)[number]["key"];
+type ShootingRange = "close" | "mid" | "long";
+type ClimbLevel = "level_1" | "level_2" | "level_3";
+
+const CLIMB_LEVEL_OPTIONS = [
+  { key: "level_1", label: "Level 1" },
+  { key: "level_2", label: "Level 2" },
+  { key: "level_3", label: "Level 3" },
+] as const;
+
 interface ScoutingFormProps {
   matchId: string;
   teamNumber: number;
   orgId: string;
   userId: string;
   eventKey?: string | null;
+  abilityQuestions: string[];
   existing: Tables<"scouting_entries"> | null;
+}
+
+function parseAbilityAnswers(
+  value: Tables<"scouting_entries">["ability_answers"] | null | undefined
+): Record<string, boolean> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+
+  const parsed: Record<string, boolean> = {};
+  for (const [key, answer] of Object.entries(value as Record<string, unknown>)) {
+    if (typeof key !== "string") continue;
+    if (typeof answer !== "boolean") continue;
+    parsed[key] = answer;
+  }
+
+  return parsed;
+}
+
+function parseIntakeMethods(
+  value: Tables<"scouting_entries">["intake_methods"] | null | undefined
+): IntakeMethod[] {
+  if (!Array.isArray(value)) return [];
+  const allowed = new Set<IntakeMethod>(INTAKE_OPTIONS.map((option) => option.key));
+  return Array.from(
+    new Set(
+      value.filter(
+        (item): item is IntakeMethod =>
+          typeof item === "string" && allowed.has(item as IntakeMethod)
+      )
+    )
+  );
+}
+
+function parseShootingRanges(
+  rangesValue:
+    | Tables<"scouting_entries">["shooting_ranges"]
+    | null
+    | undefined,
+  singleValue: Tables<"scouting_entries">["shooting_range"] | null | undefined
+): ShootingRange[] {
+  const allowed = new Set<ShootingRange>(["close", "mid", "long"]);
+
+  if (Array.isArray(rangesValue)) {
+    const ranges = Array.from(
+      new Set(
+        rangesValue.filter(
+          (item): item is ShootingRange =>
+            typeof item === "string" && allowed.has(item as ShootingRange)
+        )
+      )
+    );
+    if (ranges.length > 0) {
+      return ranges;
+    }
+  }
+
+  if (
+    singleValue === "close" ||
+    singleValue === "mid" ||
+    singleValue === "long"
+  ) {
+    return [singleValue];
+  }
+
+  return [];
+}
+
+function parseClimbLevels(
+  levelsValue:
+    | Tables<"scouting_entries">["climb_levels"]
+    | null
+    | undefined,
+  singleValue: Tables<"scouting_entries">["endgame_state"] | null | undefined
+): ClimbLevel[] {
+  const allowed = new Set<ClimbLevel>(["level_1", "level_2", "level_3"]);
+
+  if (Array.isArray(levelsValue)) {
+    const levels = Array.from(
+      new Set(
+        levelsValue.filter(
+          (item): item is ClimbLevel =>
+            typeof item === "string" && allowed.has(item as ClimbLevel)
+        )
+      )
+    );
+    if (levels.length > 0) {
+      return levels;
+    }
+  }
+
+  if (
+    singleValue === "level_1" ||
+    singleValue === "level_2" ||
+    singleValue === "level_3"
+  ) {
+    return [singleValue];
+  }
+
+  return [];
+}
+
+function stripUnsupportedScoutingColumns<T extends Record<string, unknown>>(
+  payload: T,
+  errorMessage: string
+) {
+  const next = { ...payload } as Record<string, unknown>;
+  const msg = errorMessage.toLowerCase();
+
+  if (msg.includes("ability_answers")) {
+    delete next.ability_answers;
+  }
+
+  if (msg.includes("intake_methods")) {
+    delete next.intake_methods;
+  }
+
+  if (msg.includes("shooting_ranges")) {
+    delete next.shooting_ranges;
+  }
+
+  if (msg.includes("climb_levels")) {
+    delete next.climb_levels;
+  }
+
+  return next as T;
 }
 
 export function ScoutingForm({
@@ -23,6 +165,7 @@ export function ScoutingForm({
   orgId,
   userId,
   eventKey,
+  abilityQuestions,
   existing,
 }: ScoutingFormProps) {
   const router = useRouter();
@@ -37,21 +180,22 @@ export function ScoutingForm({
       ? value
       : null;
   });
-  const [shootingRange, setShootingRange] = useState<
-    "close" | "mid" | "long" | null
-  >(() => {
-    const value = existing?.shooting_range;
-    return value === "close" || value === "mid" || value === "long"
-      ? value
-      : null;
-  });
+  const [shootingRanges, setShootingRanges] = useState<ShootingRange[]>(() =>
+    parseShootingRanges(existing?.shooting_ranges, existing?.shooting_range)
+  );
   const [shootingReliability, setShootingReliability] = useState(
     existing?.shooting_reliability ?? 3
   );
   const [autoNotes, setAutoNotes] = useState(existing?.auto_notes ?? "");
   const [teleopScore, setTeleopScore] = useState(existing?.teleop_score ?? 0);
+  const [intakeMethods, setIntakeMethods] = useState<IntakeMethod[]>(() =>
+    parseIntakeMethods(existing?.intake_methods)
+  );
   const [endgameScore, setEndgameScore] = useState(
     existing?.endgame_score ?? 0
+  );
+  const [climbLevels, setClimbLevels] = useState<ClimbLevel[]>(() =>
+    parseClimbLevels(existing?.climb_levels, existing?.endgame_state)
   );
   const [defenseRating, setDefenseRating] = useState(
     existing?.defense_rating ?? 3
@@ -69,22 +213,54 @@ export function ScoutingForm({
   const [pendingCount, setPendingCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [activeStep, setActiveStep] = useState(0);
+  const [abilityAnswers, setAbilityAnswers] = useState<
+    Record<string, boolean | null>
+  >(() => {
+    const existingAnswers = parseAbilityAnswers(existing?.ability_answers);
+    const initial: Record<string, boolean | null> = {};
+    for (const question of abilityQuestions) {
+      initial[question] =
+        typeof existingAnswers[question] === "boolean"
+          ? existingAnswers[question]
+          : null;
+    }
+    return initial;
+  });
 
   const autoRef = useRef<HTMLDivElement | null>(null);
   const teleopRef = useRef<HTMLDivElement | null>(null);
   const endgameRef = useRef<HTMLDivElement | null>(null);
   const ratingsRef = useRef<HTMLDivElement | null>(null);
+  const abilitiesRef = useRef<HTMLDivElement | null>(null);
   const notesRef = useRef<HTMLDivElement | null>(null);
 
   const steps = useMemo(
-    () => [
-      { label: "Auto", ref: autoRef },
-      { label: "Teleop", ref: teleopRef },
-      { label: "Endgame", ref: endgameRef },
-      { label: "Ratings", ref: ratingsRef },
-      { label: "Notes", ref: notesRef },
-    ],
-    []
+    () => {
+      const base = [
+        { label: "Auto", progressLabel: "Auto", ref: autoRef },
+        { label: "Teleop", progressLabel: "Teleop", ref: teleopRef },
+        { label: "Endgame", progressLabel: "Endgame", ref: endgameRef },
+        { label: "Ratings", progressLabel: "Ratings", ref: ratingsRef },
+      ];
+
+      if (abilityQuestions.length > 0) {
+        base.push({ label: "Abilities", progressLabel: "Ability", ref: abilitiesRef });
+      }
+
+      base.push({ label: "Notes", progressLabel: "Notes", ref: notesRef });
+      return base;
+    },
+    [abilityQuestions.length]
+  );
+
+  const abilityAnswersPayload = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(abilityAnswers).filter(
+          (entry): entry is [string, boolean] => typeof entry[1] === "boolean"
+        )
+      ),
+    [abilityAnswers]
   );
 
   useEffect(() => {
@@ -126,14 +302,19 @@ export function ScoutingForm({
     team_number: teamNumber,
     auto_score: autoScore,
     auto_start_position: autoStartPosition,
-    shooting_range: shootingRange,
     shooting_reliability: shootingReliability,
     auto_notes: autoNotes.trim() || null,
     teleop_score: teleopScore,
+    intake_methods: intakeMethods.length > 0 ? intakeMethods : null,
     endgame_score: endgameScore,
+    climb_levels: climbLevels.length > 0 ? climbLevels : null,
+    endgame_state: climbLevels[0] ?? null,
     defense_rating: defenseRating,
     cycle_time_rating: cycleTimeRating,
     reliability_rating: reliabilityRating,
+    shooting_ranges: shootingRanges.length > 0 ? shootingRanges : null,
+    shooting_range: shootingRanges[0] ?? null,
+    ability_answers: abilityAnswersPayload,
     notes: notes.trim(),
   };
 
@@ -148,12 +329,32 @@ export function ScoutingForm({
     };
 
     try {
-      const result = await supabase
-        .from("scouting_entries")
-        .upsert(entry, { onConflict: "match_id,team_number,scouted_by" });
+      let payload = { ...entry };
+      let attempts = 0;
 
-      if (result.error) {
-        throw new Error(result.error.message);
+      while (attempts < 5) {
+        const result = await supabase
+          .from("scouting_entries")
+          .upsert(payload, {
+            onConflict: "match_id,team_number,scouted_by",
+          });
+
+        if (!result.error) {
+          break;
+        }
+
+        const nextPayload = stripUnsupportedScoutingColumns(
+          payload,
+          result.error.message
+        );
+        const changed =
+          Object.keys(nextPayload).length < Object.keys(payload).length;
+        if (!changed) {
+          throw new Error(result.error.message);
+        }
+
+        payload = nextPayload;
+        attempts += 1;
       }
 
       // Submitted online successfully
@@ -278,7 +479,12 @@ export function ScoutingForm({
             Step {activeStep + 1} of {steps.length}
           </p>
         </div>
-        <div className="mt-3 grid grid-cols-5 gap-2">
+        <div
+          className="mt-3 grid gap-2"
+          style={{
+            gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))`,
+          }}
+        >
           {steps.map((step, index) => (
             <button
               key={step.label}
@@ -289,7 +495,7 @@ export function ScoutingForm({
                   block: "start",
                 })
               }
-              className="text-left"
+              className="text-center"
             >
               <span className="block h-1.5 overflow-hidden rounded-full bg-white/10">
                 <span
@@ -299,11 +505,11 @@ export function ScoutingForm({
                 />
               </span>
               <span
-                className={`mt-1 block text-[10px] uppercase tracking-widest transition-colors duration-300 ${
+                className={`mt-1 block whitespace-nowrap text-[10px] font-medium uppercase tracking-[0.1em] transition-colors duration-300 sm:text-[11px] ${
                   index === activeStep ? "text-cyan-200" : "text-gray-400"
                 }`}
               >
-                {step.label}
+                {step.progressLabel}
               </span>
             </button>
           ))}
@@ -383,6 +589,38 @@ export function ScoutingForm({
               onChange={setTeleopScore}
             />
         </div>
+
+        <div className="mt-4 space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+            Intake Method
+          </p>
+          <p className="text-[11px] text-gray-500">Multi-select</p>
+          <div className="grid grid-cols-2 gap-2">
+            {INTAKE_OPTIONS.map((option) => {
+              const active = intakeMethods.includes(option.key);
+              return (
+                <button
+                  key={option.key}
+                  type="button"
+                  onClick={() =>
+                    setIntakeMethods((prev) =>
+                      prev.includes(option.key)
+                        ? prev.filter((item) => item !== option.key)
+                        : [...prev, option.key]
+                    )
+                  }
+                  className={`rounded-md border px-3 py-2 text-xs font-semibold uppercase tracking-wide transition ${
+                    active
+                      ? "border-cyan-400/70 bg-cyan-500/15 text-cyan-200"
+                      : "border-white/10 bg-white/5 text-gray-300 hover:bg-white/10"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </section>
 
       {/* Endgame Section */}
@@ -397,10 +635,42 @@ export function ScoutingForm({
         </h2>
         <div className="flex flex-wrap justify-center gap-6">
           <CounterButton
-            label="Endgame Points"
+            label="Points"
             value={endgameScore}
             onChange={setEndgameScore}
           />
+        </div>
+
+        <div className="mt-4 space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+            Climb
+          </p>
+          <p className="text-[11px] text-gray-500">Multi-select</p>
+          <div className="grid grid-cols-3 gap-2">
+            {CLIMB_LEVEL_OPTIONS.map((option) => {
+              const active = climbLevels.includes(option.key);
+              return (
+                <button
+                  key={option.key}
+                  type="button"
+                  onClick={() =>
+                    setClimbLevels((prev) =>
+                      prev.includes(option.key)
+                        ? prev.filter((item) => item !== option.key)
+                        : [...prev, option.key]
+                    )
+                  }
+                  className={`rounded-md border px-3 py-2 text-xs font-semibold uppercase tracking-wide transition ${
+                    active
+                      ? "border-cyan-400/70 bg-cyan-500/15 text-cyan-200"
+                      : "border-white/10 bg-white/5 text-gray-300 hover:bg-white/10"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </section>
 
@@ -419,6 +689,7 @@ export function ScoutingForm({
             <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
               Shooting Range
             </p>
+            <p className="text-[11px] text-gray-500">Multi-select</p>
             <div className="grid grid-cols-3 gap-2">
               {([
                 { key: "close", label: "Close" },
@@ -428,9 +699,15 @@ export function ScoutingForm({
                 <button
                   key={`ratings-${range.key}`}
                   type="button"
-                  onClick={() => setShootingRange(range.key)}
+                  onClick={() =>
+                    setShootingRanges((prev) =>
+                      prev.includes(range.key)
+                        ? prev.filter((item) => item !== range.key)
+                        : [...prev, range.key]
+                    )
+                  }
                   className={`rounded-md border px-3 py-2 text-xs font-semibold uppercase tracking-wide transition ${
-                    shootingRange === range.key
+                    shootingRanges.includes(range.key)
                       ? "border-cyan-400/70 bg-cyan-500/15 text-cyan-200"
                       : "border-white/10 bg-white/5 text-gray-300 hover:bg-white/10"
                   }`}
@@ -466,11 +743,83 @@ export function ScoutingForm({
         </div>
       </section>
 
+      {abilityQuestions.length > 0 && (
+        <section
+          ref={abilitiesRef}
+          onTouchStart={() => setActiveStep(4)}
+          onMouseDown={() => setActiveStep(4)}
+          className="scout-panel p-4"
+        >
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-cyan-300">
+            Ability Checks
+          </h2>
+          <div className="space-y-3">
+            {abilityQuestions.map((question) => {
+              const answer = abilityAnswers[question] ?? null;
+              return (
+                <div
+                  key={question}
+                  className="rounded-md border border-white/10 bg-white/[0.03] p-3"
+                >
+                  <p className="text-sm font-medium text-slate-200">{question}</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setAbilityAnswers((prev) => ({
+                          ...prev,
+                          [question]: true,
+                        }))
+                      }
+                      className={`rounded-md border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition ${
+                        answer === true
+                          ? "border-emerald-400/70 bg-emerald-500/20 text-emerald-200"
+                          : "border-white/10 bg-white/5 text-gray-300 hover:bg-white/10"
+                      }`}
+                    >
+                      Yes
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setAbilityAnswers((prev) => ({
+                          ...prev,
+                          [question]: false,
+                        }))
+                      }
+                      className={`rounded-md border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition ${
+                        answer === false
+                          ? "border-rose-400/70 bg-rose-500/20 text-rose-200"
+                          : "border-white/10 bg-white/5 text-gray-300 hover:bg-white/10"
+                      }`}
+                    >
+                      No
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setAbilityAnswers((prev) => ({
+                          ...prev,
+                          [question]: null,
+                        }))
+                      }
+                      className="rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-400 transition hover:bg-white/10"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {/* Notes Section */}
       <section
         ref={notesRef}
-        onTouchStart={() => setActiveStep(4)}
-        onMouseDown={() => setActiveStep(4)}
+        onTouchStart={() => setActiveStep(abilityQuestions.length > 0 ? 5 : 4)}
+        onMouseDown={() => setActiveStep(abilityQuestions.length > 0 ? 5 : 4)}
         className="scout-panel p-4"
       >
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-300">

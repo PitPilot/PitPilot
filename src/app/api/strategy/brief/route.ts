@@ -12,6 +12,9 @@ import {
 } from "@/lib/rate-limit";
 import { buildFrcGamePrompt } from "@/lib/frc-game-prompt";
 
+export const runtime = "nodejs";
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -246,6 +249,8 @@ Guidelines:
 - Be candid about weak teams or fragile matchups when data supports it, using professional wording.
 - Avoid comparative labels like "lower", "low-tier", "below average", or similar phrasing.
 - Prefer neutral alternatives such as "currently limited scoring output" or "not a top-priority pick for this role."
+- Do not use location-based claims as strengths (for example: "local knowledge", "familiar with this venue", "home crowd advantage").
+- Base alliance strengths/weaknesses only on provided performance data.
 - Keep insights concise but informative
 - Do not use emojis or markdown`;
 

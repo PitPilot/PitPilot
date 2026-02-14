@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 
 type ConfirmTone = "danger" | "warning" | "info";
 
@@ -57,10 +58,11 @@ export function ConfirmDialog({
   }, [open, onClose]);
 
   if (!open) return null;
+  if (typeof document === "undefined") return null;
 
   const toneClass = toneStyles[tone];
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[999] flex items-center justify-center px-4">
       <div
         className="fixed inset-0 bg-black/60 backdrop-blur-sm"
@@ -116,6 +118,7 @@ export function ConfirmDialog({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

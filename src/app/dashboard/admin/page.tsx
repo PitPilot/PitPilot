@@ -2,7 +2,10 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Navbar } from "@/components/navbar";
 import { AdminPanel } from "./admin-panel";
-import { getEventSyncMinYear } from "@/lib/platform-settings";
+import {
+  getEventSyncMinYear,
+  getScoutingAbilityQuestions,
+} from "@/lib/platform-settings";
 
 export default async function AdminPage() {
   const supabase = await createClient();
@@ -104,7 +107,10 @@ export default async function AdminPage() {
     messages: aggregateByDay(messagesTimeRes.data),
   };
 
-  const eventSyncMinYear = await getEventSyncMinYear(supabase);
+  const [eventSyncMinYear, scoutingAbilityQuestions] = await Promise.all([
+    getEventSyncMinYear(supabase),
+    getScoutingAbilityQuestions(supabase),
+  ]);
 
   return (
     <>
@@ -123,6 +129,7 @@ export default async function AdminPage() {
         contactMessages={contactMessages ?? []}
         analytics={analytics}
         eventSyncMinYear={eventSyncMinYear}
+        scoutingAbilityQuestions={scoutingAbilityQuestions}
         adminName={profile.display_name ?? user.email ?? "Admin"}
         adminEmail={user.email ?? ""}
       />

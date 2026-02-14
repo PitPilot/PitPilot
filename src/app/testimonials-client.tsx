@@ -19,6 +19,16 @@ export function TestimonialsClient({ testimonials }: TestimonialsClientProps) {
   return (
     <section id="testimonials" className="relative py-24">
       <div className="pointer-events-none absolute left-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      <motion.div
+        className="pointer-events-none absolute -left-8 top-20 h-28 w-28 rounded-full bg-teal-300/12 blur-3xl"
+        animate={{ opacity: [0.18, 0.35, 0.18], y: [0, -8, 0] }}
+        transition={{ duration: 6.2, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div
+        className="pointer-events-none absolute -right-8 bottom-16 h-32 w-32 rounded-full bg-cyan-300/12 blur-3xl"
+        animate={{ opacity: [0.16, 0.32, 0.16], y: [0, 10, 0] }}
+        transition={{ duration: 7.1, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}
+      />
       <div className="mx-auto max-w-7xl px-4">
         <div className="text-center">
           <p className="section-label">Testimonials</p>

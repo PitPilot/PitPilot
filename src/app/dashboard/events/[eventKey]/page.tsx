@@ -249,7 +249,6 @@ export default async function EventPage({
           <TeamStatsTable
             data={tableData}
             eventKey={eventKey}
-            canSync={profile?.role === "captain"}
             highlightTeam={orgTeamNumber}
           />
         )}

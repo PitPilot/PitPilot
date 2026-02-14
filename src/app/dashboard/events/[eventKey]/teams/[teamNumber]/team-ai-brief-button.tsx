@@ -474,7 +474,7 @@ export function TeamAIBriefButton({
               transition={{ delay: 0.14, duration: 0.22 }}
             >
               <p className="text-xs text-gray-400">
-                Use this as a starting point and confirm with live scouting.
+                This brief is strongest when current EPA and your team&apos;s scouting entries are both available; sparse data produces broader guidance.
               </p>
               <motion.button
                 type="button"

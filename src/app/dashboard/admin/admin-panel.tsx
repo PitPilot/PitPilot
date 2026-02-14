@@ -80,6 +80,7 @@ interface AdminPanelProps {
     messages: TimePoint[];
   };
   eventSyncMinYear: number;
+  scoutingAbilityQuestions: string[];
   adminName: string;
   adminEmail: string;
 }
@@ -172,6 +173,7 @@ export function AdminPanel({
   contactMessages,
   analytics,
   eventSyncMinYear,
+  scoutingAbilityQuestions,
   adminName,
   adminEmail,
 }: AdminPanelProps) {
@@ -222,7 +224,13 @@ export function AdminPanel({
   function renderTab() {
     switch (activeTab) {
       case "overview":
-        return <OverviewTab stats={stats} eventSyncMinYear={eventSyncMinYear} />;
+        return (
+          <OverviewTab
+            stats={stats}
+            eventSyncMinYear={eventSyncMinYear}
+            scoutingAbilityQuestions={scoutingAbilityQuestions}
+          />
+        );
       case "analytics":
         return <AnalyticsTab analytics={analytics} />;
       case "announcements":

@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { SyncStatsButton } from "./sync-stats-button";
 
 interface TeamStat {
   team_number: number;
@@ -46,12 +45,10 @@ function SortHeader({
 export function TeamStatsTable({
   data,
   eventKey,
-  canSync = false,
   highlightTeam = null,
 }: {
   data: TeamStat[];
   eventKey: string;
-  canSync?: boolean;
   highlightTeam?: number | null;
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("epa");
@@ -110,11 +107,6 @@ export function TeamStatsTable({
           {missingEpaCount === data.length
             ? "EPA stats update once matches start or as the event gets closer."
             : `EPA stats are still missing for ${missingEpaCount} team${missingEpaCount === 1 ? "" : "s"}.`}
-          {canSync && (
-            <div className="mt-2">
-              <SyncStatsButton eventKey={eventKey} />
-            </div>
-          )}
         </div>
       )}
       <input

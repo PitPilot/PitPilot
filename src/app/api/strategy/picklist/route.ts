@@ -12,6 +12,9 @@ import {
 } from "@/lib/rate-limit";
 import { buildFrcGamePrompt } from "@/lib/frc-game-prompt";
 
+export const runtime = "nodejs";
+export const maxDuration = 60;
+
 function parseAiJson(text: string): unknown {
   // Try raw first.
   try {
@@ -396,6 +399,8 @@ IMPORTANT:
 - Do not treat limited/missing scouting data as a risk factor.
 - When scouting is limited, use professional wording in scoutingSummary like: "Additional scouting entries would enable a more complete report."
 - Be specific in synergy reasons — reference actual stats
+- Do not use location-based claims as strengths/pros/synergy (for example: "local knowledge", "familiar with this venue", "home crowd advantage").
+- For strengths, pickReason, and synergyReason, use only provided performance data (EPA, record, scouting notes/profile).
 - The user's team number may be null if not set; in that case, rank purely on individual team strength`;
 
   try {

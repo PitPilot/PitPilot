@@ -13,8 +13,8 @@ export function DashboardPreview() {
             Interface built for match tempo
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-slate-400">
-            Clear hierarchy, assignment controls, quick brief access, and high-contrast
-            team grids designed for noisy stands.
+            We keep your flow clear with assignment controls, quick brief access, and
+            high-contrast team grids built for noisy stands.
           </p>
         </div>
 
@@ -25,7 +25,17 @@ export function DashboardPreview() {
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           className="mt-14"
         >
-          <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0b1116] shadow-[0_0_50px_-20px_rgba(67,217,162,0.35)]">
+          <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0b1116] shadow-[0_0_50px_-20px_rgba(67,217,162,0.35)]">
+            <motion.div
+              className="pointer-events-none absolute -right-12 -top-10 h-28 w-28 rounded-full bg-teal-300/20 blur-2xl"
+              animate={{ opacity: [0.2, 0.45, 0.2], scale: [0.95, 1.08, 0.95] }}
+              transition={{ duration: 6.2, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <motion.div
+              className="pointer-events-none absolute -bottom-10 -left-8 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl"
+              animate={{ opacity: [0.2, 0.38, 0.2], scale: [1.05, 0.9, 1.05] }}
+              transition={{ duration: 5.4, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
+            />
             <div className="flex items-center gap-3 border-b border-white/10 bg-white/5 px-4 py-3.5">
               <div className="flex gap-1.5">
                 <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
@@ -35,9 +45,19 @@ export function DashboardPreview() {
               <div className="ml-2 rounded-md border border-white/10 bg-black/35 px-3 py-1 font-mono text-[11px] text-slate-400">
                 pitpulse.app/dashboard/events/2026miket
               </div>
+              <motion.span
+                className="ml-auto inline-flex h-2.5 w-2.5 rounded-full bg-teal-300"
+                animate={{ opacity: [0.4, 1, 0.4], scale: [1, 1.15, 1] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              />
             </div>
 
-            <div className="p-4 sm:p-6">
+            <div className="relative p-4 sm:p-6">
+              <motion.div
+                className="pointer-events-none absolute left-6 right-6 top-16 h-px bg-gradient-to-r from-transparent via-cyan-200/70 to-transparent"
+                animate={{ opacity: [0, 0.8, 0], x: ["-24%", "24%", "-24%"] }}
+                transition={{ duration: 4.8, repeat: Infinity, ease: "easeInOut" }}
+              />
               <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <div className="h-4 w-52 rounded-full bg-white/10" />
@@ -119,7 +139,7 @@ function MatchMockup({
   hasBrief?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:border-teal-300/35 hover:shadow-[0_0_20px_-12px_rgba(67,217,162,0.55)]">
+    <div className="relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.03] p-3 transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:border-teal-300/35 hover:shadow-[0_0_20px_-12px_rgba(67,217,162,0.55)]">
       <div className="mb-2 flex items-center justify-between">
         <span className="font-mono text-[11px] font-medium text-blue-400">{label}</span>
         <div className="flex items-center gap-2">

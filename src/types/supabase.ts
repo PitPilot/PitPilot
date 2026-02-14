@@ -268,18 +268,21 @@ export type Database = {
           created_at: string
           event_sync_min_year: number
           id: number
+          scouting_ability_questions: Json | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           event_sync_min_year?: number
           id?: number
+          scouting_ability_questions?: Json | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           event_sync_min_year?: number
           id?: number
+          scouting_ability_questions?: Json | null
           updated_at?: string
         }
         Relationships: []
@@ -460,66 +463,78 @@ export type Database = {
       }
       scouting_entries: {
         Row: {
+          ability_answers: Json | null
           auto_mobility: boolean | null
           auto_notes: string | null
           auto_score: number
           auto_start_position: string | null
           cycle_time_rating: number | null
+          climb_levels: Json | null
           created_at: string
           defense_rating: number
           endgame_score: number
           endgame_state: string | null
           id: string
+          intake_methods: Json | null
           match_id: string
           notes: string | null
           org_id: string
           reliability_rating: number
           scouted_by: string
           shooting_range: string | null
+          shooting_ranges: Json | null
           shooting_reliability: number | null
           team_number: number
           teleop_defense: boolean | null
           teleop_score: number
         }
         Insert: {
+          ability_answers?: Json | null
           auto_mobility?: boolean | null
           auto_notes?: string | null
           auto_score?: number
           auto_start_position?: string | null
           cycle_time_rating?: number | null
+          climb_levels?: Json | null
           created_at?: string
           defense_rating?: number
           endgame_score?: number
           endgame_state?: string | null
           id?: string
+          intake_methods?: Json | null
           match_id: string
           notes?: string | null
           org_id: string
           reliability_rating?: number
           scouted_by: string
           shooting_range?: string | null
+          shooting_ranges?: Json | null
           shooting_reliability?: number | null
           team_number: number
           teleop_defense?: boolean | null
           teleop_score?: number
         }
         Update: {
+          ability_answers?: Json | null
           auto_mobility?: boolean | null
           auto_notes?: string | null
           auto_score?: number
           auto_start_position?: string | null
           cycle_time_rating?: number | null
+          climb_levels?: Json | null
           created_at?: string
           defense_rating?: number
           endgame_score?: number
           endgame_state?: string | null
           id?: string
+          intake_methods?: Json | null
           match_id?: string
           notes?: string | null
           org_id?: string
           reliability_rating?: number
           scouted_by?: string
           shooting_range?: string | null
+          shooting_ranges?: Json | null
           shooting_reliability?: number | null
           team_number?: number
           teleop_defense?: boolean | null

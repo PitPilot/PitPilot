@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { checkRateLimit, retryAfterSeconds } from "@/lib/rate-limit";
+import {
+  buildRateLimitHeaders,
+  checkRateLimit,
+  retryAfterSeconds,
+} from "@/lib/rate-limit";
 import { getEventSyncMinYear } from "@/lib/platform-settings";
 import {
   fetchEvent,
@@ -9,13 +13,30 @@ import {
   parseMatchAlliance,
 } from "@/lib/tba";
 
+export const runtime = "nodejs";
+export const maxDuration = 60;
+const EVENT_SYNC_RATE_LIMIT_MAX = 2;
+const EVENT_KEY_PATTERN = /^\d{4}[a-z0-9]+$/;
+
 export async function POST(request: Request) {
   try {
-    const { eventKey } = await request.json();
+    const payload = (await request.json().catch(() => null)) as
+      | { eventKey?: string }
+      | null;
+    const eventKeyRaw =
+      typeof payload?.eventKey === "string" ? payload.eventKey.trim() : "";
+    const eventKey = eventKeyRaw.toLowerCase();
 
-    if (!eventKey || typeof eventKey !== "string") {
+    if (!eventKey) {
       return NextResponse.json(
         { error: "eventKey is required (e.g. '2025hiho')" },
+        { status: 400 }
+      );
+    }
+
+    if (!EVENT_KEY_PATTERN.test(eventKey)) {
+      return NextResponse.json(
+        { error: "Invalid event key format (expected e.g. 2025hiho)." },
         { status: 400 }
       );
     }
@@ -59,13 +80,20 @@ export async function POST(request: Request) {
     const limit = await checkRateLimit(
       `events-sync:${profile.org_id}`,
       5 * 60_000,
-      2
+      EVENT_SYNC_RATE_LIMIT_MAX
+    );
+    const limitHeaders = buildRateLimitHeaders(
+      limit,
+      EVENT_SYNC_RATE_LIMIT_MAX
     );
     if (!limit.allowed) {
       const retryAfter = retryAfterSeconds(limit.resetAt);
       return NextResponse.json(
         { error: "Your team has exceeded the rate limit. Please try again soon." },
-        { status: 429, headers: { "Retry-After": retryAfter.toString() } }
+        {
+          status: 429,
+          headers: { ...limitHeaders, "Retry-After": retryAfter.toString() },
+        }
       );
     }
 
@@ -234,15 +262,18 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      event: tbaEvent.name,
-      teams: tbaTeams.length,
-      matches: tbaMatches.length,
-      warning: isAttending
-        ? null
-        : "Your team isn’t listed for this event. You can still scout it, but it won’t be on your schedule.",
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        event: tbaEvent.name,
+        teams: tbaTeams.length,
+        matches: tbaMatches.length,
+        warning: isAttending
+          ? null
+          : "Your team isn’t listed for this event. You can still scout it, but it won’t be on your schedule.",
+      },
+      { headers: limitHeaders }
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json({ error: message }, { status: 500 });

@@ -11,6 +11,9 @@ import {
 } from "@/lib/rate-limit";
 import { buildFrcGamePrompt } from "@/lib/frc-game-prompt";
 
+export const runtime = "nodejs";
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -187,6 +190,7 @@ Rules:
 - Be honest about weak performance when supported by data, but keep wording professional and respectful.
 - Avoid comparative labels like "lower", "low-tier", "below average", or similar phrasing.
 - Prefer neutral alternatives such as "currently limited scoring output" or "not a top-priority pick for this role."
+- Do not cite location-based advantages (for example: "local knowledge", "familiar with this venue", "home crowd advantage") unless explicit supporting data is provided.
 - Remind the user that more scouting entries improve response quality when relevant.
 - Do not use emojis or markdown. Use short, plain-text responses.
 - If asked what model you are, say: "This assistant runs on a Sonnet 4-based model that is being fine-tuned on FRC game data; full fine-tuning is planned soon."`;

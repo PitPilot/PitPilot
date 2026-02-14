@@ -13,6 +13,7 @@ import { HeroAnimations } from "./hero-animations";
 import { Navbar } from "@/components/navbar";
 import { LiveStats } from "./live-stats";
 import { DashboardPreview } from "./dashboard-preview";
+import { AIBriefingPreview } from "./ai-briefing-preview";
 import { Testimonials } from "./testimonials";
 import { createClient } from "@/lib/supabase/server";
 import { MotionSection } from "@/components/motion-section";
@@ -34,37 +35,37 @@ const FEATURES: Feature[] = [
   {
     title: "Smart scouting forms",
     description:
-      "Fast mobile forms made for the stands with touch-first controls and reliable offline capture.",
+      "We built fast mobile forms for your scouts in the stands, with touch-first controls and reliable offline capture.",
     icon: ClipboardList,
   },
   {
     title: "Unified event intelligence",
     description:
-      "Bring together PitPulse entries, TBA schedules/results, and Statbotics context in one view.",
+      "We bring your PitPulse entries, TBA schedules/results, and Statbotics context together in one shared view.",
     icon: Database,
   },
   {
     title: "Pre-match AI briefs",
     description:
-      "Generate concise match plans before each match with priorities, risks, and role focus.",
+      "We generate concise pre-match plans for you with priorities, risks, and role focus before each match.",
     icon: Bot,
   },
   {
     title: "Alliance pick optimizer",
     description:
-      "Rank teams by complement fit, not just raw EPA, so your picks match your robot profile.",
+      "We rank teams by fit with your robot, not just raw EPA, so you can draft with intent.",
     icon: Handshake,
   },
   {
     title: "Team operations",
     description:
-      "Captains manage roles, assignments, and communication without leaving the dashboard.",
+      "Your captains can manage roles, assignments, and communication without leaving the dashboard.",
     icon: Users,
   },
   {
     title: "Competition-ready reliability",
     description:
-      "Offline-first behavior, sync recovery, and resilient UX for real venue network conditions.",
+      "We keep you moving with offline-first behavior, sync recovery, and resilient UX for real venue networks.",
     icon: Smartphone,
   },
 ];
@@ -74,19 +75,19 @@ const STEPS: Step[] = [
     label: "Step 01",
     title: "Capture",
     description:
-      "Scouts submit structured match notes quickly from phones with low-friction tap controls.",
+      "Your scouts submit structured match notes quickly from phones with low-friction tap controls.",
   },
   {
     label: "Step 02",
     title: "Contextualize",
     description:
-      "PitPulse layers your scouting signal with event data to build a complete performance picture.",
+      "We layer your scouting signal with event data so you can see a complete performance picture.",
   },
   {
     label: "Step 03",
     title: "Execute",
     description:
-      "Drive team gets focused strategy briefs and pick recommendations in time for decisions.",
+      "Your drive team gets focused briefs and pick recommendations in time for real decisions.",
   },
 ];
 
@@ -141,7 +142,7 @@ export default async function Home() {
               Strategy is not a spreadsheet problem
             </h2>
             <p className="mx-auto mt-5 max-w-3xl text-base leading-relaxed text-slate-400 md:text-lg">
-              Most tools stop at data collection. PitPulse turns raw scouting signal into
+              Most tools stop at data collection. We help you turn raw scouting signal into
               match-ready decisions with clear priorities and confidence.
             </p>
           </div>
@@ -159,17 +160,17 @@ export default async function Home() {
                 <tr className="transition-colors duration-300 hover:bg-white/[0.03]">
                   <td className="px-6 py-4 font-semibold text-white">TBA / Statbotics</td>
                   <td className="px-6 py-4 text-slate-300">Publishes schedule, results, rankings, and EPA context.</td>
-                  <td className="px-6 py-4 text-slate-500">Does not give your drive team a match plan.</td>
+                  <td className="px-6 py-4 text-slate-500">Doesn&apos;t turn that data into your next-match plan.</td>
                 </tr>
                 <tr className="transition-colors duration-300 hover:bg-white/[0.03]">
                   <td className="px-6 py-4 font-semibold text-white">Forms / sheets workflows</td>
                   <td className="px-6 py-4 text-slate-300">Collects team notes and subjective observations.</td>
-                  <td className="px-6 py-4 text-slate-500">Hard to convert into consistent strategy at speed.</td>
+                  <td className="px-6 py-4 text-slate-500">You still have to convert it into strategy under time pressure.</td>
                 </tr>
                 <tr className="transition-colors duration-300 hover:bg-white/[0.03]">
                   <td className="px-6 py-4 font-semibold text-white">PitPulse</td>
-                  <td className="px-6 py-4 text-slate-300">Combines both + generates tactical pre-match guidance.</td>
-                  <td className="px-6 py-4 text-slate-500">Does not replace your scouts; it amplifies them.</td>
+                  <td className="px-6 py-4 text-slate-300">We combine both + generate tactical pre-match guidance.</td>
+                  <td className="px-6 py-4 text-slate-500">We don&apos;t replace your scouts; we amplify them.</td>
                 </tr>
               </tbody>
             </table>
@@ -197,7 +198,7 @@ export default async function Home() {
 
       <MotionSection id="how-it-works" className="relative py-24">
         <div className="pointer-events-none absolute left-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-        <div className="mx-auto max-w-5xl px-4">
+        <div className="mx-auto max-w-4xl px-4">
           <div className="text-center">
             <p className="section-label">How it works</p>
             <h2 className="font-outfit mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl">
@@ -227,6 +228,7 @@ export default async function Home() {
       </MotionSection>
 
       <DashboardPreview />
+      <AIBriefingPreview />
       <Testimonials />
 
       <MotionSection id="pricing" className="relative py-24">
@@ -238,13 +240,13 @@ export default async function Home() {
               Community-first, team-friendly
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-sm text-slate-400 md:text-base">
-              Free gives your team everything needed to scout real events. Supporter adds
-              more AI headroom and helps us keep PitPulse fast and reliable for everyone.
+              Free gives you everything you need to scout real events. Supporter gives your
+              team more AI headroom and helps us keep PitPulse fast and reliable for everyone.
             </p>
           </div>
 
-          <div className="mt-14 grid gap-6 md:grid-cols-2">
-            <div className="rounded-2xl border border-white/10 bg-[#0f1115]/80 p-8 backdrop-blur-md transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-teal-300/30 hover:shadow-[0_0_34px_-18px_rgba(67,217,162,0.34)]">
+          <div className="mt-14 grid justify-items-center gap-4 md:grid-cols-2">
+            <div className="w-full max-w-[360px] rounded-2xl border border-white/10 bg-[#0f1115]/80 p-8 backdrop-blur-md transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-teal-300/30 hover:shadow-[0_0_34px_-18px_rgba(67,217,162,0.34)]">
               <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-slate-400">Free</p>
               <p className="font-outfit mt-4 text-5xl font-bold">$0</p>
               <p className="mt-1 text-sm text-slate-500">forever</p>
@@ -264,7 +266,7 @@ export default async function Home() {
               </Link>
             </div>
 
-            <div className="relative rounded-2xl border border-teal-300/35 bg-gradient-to-b from-teal-300/15 to-transparent p-8 shadow-[0_0_40px_-20px_rgba(67,217,162,0.55)] transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-teal-200/60 hover:shadow-[0_0_44px_-18px_rgba(67,217,162,0.78)]">
+            <div className="relative w-full max-w-[360px] rounded-2xl border border-teal-300/35 bg-gradient-to-b from-teal-300/15 to-transparent p-8 shadow-[0_0_40px_-20px_rgba(67,217,162,0.55)] transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-teal-200/60 hover:shadow-[0_0_44px_-18px_rgba(67,217,162,0.78)]">
               <div className="absolute -top-3 left-6 rounded-full border border-teal-200/70 bg-teal-300 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.15em] text-[#042116] shadow-[0_8px_18px_-10px_rgba(67,217,162,0.8)]">
                 Support us
               </div>
@@ -301,7 +303,7 @@ export default async function Home() {
             Ready for cleaner decisions at your next event?
           </h2>
           <p className="mx-auto mt-5 max-w-xl text-sm text-slate-400 md:text-base">
-            PitPulse is designed to reduce chaos on match day and help your drive team
+            We built PitPulse to reduce match-day chaos so your drive team can
             act with confidence.
           </p>
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">

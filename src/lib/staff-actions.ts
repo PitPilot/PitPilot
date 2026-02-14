@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/supabase";
+import {
+  getDefaultEventSyncMinYear,
+  normalizeScoutingAbilityQuestions,
+} from "@/lib/platform-settings";
 
 async function requireStaff() {
   const supabase = await createClient();
@@ -93,6 +97,8 @@ export async function deleteOrganization(formData: FormData) {
   }
 
   const tablesToDelete = [
+    "team_messages",
+    "draft_sessions",
     "scout_assignments",
     "scouting_entries",
     "strategy_briefs",
@@ -370,5 +376,76 @@ export async function updateEventSyncMinYear(formData: FormData) {
 
   revalidatePath("/dashboard/admin");
   revalidatePath("/dashboard");
+  return { success: true } as const;
+}
+
+export async function updateScoutingAbilityQuestions(formData: FormData) {
+  const ctx = await requireStaff();
+  if ("error" in ctx) return ctx;
+
+  const raw = (formData.get("questionsJson") as string | null)?.trim();
+  if (!raw) {
+    return { error: "Missing scouting list payload." } as const;
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return { error: "Invalid scouting list payload." } as const;
+  }
+
+  const questions = normalizeScoutingAbilityQuestions(parsed);
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) {
+    return {
+      error: "SUPABASE_SERVICE_ROLE_KEY is missing.",
+    } as const;
+  }
+
+  const admin = createAdminClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    serviceRoleKey
+  );
+
+  const { data: current } = await admin
+    .from("platform_settings")
+    .select("event_sync_min_year")
+    .eq("id", 1)
+    .maybeSingle();
+
+  const eventSyncMinYear =
+    current?.event_sync_min_year ?? getDefaultEventSyncMinYear();
+
+  const { error } = await admin
+    .from("platform_settings")
+    .upsert(
+      {
+        id: 1,
+        event_sync_min_year: eventSyncMinYear,
+        scouting_ability_questions: questions,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "id" }
+    );
+
+  if (error) {
+    if (error.message.toLowerCase().includes("scouting_ability_questions")) {
+      return {
+        error:
+          "Scouting question settings are missing in the database. Run the latest migration first.",
+      } as const;
+    }
+    if (error.message.toLowerCase().includes("platform_settings")) {
+      return {
+        error:
+          "Platform settings table is missing. Run the new migration first.",
+      } as const;
+    }
+    return { error: error.message } as const;
+  }
+
+  revalidatePath("/dashboard/admin");
+  revalidatePath("/scout");
   return { success: true } as const;
 }

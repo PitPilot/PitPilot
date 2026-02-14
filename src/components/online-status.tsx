@@ -12,6 +12,32 @@ const OFFLINE_BANNER_DISMISS_KEY = "pitpulse:offline-banner-dismissed";
 const ONLINE_BANNER_DISMISS_KEY = "pitpulse:online-sync-banner-dismissed";
 const CONNECTIVITY_POLL_MS = 10000;
 
+function stripUnsupportedScoutingColumns<T extends Record<string, unknown>>(
+  payload: T,
+  errorMessage: string
+) {
+  const next = { ...payload } as Record<string, unknown>;
+  const msg = errorMessage.toLowerCase();
+
+  if (msg.includes("ability_answers")) {
+    delete next.ability_answers;
+  }
+
+  if (msg.includes("intake_methods")) {
+    delete next.intake_methods;
+  }
+
+  if (msg.includes("shooting_ranges")) {
+    delete next.shooting_ranges;
+  }
+
+  if (msg.includes("climb_levels")) {
+    delete next.climb_levels;
+  }
+
+  return next as T;
+}
+
 function readDismissed(key: string): boolean {
   if (typeof window === "undefined") return false;
   try {
@@ -150,9 +176,37 @@ export function OnlineStatus() {
       const entry = entries[i];
       const { id: _id, ...data } = entry;
       void _id;
-      const { error } = await supabase
-        .from("scouting_entries")
-        .upsert(data, { onConflict: "match_id,team_number,scouted_by" });
+      let payload = { ...data };
+      let error: { message: string } | null = null;
+      let attempts = 0;
+
+      while (attempts < 5) {
+        const result = await supabase
+          .from("scouting_entries")
+          .upsert(payload, { onConflict: "match_id,team_number,scouted_by" });
+
+        if (!result.error) {
+          error = null;
+          break;
+        }
+
+        const nextPayload = stripUnsupportedScoutingColumns(
+          payload,
+          result.error.message
+        );
+        const changed =
+          Object.keys(nextPayload).length < Object.keys(payload).length;
+
+        if (!changed) {
+          error = { message: result.error.message };
+          break;
+        }
+
+        payload = nextPayload;
+        attempts += 1;
+        error = { message: result.error.message };
+      }
+
       if (!error) {
         await removePendingEntry(entry.id);
       } else {
@@ -201,7 +255,7 @@ export function OnlineStatus() {
 
   return (
     <div
-      className={`pointer-events-auto fixed bottom-4 left-4 right-4 z-[120] mx-auto max-w-sm rounded-lg px-4 py-3 text-sm font-medium shadow-lg transition-colors duration-300 ${
+      className={`pointer-events-auto fixed bottom-4 left-4 right-4 z-[40] mx-auto max-w-sm rounded-lg px-4 py-3 text-sm font-medium shadow-lg transition-colors duration-300 ${
         !isOnline
           ? "bg-yellow-500 text-yellow-900"
           : syncErrors > 0

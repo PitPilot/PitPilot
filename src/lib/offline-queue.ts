@@ -12,12 +12,16 @@ export interface PendingEntry {
   auto_start_position?: string | null;
   auto_notes?: string | null;
   shooting_range?: string | null;
+  shooting_ranges?: string[] | null;
   shooting_reliability?: number | null;
   teleop_score: number;
   endgame_score: number;
   defense_rating: number;
   cycle_time_rating?: number | null;
   reliability_rating: number;
+  ability_answers?: Record<string, boolean>;
+  intake_methods?: string[] | null;
+  climb_levels?: string[] | null;
   notes: string;
   created_at: string;
 }

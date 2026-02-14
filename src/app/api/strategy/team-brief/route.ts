@@ -11,6 +11,9 @@ import {
 } from "@/lib/rate-limit";
 import { buildFrcGamePrompt } from "@/lib/frc-game-prompt";
 
+export const runtime = "nodejs";
+export const maxDuration = 60;
+
 const STATBOTICS_BASE = "https://api.statbotics.io/v3";
 
 type JsonObject = Record<string, unknown>;
@@ -446,6 +449,8 @@ Rules:
 - Do not frame limited scouting data as a team weakness or risk.
 - If scouting data is limited, use a professional note such as: "Additional scouting entries would enable a more complete report."
 - Do not invent stats or history.
+- Do not use location-based claims as strengths (for example: "local knowledge", "familiar with this venue", "home crowd advantage").
+- For Alliance Fit bullets, only use performance evidence from the provided JSON (EPA, record, scouting), not geography.
 - Keep total output under 260 words.
 - End with exactly one closing sentence after all sections.
 - No emojis.`;
