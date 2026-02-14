@@ -6,14 +6,64 @@ import { summarizeScouting } from "@/lib/scouting-summary";
 import {
   buildRateLimitHeaders,
   checkRateLimit,
-  getTeamAiLimit,
   retryAfterSeconds,
   TEAM_AI_WINDOW_MS,
 } from "@/lib/rate-limit";
 import { buildFrcGamePrompt } from "@/lib/frc-game-prompt";
+import {
+  getTeamAiLimitFromSettings,
+  getTeamAiPromptLimits,
+} from "@/lib/platform-settings";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
+
+export async function GET(request: NextRequest) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("org_id")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile?.org_id) {
+    return NextResponse.json({ error: "No organization found" }, { status: 400 });
+  }
+
+  const matchId = request.nextUrl.searchParams.get("matchId");
+  if (!matchId) {
+    return NextResponse.json({ error: "matchId is required" }, { status: 400 });
+  }
+
+  const { data: brief, error } = await supabase
+    .from("strategy_briefs")
+    .select("content, created_at")
+    .eq("match_id", matchId)
+    .eq("org_id", profile.org_id)
+    .maybeSingle();
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  if (!brief) {
+    return NextResponse.json({ error: "Brief not found" }, { status: 404 });
+  }
+
+  return NextResponse.json({
+    success: true,
+    brief: brief.content,
+    createdAt: brief.created_at,
+  });
+}
 
 export async function POST(request: NextRequest) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -61,7 +111,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Organization not found" }, { status: 404 });
   }
 
-  const aiLimit = getTeamAiLimit(org.plan_tier);
+  const teamAiPromptLimits = await getTeamAiPromptLimits(supabase);
+  const aiLimit = getTeamAiLimitFromSettings(teamAiPromptLimits, org.plan_tier);
   const limit = await checkRateLimit(
     `ai-interactions:${profile.org_id}`,
     TEAM_AI_WINDOW_MS,
@@ -93,13 +144,6 @@ export async function POST(request: NextRequest) {
 
   if (matchError || !match) {
     return NextResponse.json({ error: "Match not found" }, { status: 404 });
-  }
-
-  if (match.red_score !== null || match.blue_score !== null) {
-    return NextResponse.json(
-      { error: "Pre-match briefs are only available before the match starts." },
-      { status: 400 }
-    );
   }
 
   if (
@@ -189,8 +233,9 @@ export async function POST(request: NextRequest) {
       match_number: match.match_number,
       red_teams: match.red_teams,
       blue_teams: match.blue_teams,
-      red_score: match.red_score,
-      blue_score: match.blue_score,
+      // Keep brief generation pre-match oriented, even for completed matches.
+      red_score: null,
+      blue_score: null,
     },
     stats: statsMap,
     scouting: scoutingSummary,

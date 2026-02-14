@@ -9,6 +9,8 @@ type RateLimitResult = {
   resetAt: number;
 };
 
+type RateLimitSnapshot = Pick<RateLimitResult, "remaining" | "resetAt">;
+
 export type PlanTier = "free" | "supporter";
 
 export const TEAM_AI_WINDOW_MS = 3 * 60 * 60 * 1000;
@@ -57,6 +59,17 @@ function getStore(): Map<string, RateLimitEntry> {
   }
 
   return globalAny[storeKey] as Map<string, RateLimitEntry>;
+}
+
+function resetRateLimitPrefixInMemory(prefix: string): number {
+  const store = getStore();
+  let deleted = 0;
+  for (const key of store.keys()) {
+    if (!key.startsWith(prefix)) continue;
+    store.delete(key);
+    deleted += 1;
+  }
+  return deleted;
 }
 
 function checkRateLimitInMemory(
@@ -146,6 +159,179 @@ async function checkRateLimitUpstash(
   }
 }
 
+function peekRateLimitInMemory(
+  key: string,
+  windowMs: number,
+  max: number
+): RateLimitSnapshot {
+  const store = getStore();
+  const now = Date.now();
+  const entry = store.get(key);
+
+  if (!entry || entry.resetAt <= now) {
+    if (entry && entry.resetAt <= now) {
+      store.delete(key);
+    }
+
+    return {
+      remaining: max,
+      resetAt: now + windowMs,
+    };
+  }
+
+  return {
+    remaining: Math.max(0, max - Math.max(0, entry.count)),
+    resetAt: entry.resetAt,
+  };
+}
+
+async function peekRateLimitUpstash(
+  key: string,
+  windowMs: number,
+  max: number
+): Promise<RateLimitSnapshot | null> {
+  if (!canUseUpstashRateLimit) return null;
+
+  try {
+    const response = await fetch(`${UPSTASH_REDIS_REST_URL}/pipeline`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${UPSTASH_REDIS_REST_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify([
+        ["GET", key],
+        ["PTTL", key],
+      ]),
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Upstash response status ${response.status}`);
+    }
+
+    const payload = (await response.json()) as Array<{
+      result?: unknown;
+      error?: string | null;
+    }>;
+
+    const countResult = Array.isArray(payload) ? payload[0] : null;
+    const ttlResult = Array.isArray(payload) ? payload[1] : null;
+
+    if (!countResult || !ttlResult) {
+      throw new Error("Invalid Upstash response");
+    }
+    if (countResult.error) {
+      throw new Error(countResult.error);
+    }
+    if (ttlResult.error) {
+      throw new Error(ttlResult.error);
+    }
+
+    const parsedCount = Number(countResult.result ?? 0);
+    const count = Number.isFinite(parsedCount) ? Math.max(0, parsedCount) : 0;
+    const parsedTtl = Number(ttlResult.result);
+    const ttlMs = Number.isFinite(parsedTtl) && parsedTtl > 0 ? parsedTtl : windowMs;
+
+    return {
+      remaining: Math.max(0, max - count),
+      resetAt: Date.now() + ttlMs,
+    };
+  } catch (error) {
+    console.error(
+      "Upstash rate limit snapshot failed, falling back to in-memory store.",
+      error
+    );
+    return null;
+  }
+}
+
+async function resetRateLimitPrefixUpstash(
+  prefix: string
+): Promise<number | null> {
+  if (!canUseUpstashRateLimit) return null;
+
+  let cursor = "0";
+  let deleted = 0;
+
+  try {
+    do {
+      const scanResponse = await fetch(`${UPSTASH_REDIS_REST_URL}/pipeline`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${UPSTASH_REDIS_REST_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify([
+          ["SCAN", cursor, "MATCH", `${prefix}*`, "COUNT", "500"],
+        ]),
+        cache: "no-store",
+      });
+
+      if (!scanResponse.ok) {
+        throw new Error(`Upstash response status ${scanResponse.status}`);
+      }
+
+      const scanPayload = (await scanResponse.json()) as Array<{
+        result?: unknown;
+        error?: string | null;
+      }>;
+      const first = Array.isArray(scanPayload) ? scanPayload[0] : null;
+      if (!first) throw new Error("Invalid Upstash scan response");
+      if (first.error) throw new Error(first.error);
+
+      const result = Array.isArray(first.result) ? first.result : null;
+      if (!result || result.length < 2) {
+        throw new Error("Invalid Upstash SCAN result shape");
+      }
+
+      cursor = String(result[0] ?? "0");
+      const keys = Array.isArray(result[1])
+        ? result[1].map((item) => String(item))
+        : [];
+
+      if (keys.length > 0) {
+        const deleteResponse = await fetch(`${UPSTASH_REDIS_REST_URL}/pipeline`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${UPSTASH_REDIS_REST_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(keys.map((key) => ["DEL", key])),
+          cache: "no-store",
+        });
+
+        if (!deleteResponse.ok) {
+          throw new Error(`Upstash response status ${deleteResponse.status}`);
+        }
+
+        const deletePayload = (await deleteResponse.json()) as Array<{
+          result?: unknown;
+          error?: string | null;
+        }>;
+
+        for (const row of deletePayload) {
+          if (row?.error) {
+            throw new Error(row.error);
+          }
+          const count = Number(row?.result ?? 0);
+          if (Number.isFinite(count) && count > 0) {
+            deleted += count;
+          }
+        }
+      }
+    } while (cursor !== "0");
+
+    return deleted;
+  } catch (error) {
+    console.error(
+      "Upstash rate limit reset failed, falling back to in-memory store.",
+      error
+    );
+    return null;
+  }
+}
+
 export async function checkRateLimit(
   key: string,
   windowMs: number,
@@ -154,6 +340,29 @@ export async function checkRateLimit(
   const distributed = await checkRateLimitUpstash(key, windowMs, max);
   if (distributed) return distributed;
   return checkRateLimitInMemory(key, windowMs, max);
+}
+
+export async function peekRateLimit(
+  key: string,
+  windowMs: number,
+  max: number
+): Promise<RateLimitSnapshot> {
+  const distributed = await peekRateLimitUpstash(key, windowMs, max);
+  if (distributed) return distributed;
+  return peekRateLimitInMemory(key, windowMs, max);
+}
+
+export async function resetRateLimitPrefix(prefix: string): Promise<{
+  deleted: number;
+  backend: "upstash" | "memory";
+}> {
+  const distributed = await resetRateLimitPrefixUpstash(prefix);
+  if (distributed !== null) {
+    return { deleted: distributed, backend: "upstash" };
+  }
+
+  const deleted = resetRateLimitPrefixInMemory(prefix);
+  return { deleted, backend: "memory" };
 }
 
 export function retryAfterSeconds(resetAt: number): number {

@@ -1,11 +1,16 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/supabase";
+import { TEAM_AI_LIMITS, type PlanTier, normalizePlanTier } from "@/lib/rate-limit";
 
 const DEFAULT_EVENT_SYNC_MIN_YEAR = 2025;
 const DEFAULT_SCOUTING_ABILITY_QUESTIONS = [
   "Can go under the trench?",
   "Can go over the ramp?",
 ];
+const MIN_AI_PROMPT_LIMIT = 1;
+const MAX_AI_PROMPT_LIMIT = 50;
+
+export type TeamAiPromptLimits = Record<PlanTier, number>;
 
 function normalizeYear(value: unknown): number {
   const parsed =
@@ -60,6 +65,83 @@ export function getDefaultScoutingAbilityQuestions(): string[] {
   return [...DEFAULT_SCOUTING_ABILITY_QUESTIONS];
 }
 
+export function getDefaultTeamAiPromptLimits(): TeamAiPromptLimits {
+  return { ...TEAM_AI_LIMITS };
+}
+
+function normalizeAiPromptLimit(
+  value: unknown,
+  fallback: number
+): number {
+  const parsed =
+    typeof value === "number"
+      ? value
+      : Number.parseInt(String(value ?? ""), 10);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.max(MIN_AI_PROMPT_LIMIT, Math.min(MAX_AI_PROMPT_LIMIT, parsed));
+}
+
+export function normalizeTeamAiPromptLimits(
+  value: unknown
+): TeamAiPromptLimits {
+  const defaults = getDefaultTeamAiPromptLimits();
+  if (!value || typeof value !== "object") return defaults;
+
+  const obj = value as Record<string, unknown>;
+  return {
+    free: normalizeAiPromptLimit(obj.free, defaults.free),
+    supporter: normalizeAiPromptLimit(obj.supporter, defaults.supporter),
+  };
+}
+
+type PlatformQuestionSettings = {
+  questions: string[];
+  aiPromptLimits: TeamAiPromptLimits;
+};
+
+function parseQuestionSettingsPayload(value: unknown): PlatformQuestionSettings {
+  const defaults = {
+    questions: getDefaultScoutingAbilityQuestions(),
+    aiPromptLimits: getDefaultTeamAiPromptLimits(),
+  };
+
+  if (!value) return defaults;
+
+  if (Array.isArray(value)) {
+    return {
+      questions: normalizeScoutingAbilityQuestions(value),
+      aiPromptLimits: defaults.aiPromptLimits,
+    };
+  }
+
+  if (typeof value !== "object") return defaults;
+
+  const obj = value as Record<string, unknown>;
+  const questionSource =
+    obj.questions ??
+    obj.scoutingAbilityQuestions ??
+    obj.scouting_ability_questions;
+  const aiLimitSource = obj.aiPromptLimits ?? obj.ai_prompt_limits;
+
+  return {
+    questions: normalizeScoutingAbilityQuestions(questionSource),
+    aiPromptLimits: normalizeTeamAiPromptLimits(aiLimitSource),
+  };
+}
+
+export function serializeQuestionSettingsPayload({
+  questions,
+  aiPromptLimits,
+}: {
+  questions: string[];
+  aiPromptLimits: TeamAiPromptLimits;
+}): Record<string, unknown> {
+  return {
+    questions: normalizeScoutingAbilityQuestions(questions),
+    aiPromptLimits: normalizeTeamAiPromptLimits(aiPromptLimits),
+  };
+}
+
 export async function getEventSyncMinYear(
   supabase: SupabaseClient<Database>
 ): Promise<number> {
@@ -91,5 +173,31 @@ export async function getScoutingAbilityQuestions(
 
   if (error) return fallback;
 
-  return normalizeScoutingAbilityQuestions(data?.scouting_ability_questions);
+  return parseQuestionSettingsPayload(data?.scouting_ability_questions)
+    .questions;
+}
+
+export async function getTeamAiPromptLimits(
+  supabase: SupabaseClient<Database>
+): Promise<TeamAiPromptLimits> {
+  const fallback = getDefaultTeamAiPromptLimits();
+
+  const { data, error } = await supabase
+    .from("platform_settings")
+    .select("scouting_ability_questions")
+    .eq("id", 1)
+    .maybeSingle();
+
+  if (error) return fallback;
+
+  return parseQuestionSettingsPayload(data?.scouting_ability_questions)
+    .aiPromptLimits;
+}
+
+export function getTeamAiLimitFromSettings(
+  limits: TeamAiPromptLimits,
+  planTier: string | null | undefined
+): number {
+  const normalizedPlan = normalizePlanTier(planTier);
+  return limits[normalizedPlan];
 }

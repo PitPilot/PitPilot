@@ -3,11 +3,14 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
+  resetAllTeamAiCooldowns,
   updateEventSyncMinYear,
   updateScoutingAbilityQuestions,
+  updateTeamAiPromptLimits,
 } from "@/lib/staff-actions";
 import { Button } from "@/components/ui/button";
 import { StaggerGroup, StaggerChild } from "@/components/ui/animate-in";
+import { TEAM_AI_WINDOW_MS } from "@/lib/rate-limit";
 
 interface OverviewTabProps {
   stats: {
@@ -19,12 +22,17 @@ interface OverviewTabProps {
   };
   eventSyncMinYear: number;
   scoutingAbilityQuestions: string[];
+  teamAiPromptLimits: {
+    free: number;
+    supporter: number;
+  };
 }
 
 export function OverviewTab({
   stats,
   eventSyncMinYear,
   scoutingAbilityQuestions,
+  teamAiPromptLimits,
 }: OverviewTabProps) {
   const router = useRouter();
   const [status, setStatus] = useState<string | null>(null);
@@ -32,6 +40,9 @@ export function OverviewTab({
   const [questions, setQuestions] = useState<string[]>(
     scoutingAbilityQuestions.length > 0 ? scoutingAbilityQuestions : [""]
   );
+  const [freeLimit, setFreeLimit] = useState(teamAiPromptLimits.free);
+  const [supporterLimit, setSupporterLimit] = useState(teamAiPromptLimits.supporter);
+  const aiWindowHours = Math.round(TEAM_AI_WINDOW_MS / (60 * 60 * 1000));
 
   async function handleUpdateEventWindow(formData: FormData) {
     const result = await updateEventSyncMinYear(formData);
@@ -58,6 +69,40 @@ export function OverviewTab({
     }
 
     setStatus("Scouting list updated.");
+    startTransition(() => router.refresh());
+  }
+
+  async function handleSaveAiLimits() {
+    const formData = new FormData();
+    formData.set("freeAiLimit", String(freeLimit));
+    formData.set("supporterAiLimit", String(supporterLimit));
+
+    const result = await updateTeamAiPromptLimits(formData);
+    if (result?.error) {
+      setStatus(result.error);
+      return;
+    }
+
+    setStatus("AI prompt limits updated.");
+    startTransition(() => router.refresh());
+  }
+
+  async function handleResetAllAiCooldowns() {
+    if (!window.confirm("Reset AI cooldowns for all teams now?")) {
+      return;
+    }
+
+    const result = await resetAllTeamAiCooldowns();
+    if (result?.error) {
+      setStatus(result.error);
+      return;
+    }
+
+    setStatus(
+      `Reset AI cooldowns for ${result.deleted} team bucket${
+        result.deleted === 1 ? "" : "s"
+      } (${result.backend}).`
+    );
     startTransition(() => router.refresh());
   }
 
@@ -181,6 +226,87 @@ export function OverviewTab({
             {status}
           </p>
         )}
+      </div>
+
+      <div className="mt-6 rounded-2xl dashboard-panel dashboard-card p-5">
+        <div className="flex items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-300">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 2v20" />
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14.5a3.5 3.5 0 0 1 0 7H7" />
+            </svg>
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-base font-semibold text-white">Team AI Prompt Limits</h3>
+            <p className="mt-1 text-sm text-gray-400">
+              Set shared prompt caps per plan for each {aiWindowHours}-hour window.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <label className="block">
+            <span className="text-xs font-medium text-gray-400">Free plan limit</span>
+            <input
+              type="number"
+              min={1}
+              max={50}
+              value={freeLimit}
+              onChange={(e) =>
+                setFreeLimit(Math.max(1, Math.min(50, Number(e.target.value) || 1)))
+              }
+              className="dashboard-input mt-1 w-full px-3 py-2 text-sm"
+            />
+          </label>
+          <label className="block">
+            <span className="text-xs font-medium text-gray-400">Supporter plan limit</span>
+            <input
+              type="number"
+              min={1}
+              max={50}
+              value={supporterLimit}
+              onChange={(e) =>
+                setSupporterLimit(
+                  Math.max(1, Math.min(50, Number(e.target.value) || 1))
+                )
+              }
+              className="dashboard-input mt-1 w-full px-3 py-2 text-sm"
+            />
+          </label>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <Button
+            type="button"
+            size="sm"
+            loading={isPending}
+            onClick={handleSaveAiLimits}
+          >
+            Save AI limits
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            loading={isPending}
+            onClick={handleResetAllAiCooldowns}
+          >
+            Reset all cooldowns
+          </Button>
+          <p className="text-xs text-gray-500">
+            Applies team-wide to strategy chat, pick list, and team/match briefs.
+          </p>
+        </div>
       </div>
 
       <div className="mt-6 rounded-2xl dashboard-panel dashboard-card p-5">

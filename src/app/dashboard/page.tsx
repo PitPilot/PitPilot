@@ -8,6 +8,9 @@ import { LeaveTeamButton } from "@/components/leave-team-button";
 import { CopyInviteLink } from "@/components/copy-invite-link";
 import { SortableEvents } from "@/components/sortable-events";
 import { AnimateIn, StaggerGroup, StaggerChild } from "@/components/ui/animate-in";
+import { TEAM_AI_WINDOW_MS, peekRateLimit } from "@/lib/rate-limit";
+import { getTeamAiPromptLimits } from "@/lib/platform-settings";
+import { UsageLimitMeter } from "./usage-limit-meter";
 
 export const metadata: Metadata = {
   title: "Dashboard | PitPulse",
@@ -42,6 +45,14 @@ export default async function DashboardPage() {
 
   const org = profile.organizations;
   const isSupporter = org?.plan_tier === "supporter";
+  const teamAiPromptLimits = await getTeamAiPromptLimits(supabase);
+  const aiWindowHours = Math.round(TEAM_AI_WINDOW_MS / (60 * 60 * 1000));
+  const currentPlanAiLimit = teamAiPromptLimits[isSupporter ? "supporter" : "free"];
+  const aiUsage = await peekRateLimit(
+    `ai-interactions:${profile.org_id}`,
+    TEAM_AI_WINDOW_MS,
+    currentPlanAiLimit
+  );
 
   const formatDate = (value?: string | null) => {
     if (!value) return "TBA";
@@ -173,6 +184,12 @@ export default async function DashboardPage() {
               <p className="mt-4 text-sm leading-relaxed text-gray-300">
                 Welcome back, <span className="font-medium text-white">{profile.display_name}</span>. Sync events and keep scouting data flowing for the next match.
               </p>
+              <UsageLimitMeter
+                limit={currentPlanAiLimit}
+                remaining={aiUsage.remaining}
+                resetAt={aiUsage.resetAt}
+                windowHours={aiWindowHours}
+              />
             </div>
           </StaggerChild>
 

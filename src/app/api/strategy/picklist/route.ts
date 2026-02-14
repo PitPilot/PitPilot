@@ -6,11 +6,14 @@ import { summarizeScouting } from "@/lib/scouting-summary";
 import {
   buildRateLimitHeaders,
   checkRateLimit,
-  getTeamAiLimit,
   retryAfterSeconds,
   TEAM_AI_WINDOW_MS,
 } from "@/lib/rate-limit";
 import { buildFrcGamePrompt } from "@/lib/frc-game-prompt";
+import {
+  getTeamAiLimitFromSettings,
+  getTeamAiPromptLimits,
+} from "@/lib/platform-settings";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -182,7 +185,11 @@ export async function POST(request: NextRequest) {
     ? profile.organizations[0]
     : profile.organizations;
 
-  const aiLimit = getTeamAiLimit(orgMeta?.plan_tier);
+  const teamAiPromptLimits = await getTeamAiPromptLimits(supabase);
+  const aiLimit = getTeamAiLimitFromSettings(
+    teamAiPromptLimits,
+    orgMeta?.plan_tier
+  );
   const limit = await checkRateLimit(
     `ai-interactions:${profile.org_id}`,
     TEAM_AI_WINDOW_MS,

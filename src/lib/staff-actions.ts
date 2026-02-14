@@ -6,8 +6,12 @@ import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/supabase";
 import {
   getDefaultEventSyncMinYear,
+  getDefaultTeamAiPromptLimits,
   normalizeScoutingAbilityQuestions,
+  normalizeTeamAiPromptLimits,
+  serializeQuestionSettingsPayload,
 } from "@/lib/platform-settings";
+import { resetRateLimitPrefix } from "@/lib/rate-limit";
 
 async function requireStaff() {
   const supabase = await createClient();
@@ -323,6 +327,41 @@ export async function deleteContactMessage(formData: FormData) {
   return { success: true } as const;
 }
 
+function extractQuestionSettings(raw: unknown): {
+  questions: string[];
+  aiPromptLimits: { free: number; supporter: number };
+} {
+  const defaultQuestions = normalizeScoutingAbilityQuestions([]);
+  const defaultLimits = getDefaultTeamAiPromptLimits();
+
+  if (!raw) {
+    return { questions: defaultQuestions, aiPromptLimits: defaultLimits };
+  }
+
+  if (Array.isArray(raw)) {
+    return {
+      questions: normalizeScoutingAbilityQuestions(raw),
+      aiPromptLimits: defaultLimits,
+    };
+  }
+
+  if (typeof raw !== "object") {
+    return { questions: defaultQuestions, aiPromptLimits: defaultLimits };
+  }
+
+  const obj = raw as Record<string, unknown>;
+  const questionSource =
+    obj.questions ??
+    obj.scoutingAbilityQuestions ??
+    obj.scouting_ability_questions;
+  const aiLimitsSource = obj.aiPromptLimits ?? obj.ai_prompt_limits;
+
+  return {
+    questions: normalizeScoutingAbilityQuestions(questionSource),
+    aiPromptLimits: normalizeTeamAiPromptLimits(aiLimitsSource),
+  };
+}
+
 export async function updateEventSyncMinYear(formData: FormData) {
   const ctx = await requireStaff();
   if ("error" in ctx) return ctx;
@@ -410,12 +449,15 @@ export async function updateScoutingAbilityQuestions(formData: FormData) {
 
   const { data: current } = await admin
     .from("platform_settings")
-    .select("event_sync_min_year")
+    .select("event_sync_min_year, scouting_ability_questions")
     .eq("id", 1)
     .maybeSingle();
 
   const eventSyncMinYear =
     current?.event_sync_min_year ?? getDefaultEventSyncMinYear();
+  const { aiPromptLimits } = extractQuestionSettings(
+    current?.scouting_ability_questions
+  );
 
   const { error } = await admin
     .from("platform_settings")
@@ -423,7 +465,10 @@ export async function updateScoutingAbilityQuestions(formData: FormData) {
       {
         id: 1,
         event_sync_min_year: eventSyncMinYear,
-        scouting_ability_questions: questions,
+        scouting_ability_questions: serializeQuestionSettingsPayload({
+          questions,
+          aiPromptLimits,
+        }),
         updated_at: new Date().toISOString(),
       },
       { onConflict: "id" }
@@ -448,4 +493,114 @@ export async function updateScoutingAbilityQuestions(formData: FormData) {
   revalidatePath("/dashboard/admin");
   revalidatePath("/scout");
   return { success: true } as const;
+}
+
+export async function updateTeamAiPromptLimits(formData: FormData) {
+  const ctx = await requireStaff();
+  if ("error" in ctx) return ctx;
+
+  const freeRaw = (formData.get("freeAiLimit") as string | null)?.trim();
+  const supporterRaw = (formData.get("supporterAiLimit") as string | null)?.trim();
+
+  if (!freeRaw || !supporterRaw) {
+    return { error: "Both free and supporter limits are required." } as const;
+  }
+
+  const freeParsed = Number.parseInt(freeRaw, 10);
+  const supporterParsed = Number.parseInt(supporterRaw, 10);
+
+  if (
+    Number.isNaN(freeParsed) ||
+    Number.isNaN(supporterParsed) ||
+    freeParsed < 1 ||
+    supporterParsed < 1 ||
+    freeParsed > 50 ||
+    supporterParsed > 50
+  ) {
+    return { error: "Limits must be whole numbers between 1 and 50." } as const;
+  }
+
+  if (supporterParsed < freeParsed) {
+    return {
+      error: "Supporter limit should be greater than or equal to free limit.",
+    } as const;
+  }
+
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) {
+    return {
+      error: "SUPABASE_SERVICE_ROLE_KEY is missing.",
+    } as const;
+  }
+
+  const admin = createAdminClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    serviceRoleKey
+  );
+
+  const { data: current } = await admin
+    .from("platform_settings")
+    .select("event_sync_min_year, scouting_ability_questions")
+    .eq("id", 1)
+    .maybeSingle();
+
+  const eventSyncMinYear =
+    current?.event_sync_min_year ?? getDefaultEventSyncMinYear();
+  const { questions } = extractQuestionSettings(current?.scouting_ability_questions);
+
+  const { error } = await admin
+    .from("platform_settings")
+    .upsert(
+      {
+        id: 1,
+        event_sync_min_year: eventSyncMinYear,
+        scouting_ability_questions: serializeQuestionSettingsPayload({
+          questions,
+          aiPromptLimits: {
+            free: freeParsed,
+            supporter: supporterParsed,
+          },
+        }),
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "id" }
+    );
+
+  if (error) {
+    if (error.message.toLowerCase().includes("scouting_ability_questions")) {
+      return {
+        error:
+          "AI prompt limit settings are missing in the database. Run the latest migration first.",
+      } as const;
+    }
+    if (error.message.toLowerCase().includes("platform_settings")) {
+      return {
+        error:
+          "Platform settings table is missing. Run the new migration first.",
+      } as const;
+    }
+    return { error: error.message } as const;
+  }
+
+  revalidatePath("/dashboard/admin");
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/events");
+  return { success: true } as const;
+}
+
+export async function resetAllTeamAiCooldowns() {
+  const ctx = await requireStaff();
+  if ("error" in ctx) return ctx;
+
+  const result = await resetRateLimitPrefix("ai-interactions:");
+
+  revalidatePath("/dashboard/admin");
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/events");
+
+  return {
+    success: true,
+    deleted: result.deleted,
+    backend: result.backend,
+  } as const;
 }

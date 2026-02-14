@@ -347,8 +347,8 @@ a[class*="rounded-"][class*="px-"][class*="py-"]:not([class*="rounded-full"]):no
   --back-btn-bg: var(--scout-surface);
   --back-btn-border: var(--scout-border);
   --back-btn-text: var(--scout-text);
-  --back-btn-bg-hover: #ffffff;
-  --back-btn-border-hover: rgba(15, 23, 42, 0.2);
+  --back-btn-bg-hover: color-mix(in srgb, var(--scout-surface) 82%, var(--brand-primary) 18%);
+  --back-btn-border-hover: color-mix(in srgb, var(--scout-border) 62%, var(--brand-primary) 38%);
   --back-btn-shadow: var(--scout-shadow);
   --back-btn-shadow-hover: 0 18px 30px rgba(15, 23, 42, 0.2);
 }

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Navbar } from "@/components/navbar";
+import { MatchBriefOverlayButton } from "./match-brief-overlay-button";
 
 export default async function MatchListPage({
   params,
@@ -143,8 +144,7 @@ export default async function MatchListPage({
       ? match.red_teams.includes(orgTeamNumber) ||
         match.blue_teams.includes(orgTeamNumber)
       : true;
-    const canOpenBrief = isOurMatch && (hasBrief || !hasScore);
-    const showDisabledBrief = isOurMatch && hasScore && !hasBrief;
+    const canOpenBrief = isOurMatch;
     return (
       <div className="rounded-2xl dashboard-panel p-3">
         <div className="mb-2 flex items-center justify-between">
@@ -157,21 +157,19 @@ export default async function MatchListPage({
           </span>
           <div className="flex items-center gap-2">
             {canOpenBrief && (
-              <Link
-                href={`/dashboard/events/${eventKey}/matches/${match.id}/brief`}
-                className={`rounded-md px-2 py-1 text-xs font-semibold transition ${
-                  hasBrief
-                    ? "bg-purple-500/20 text-purple-200 hover:bg-purple-500/30"
-                    : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-purple-200"
-                }`}
-              >
-                {hasBrief ? "View Brief" : "Pre-Match Brief"}
-              </Link>
-            )}
-            {showDisabledBrief && (
-              <span className="cursor-not-allowed rounded-md bg-white/5 px-2 py-1 text-xs font-semibold text-gray-500">
-                Pre-Match Brief
-              </span>
+              <MatchBriefOverlayButton
+                matchId={match.id}
+                eventTitle={eventTitle}
+                matchLabel={compLabel(
+                  match.comp_level,
+                  match.match_number,
+                  match.set_number
+                )}
+                redTeams={match.red_teams}
+                blueTeams={match.blue_teams}
+                hasBrief={hasBrief}
+                hasScore={hasScore}
+              />
             )}
           </div>
         </div>

@@ -468,12 +468,12 @@ export function TeamAIBriefButton({
             </motion.div>
 
             <motion.div
-              className="mt-4 flex items-center justify-between"
+              className="mt-4 flex flex-col items-center gap-3"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.14, duration: 0.22 }}
             >
-              <p className="text-xs text-gray-400">
+              <p className="text-center text-xs text-gray-400">
                 This brief is strongest when current EPA and your team&apos;s scouting entries are both available; sparse data produces broader guidance.
               </p>
               <motion.button

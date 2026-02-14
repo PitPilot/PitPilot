@@ -546,7 +546,13 @@ export function SortableEvents({
                         title="Not attending"
                       />
                     )}
-                    <h4 className="truncate text-base font-semibold text-white">
+                    <h4
+                      className={`truncate text-base font-semibold ${
+                        orgEvent.is_attending
+                          ? "text-emerald-300"
+                          : "text-white"
+                      }`}
+                    >
                       {formatEventTitle(event)}
                     </h4>
                   </div>

@@ -93,6 +93,8 @@ export default async function ReportsPage() {
             </h1>
             <p className="text-sm text-gray-400">
               Every scouting report you have submitted, newest first.
+              Captains are recommended to clear reports at the start of each
+              season so older data does not affect AI insights.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">

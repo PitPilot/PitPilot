@@ -81,6 +81,10 @@ interface AdminPanelProps {
   };
   eventSyncMinYear: number;
   scoutingAbilityQuestions: string[];
+  teamAiPromptLimits: {
+    free: number;
+    supporter: number;
+  };
   adminName: string;
   adminEmail: string;
 }
@@ -174,6 +178,7 @@ export function AdminPanel({
   analytics,
   eventSyncMinYear,
   scoutingAbilityQuestions,
+  teamAiPromptLimits,
   adminName,
   adminEmail,
 }: AdminPanelProps) {
@@ -229,6 +234,7 @@ export function AdminPanel({
             stats={stats}
             eventSyncMinYear={eventSyncMinYear}
             scoutingAbilityQuestions={scoutingAbilityQuestions}
+            teamAiPromptLimits={teamAiPromptLimits}
           />
         );
       case "analytics":

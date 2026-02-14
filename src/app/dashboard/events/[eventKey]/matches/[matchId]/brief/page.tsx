@@ -109,7 +109,7 @@ export default async function BriefPage({
               {eventTitle}
             </p>
             <h1 className="text-lg font-bold">
-              {matchLabel} — Pre-Match Brief
+              {matchLabel} — {matchCompleted ? "Match Brief (Reference)" : "Pre-Match Brief"}
             </h1>
           </div>
           <Link
@@ -119,17 +119,25 @@ export default async function BriefPage({
             Back
           </Link>
         </div>
+        {matchCompleted && (
+          <div className="rounded-xl border border-amber-300/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
+            This match already has a score. Brief generation is in reference mode and does not use final score as input.
+          </div>
+        )}
         {!content ? (
           <div className="rounded-2xl dashboard-panel p-8 text-center">
             <p className="text-gray-400 mb-4">
               {!isOurMatch
-                ? "Pre-match briefs are only available for matches your team is playing."
+                ? "Briefs are only available for matches your team is playing."
                 : matchCompleted
-                ? "This match already has a score. Pre-match briefs are only available before the match starts."
+                ? "No brief generated yet for this match. You can still generate a reference brief."
                 : "No pre-match brief generated yet for this match."}
             </p>
-            {isOurMatch && !matchCompleted && (
-              <GenerateBriefButton matchId={matchId} />
+            {isOurMatch && (
+              <GenerateBriefButton
+                matchId={matchId}
+                label={matchCompleted ? "Generate Reference Brief" : "Generate Pre-Match Brief"}
+              />
             )}
           </div>
         ) : (
@@ -360,7 +368,7 @@ export default async function BriefPage({
             <div className="text-center">
               <GenerateBriefButton
                 matchId={matchId}
-                label="Regenerate Pre-Match Brief"
+                label={matchCompleted ? "Regenerate Reference Brief" : "Regenerate Pre-Match Brief"}
               />
               <p className="mt-2 text-xs text-gray-400">
                 Generated {new Date(brief!.created_at).toLocaleString()}
