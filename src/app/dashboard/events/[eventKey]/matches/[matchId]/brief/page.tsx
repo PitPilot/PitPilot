@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import type { BriefContent } from "@/types/strategy";
+import { BriefContentSchema, type BriefContent } from "@/types/strategy";
 import { GenerateBriefButton } from "./generate-button";
 import { Navbar } from "@/components/navbar";
 
@@ -86,7 +86,16 @@ export default async function BriefPage({
     match.match_number,
     match.set_number
   );
-  const content = brief?.content as BriefContent | null;
+  const parsedContent = brief?.content
+    ? BriefContentSchema.safeParse(brief.content)
+    : null;
+  const content = parsedContent?.success
+    ? parsedContent.data
+    : (brief?.content as BriefContent | null);
+  const scoutingPriorities = content?.scoutingPriorities ?? {
+    teamsNeedingCoverage: [],
+    scoutActions: [],
+  };
   const matchCompleted = match.red_score !== null || match.blue_score !== null;
   const orgTeamNumber = org?.team_number ?? null;
   const isOurMatch = orgTeamNumber
@@ -314,6 +323,51 @@ export default async function BriefPage({
                     </p>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* Strategy Recommendations */}
+            <div className="rounded-2xl dashboard-panel p-6">
+              <h2 className="mb-4 text-lg font-semibold text-white">
+                Scout Focus
+              </h2>
+              <div className="grid gap-6 md:grid-cols-2">
+                <div>
+                  <h3 className="mb-2 text-sm font-semibold text-amber-200">
+                    Teams Needing Coverage
+                  </h3>
+                  {scoutingPriorities.teamsNeedingCoverage.length > 0 ? (
+                    <ul className="space-y-1.5">
+                      {scoutingPriorities.teamsNeedingCoverage.map((item, i) => (
+                        <li key={`${item.teamNumber}-${i}`} className="text-sm text-gray-200">
+                          • Team {item.teamNumber} ({item.alliance}, {item.priority}): {item.reason} Focus: {item.focus}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-gray-400">
+                      No urgent scouting gaps flagged for this match.
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <h3 className="mb-2 text-sm font-semibold text-cyan-200">
+                    Scout Actions
+                  </h3>
+                  {scoutingPriorities.scoutActions.length > 0 ? (
+                    <ul className="space-y-1.5">
+                      {scoutingPriorities.scoutActions.map((action, i) => (
+                        <li key={i} className="text-sm text-gray-200">
+                          • {action}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-gray-400">
+                      No additional scout action items provided.
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 

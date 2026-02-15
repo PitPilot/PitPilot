@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Navbar } from "@/components/navbar";
 import { TeamSettingsForm } from "./settings-form";
+import { getOrgBillingOverview } from "@/lib/stripe";
 
 export const metadata: Metadata = {
   title: "Settings | PitPilot",
@@ -45,6 +46,9 @@ export default async function SettingsPage() {
     .eq("org_id", profile.org_id)
     .order("created_at", { ascending: true });
 
+  const billingOverview =
+    profile.role === "captain" ? await getOrgBillingOverview(profile.org_id) : null;
+
   return (
     <div className="min-h-screen dashboard-page">
       <Navbar />
@@ -77,6 +81,7 @@ export default async function SettingsPage() {
             joinCode: org?.join_code ?? "",
             planTier: (org?.plan_tier as "free" | "supporter" | undefined) ?? "free",
           }}
+          billingOverview={billingOverview}
           memberCount={memberCount ?? 0}
           isCaptain={profile.role === "captain"}
           members={members ?? []}

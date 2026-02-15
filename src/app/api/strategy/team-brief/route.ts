@@ -432,7 +432,7 @@ Required output format:
 - Years active
 - Location
 - Overall performance in past events/seasons
-- Performance at this event
+- Performance at this event (you may not be given scouting data since users may want a brief before the matches start)
 
 ## Alliance Fit
 - 2 to 4 bullets on strengths, role fit, and where this team helps most.
@@ -446,17 +446,17 @@ Rules:
 - Use professional, respectful language throughout.
 - Do not use demeaning, insulting, sarcastic, or mocking phrasing.
 - Be candid and honest about performance limitations when data supports it.
-- If the team appears to be a weaker alliance option, state it professionally (e.g., "currently not among the most desirable picks").
+- If the team appears to be a weaker alliance option, state it professionally (e.g., "currently not among the most suitable picks").
 - Avoid comparative labels like "lower", "low-tier", "below average", or similar phrasing.
 - Prefer neutral alternatives such as "currently limited scoring output" or "not a top-priority pick for this role."
 - If data is missing, explicitly say "Data unavailable".
-- Do not frame limited scouting data as a team weakness or risk.
+- Do not frame limited scouting data as a team weakness or risk or say that they would enable a more complete report, work with what you have.
 - If scouting data is limited, use a professional note such as: "Additional scouting entries would enable a more complete report."
 - Do not invent stats or history.
 - Do not use location-based claims as strengths (for example: "local knowledge", "familiar with this venue", "home crowd advantage").
 - For Alliance Fit bullets, only use performance evidence from the provided JSON (EPA, record, scouting), not geography.
 - Keep total output under 260 words.
-- End with exactly one closing sentence after all sections.
+- End with exactly one or two closing sentence after all sections. Do not mention limited scouting data.
 - No emojis.`;
 
   try {

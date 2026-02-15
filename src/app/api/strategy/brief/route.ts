@@ -58,9 +58,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Brief not found" }, { status: 404 });
   }
 
+  const parsed = BriefContentSchema.safeParse(brief.content);
+
   return NextResponse.json({
     success: true,
-    brief: brief.content,
+    brief: parsed.success ? parsed.data : brief.content,
     createdAt: brief.created_at,
   });
 }
@@ -221,6 +223,31 @@ export async function POST(request: NextRequest) {
     scoutingSummary[team] = summarizeScouting(scoutingMap[team] ?? []);
   }
 
+  const scoutingCoverage: Record<
+    number,
+    {
+      alliance: "red" | "blue";
+      entries: number;
+      coverage: "none" | "limited" | "moderate" | "strong";
+    }
+  > = {};
+  for (const team of allTeams) {
+    const summary = scoutingSummary[team];
+    const entries = summary?.count ?? 0;
+    scoutingCoverage[team] = {
+      alliance: match.red_teams.includes(team) ? "red" : "blue",
+      entries,
+      coverage:
+        entries === 0
+          ? "none"
+          : entries === 1
+          ? "limited"
+          : entries <= 3
+          ? "moderate"
+          : "strong",
+    };
+  }
+
   // Build prompt data
   const promptData = {
     event: {
@@ -239,6 +266,7 @@ export async function POST(request: NextRequest) {
     },
     stats: statsMap,
     scouting: scoutingSummary,
+    scoutingCoverage,
   };
 
   const systemPrompt = `You are an expert FRC (FIRST Robotics Competition) strategy analyst. Analyze the provided match data and generate a strategic brief.
@@ -283,6 +311,21 @@ Respond with ONLY valid JSON matching this exact structure:
     "redRecommendations": ["actionable recommendation 1", "recommendation 2"],
     "blueRecommendations": ["actionable recommendation 1", "recommendation 2"],
     "keyMatchups": ["Team X vs Team Y description"]
+  },
+  "scoutingPriorities": {
+    "teamsNeedingCoverage": [
+      {
+        "teamNumber": number,
+        "alliance": "red" or "blue",
+        "priority": "high", "medium", or "low",
+        "reason": "Why this team still needs scouting data",
+        "focus": "What scouts should specifically look for next"
+      }
+    ],
+    "scoutActions": [
+      "Action item for scouts before/early in this match",
+      "Action item for note quality or role-specific observations"
+    ]
   }
 }
 
@@ -296,6 +339,10 @@ Guidelines:
 - Prefer neutral alternatives such as "currently limited scoring output" or "not a top-priority pick for this role."
 - Do not use location-based claims as strengths (for example: "local knowledge", "familiar with this venue", "home crowd advantage").
 - Base alliance strengths/weaknesses only on provided performance data.
+- Use "scoutingCoverage" to drive scouting priorities.
+- Every team with "coverage": "none" must appear in scoutingPriorities.teamsNeedingCoverage with priority "high".
+- Teams with limited data should usually be medium priority unless other data already gives high confidence.
+- scoutActions should be concrete, short, and directly usable by scouts in the stands.
 - Keep insights concise but informative
 - Do not use emojis or markdown`;
 

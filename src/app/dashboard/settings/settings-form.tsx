@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { updateOrganization } from "@/lib/auth-actions";
-import { updateMemberRole, updateOrganizationPlan } from "@/lib/captain-actions";
+import { updateMemberRole } from "@/lib/captain-actions";
 import { DeleteTeamButton } from "@/components/delete-team-button";
 
 interface TeamSettingsFormProps {
@@ -13,6 +13,28 @@ interface TeamSettingsFormProps {
     joinCode: string;
     planTier: "free" | "supporter";
   };
+  billingOverview: {
+    stripeConfigured: boolean;
+    subscription: {
+      id: string;
+      status: string;
+      currentPeriodStart: number | null;
+      currentPeriodEnd: number | null;
+      cancelAtPeriodEnd: boolean;
+      cancelAt: number | null;
+      customerId: string;
+    } | null;
+    invoices: Array<{
+      id: string;
+      status: string | null;
+      currency: string;
+      amountPaid: number;
+      amountDue: number;
+      created: number;
+      hostedInvoiceUrl: string | null;
+    }>;
+    error: string | null;
+  } | null;
   members: {
     id: string;
     display_name: string;
@@ -25,11 +47,13 @@ interface TeamSettingsFormProps {
 
 export function TeamSettingsForm({
   org,
+  billingOverview,
   members,
   memberCount,
   isCaptain,
 }: TeamSettingsFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [copied, setCopied] = useState(false);
   const [memberStatus, setMemberStatus] = useState<string | null>(null);
 
@@ -39,6 +63,34 @@ export function TeamSettingsForm({
   const [teamMessage, setTeamMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [planLoading, setPlanLoading] = useState(false);
   const [planMessage, setPlanMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  useEffect(() => {
+    const billingState = searchParams.get("billing");
+    if (!billingState) return;
+
+    if (billingState === "success") {
+      setPlanMessage({
+        type: "success",
+        text: "Supporter checkout completed. Plan updates after webhook confirmation.",
+      });
+      return;
+    }
+
+    if (billingState === "cancel") {
+      setPlanMessage({
+        type: "error",
+        text: "Checkout canceled. No billing changes were made.",
+      });
+      return;
+    }
+
+    if (billingState === "portal") {
+      setPlanMessage({
+        type: "success",
+        text: "Returned from billing portal.",
+      });
+    }
+  }, [searchParams]);
 
   async function handleTeamSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -74,35 +126,81 @@ export function TeamSettingsForm({
     router.refresh();
   }
 
-  async function handlePlanChange(nextPlan: "free" | "supporter") {
+  async function handleUpgradeCheckout() {
     setPlanLoading(true);
     setPlanMessage(null);
 
-    const formData = new FormData();
-    formData.set("planTier", nextPlan);
-    const result = await updateOrganizationPlan(formData);
+    try {
+      const res = await fetch("/api/stripe/checkout", { method: "POST" });
+      const data = (await res.json().catch(() => null)) as
+        | { error?: string; url?: string }
+        | null;
 
-    if (result?.error) {
-      setPlanMessage({ type: "error", text: result.error });
+      if (!res.ok || !data?.url) {
+        throw new Error(data?.error || "Failed to start checkout.");
+      }
+
+      window.location.assign(data.url);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to start checkout.";
+      setPlanMessage({ type: "error", text: message });
       setPlanLoading(false);
-      return;
     }
+  }
 
-    setPlanMessage({
-      type: "success",
-      text:
-        nextPlan === "supporter"
-          ? "Team upgraded to Supporter."
-          : "Team moved to Free plan.",
-    });
-    setPlanLoading(false);
-    router.refresh();
+  async function handleManageBilling() {
+    setPlanLoading(true);
+    setPlanMessage(null);
+
+    try {
+      const res = await fetch("/api/stripe/portal", { method: "POST" });
+      const data = (await res.json().catch(() => null)) as
+        | { error?: string; url?: string }
+        | null;
+
+      if (!res.ok || !data?.url) {
+        throw new Error(data?.error || "Failed to open billing portal.");
+      }
+
+      window.location.assign(data.url);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to open billing portal.";
+      setPlanMessage({ type: "error", text: message });
+      setPlanLoading(false);
+    }
   }
 
   function handleCopyCode() {
     navigator.clipboard.writeText(org.joinCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  function formatBillingDate(unixSeconds: number | null) {
+    if (!unixSeconds) return "Not available";
+    return new Date(unixSeconds * 1000).toLocaleString();
+  }
+
+  function formatInvoiceAmount(cents: number, currency: string) {
+    const upper = currency.toUpperCase();
+    try {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: upper,
+      }).format(cents / 100);
+    } catch {
+      return `${(cents / 100).toFixed(2)} ${upper}`;
+    }
+  }
+
+  function statusBadgeClass(status: string) {
+    if (status === "active" || status === "trialing") {
+      return "border-green-300/35 bg-green-500/10 text-green-200";
+    }
+    if (status === "past_due" || status === "unpaid") {
+      return "border-amber-300/35 bg-amber-500/10 text-amber-200";
+    }
+    return "border-white/20 bg-white/10 text-gray-200";
   }
 
   return (
@@ -266,29 +364,114 @@ export function TeamSettingsForm({
               </p>
             </div>
 
+            {isCaptain && (
+              <div className="rounded-lg border border-white/10 bg-gray-950/60 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm text-gray-300">Billing status</p>
+                  {billingOverview?.subscription ? (
+                    <span
+                      className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] ${statusBadgeClass(
+                        billingOverview.subscription.status
+                      )}`}
+                    >
+                      {billingOverview.subscription.status.replaceAll("_", " ")}
+                    </span>
+                  ) : (
+                    <span className="rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-200">
+                      No subscription
+                    </span>
+                  )}
+                </div>
+
+                {!billingOverview?.stripeConfigured ? (
+                  <p className="mt-2 text-xs text-amber-200">
+                    Stripe is not fully configured on the server yet.
+                  </p>
+                ) : billingOverview.error ? (
+                  <p className="mt-2 text-xs text-red-300">{billingOverview.error}</p>
+                ) : billingOverview.subscription ? (
+                  <div className="mt-2 space-y-1 text-xs text-gray-300">
+                    <p>
+                      Current period: {formatBillingDate(billingOverview.subscription.currentPeriodStart)} to{" "}
+                      {formatBillingDate(billingOverview.subscription.currentPeriodEnd)}
+                    </p>
+                    <p>
+                      Renewal behavior:{" "}
+                      {billingOverview.subscription.cancelAtPeriodEnd
+                        ? "Cancels at period end"
+                        : "Auto-renews"}
+                    </p>
+                    {billingOverview.subscription.cancelAt && (
+                      <p>Cancellation date: {formatBillingDate(billingOverview.subscription.cancelAt)}</p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="mt-2 text-xs text-gray-400">
+                    No Stripe subscription has been created for this team yet.
+                  </p>
+                )}
+
+                <div className="mt-3 border-t border-white/10 pt-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-gray-300">
+                    Recent invoices
+                  </p>
+                  {billingOverview && billingOverview.invoices.length > 0 ? (
+                    <ul className="mt-2 space-y-1.5 text-xs text-gray-300">
+                      {billingOverview.invoices.slice(0, 5).map((invoice) => (
+                        <li key={invoice.id} className="flex flex-wrap items-center justify-between gap-2">
+                          <span>
+                            {new Date(invoice.created * 1000).toLocaleDateString()} ·{" "}
+                            {(invoice.status ?? "unknown").replaceAll("_", " ")}
+                          </span>
+                          <span className="font-medium text-gray-200">
+                            {formatInvoiceAmount(
+                              invoice.amountPaid > 0 ? invoice.amountPaid : invoice.amountDue,
+                              invoice.currency
+                            )}
+                          </span>
+                          {invoice.hostedInvoiceUrl && (
+                            <a
+                              href={invoice.hostedInvoiceUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-cyan-300 hover:text-cyan-200"
+                            >
+                              View
+                            </a>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mt-2 text-xs text-gray-400">No invoices yet.</p>
+                  )}
+                </div>
+              </div>
+            )}
+
             {isCaptain ? (
               <div className="flex flex-wrap items-center gap-2">
                 {org.planTier !== "supporter" ? (
                   <button
                     type="button"
                     disabled={planLoading}
-                    onClick={() => handlePlanChange("supporter")}
+                    onClick={() => void handleUpgradeCheckout()}
                     className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500 disabled:opacity-50"
                   >
-                    {planLoading ? "Updating..." : "Upgrade to Supporter"}
+                    {planLoading ? "Redirecting..." : "Upgrade to Supporter"}
                   </button>
                 ) : (
                   <button
                     type="button"
                     disabled={planLoading}
-                    onClick={() => handlePlanChange("free")}
+                    onClick={() => void handleManageBilling()}
                     className="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold text-gray-200 transition hover:bg-white/10 disabled:opacity-50"
                   >
-                    {planLoading ? "Updating..." : "Switch to Free"}
+                    {planLoading ? "Redirecting..." : "Manage billing"}
                   </button>
                 )}
                 <p className="text-xs text-gray-400">
-                  Billing checkout is not connected yet; this toggles plan status directly for now.
+                  Billing runs through Stripe checkout and customer portal.
                 </p>
               </div>
             ) : (

@@ -222,47 +222,10 @@ export default function JoinPageClient({
                   </p>
                 )}
               </div>
-              <fieldset className="space-y-2">
-                <legend className="text-sm font-medium text-gray-300">
-                  AI Plan (for your whole team)
-                </legend>
-                <p className="text-xs text-gray-500">
-                  You can start free and upgrade later.
-                </p>
-                <label className="block cursor-pointer rounded-lg border border-white/10 bg-white/5 p-3 transition hover:border-white/20">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-white">Free</p>
-                      <p className="text-xs text-gray-400">
-                        Unlimited prompts with usage limits.
-                      </p>
-                    </div>
-                    <input
-                      type="radio"
-                      name="planTier"
-                      value="free"
-                      defaultChecked
-                      className="mt-0.5 h-4 w-4 accent-emerald-500"
-                    />
-                  </div>
-                </label>
-                <label className="block cursor-pointer rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 transition hover:border-emerald-500/50">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-emerald-200">Supporter · $5.99/month per team</p>
-                      <p className="text-xs text-emerald-100/80">
-                        Higher shared AI usage limits. Helps cover token costs for community access.
-                      </p>
-                    </div>
-                    <input
-                      type="radio"
-                      name="planTier"
-                      value="supporter"
-                      className="mt-0.5 h-4 w-4 accent-emerald-500"
-                    />
-                  </div>
-                </label>
-              </fieldset>
+              <div className="rounded-lg border border-white/10 bg-white/5 p-3 text-xs text-gray-300">
+                New teams start on the Free plan. Captains can upgrade to Supporter anytime from
+                Team Settings.
+              </div>
               <button
                 type="submit"
                 disabled={loading || teamLookup.taken}

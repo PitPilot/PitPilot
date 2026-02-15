@@ -116,8 +116,6 @@ export async function createOrganization(formData: FormData) {
 
   const teamNumberStr = formData.get("teamNumber") as string;
   const teamNumber = parseInt(teamNumberStr, 10);
-  const requestedPlanTier = formData.get("planTier");
-  const planTier = requestedPlanTier === "supporter" ? "supporter" : "free";
 
   if (isNaN(teamNumber) || teamNumber < 1 || teamNumber > 99999) {
     return { error: "Please enter a valid FRC team number (1–99999)." };
@@ -170,7 +168,7 @@ export async function createOrganization(formData: FormData) {
       name: orgName,
       team_number: teamNumber,
       join_code: joinCode,
-      plan_tier: planTier,
+      plan_tier: "free",
     })
     .select()
     .single();

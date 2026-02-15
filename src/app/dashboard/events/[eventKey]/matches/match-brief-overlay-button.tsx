@@ -120,6 +120,15 @@ export function MatchBriefOverlayButton({
     return hasScore ? "Generate Brief" : "Pre-Match Brief";
   }, [hasBriefState, hasScore]);
 
+  const scoutingPriorities = useMemo(
+    () =>
+      brief?.scoutingPriorities ?? {
+        teamsNeedingCoverage: [],
+        scoutActions: [],
+      },
+    [brief]
+  );
+
   const portalRoot = typeof document !== "undefined" ? document.body : null;
 
   const modal = (
@@ -322,6 +331,42 @@ export function MatchBriefOverlayButton({
                         <p className="text-sm text-gray-200">{team.scoutingInsights}</p>
                       </div>
                     ))}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl dashboard-panel p-5">
+                  <h4 className="mb-3 text-base font-semibold text-white">Scout Focus</h4>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <p className="mb-1 text-xs font-semibold text-amber-200">Teams Needing Coverage</p>
+                      {scoutingPriorities.teamsNeedingCoverage.length > 0 ? (
+                        <ul className="space-y-1 text-sm text-gray-200">
+                          {scoutingPriorities.teamsNeedingCoverage.map((item, index) => (
+                            <li key={`${item.teamNumber}-${index}`}>
+                              • Team {item.teamNumber} ({item.alliance}, {item.priority}): {item.reason} Focus: {item.focus}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-gray-400">
+                          No urgent scouting gaps flagged for this match.
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <p className="mb-1 text-xs font-semibold text-cyan-200">Scout Actions</p>
+                      {scoutingPriorities.scoutActions.length > 0 ? (
+                        <ul className="space-y-1 text-sm text-gray-200">
+                          {scoutingPriorities.scoutActions.map((item, index) => (
+                            <li key={`scout-action-${index}`}>• {item}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-gray-400">
+                          No additional scout action items provided.
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
 

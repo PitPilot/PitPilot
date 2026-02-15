@@ -35,7 +35,12 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // Protect all routes except public ones
-  const publicPaths = ["/login", "/signup", "/auth/callback"];
+  const publicPaths = [
+    "/login",
+    "/signup",
+    "/auth/callback",
+    "/api/stripe/webhook",
+  ];
   const isPublicPath = publicPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   );

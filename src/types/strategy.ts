@@ -20,6 +20,14 @@ export const TeamAnalysisSchema = z.object({
   role: z.enum(["scorer", "defender", "support"]),
 });
 
+export const ScoutingPriorityTeamSchema = z.object({
+  teamNumber: z.number(),
+  alliance: z.enum(["red", "blue"]),
+  priority: z.enum(["high", "medium", "low"]),
+  reason: z.string(),
+  focus: z.string(),
+});
+
 export const BriefContentSchema = z.object({
   prediction: z.object({
     winner: z.enum(["red", "blue"]),
@@ -35,6 +43,15 @@ export const BriefContentSchema = z.object({
     blueRecommendations: z.array(z.string()),
     keyMatchups: z.array(z.string()),
   }),
+  scoutingPriorities: z
+    .object({
+      teamsNeedingCoverage: z.array(ScoutingPriorityTeamSchema),
+      scoutActions: z.array(z.string()),
+    })
+    .default({
+      teamsNeedingCoverage: [],
+      scoutActions: [],
+    }),
 });
 
 export const PickListTeamSchema = z.object({
@@ -65,6 +82,7 @@ export const PickListContentSchema = z.object({
 
 export type AllianceAnalysis = z.infer<typeof AllianceAnalysisSchema>;
 export type TeamAnalysis = z.infer<typeof TeamAnalysisSchema>;
+export type ScoutingPriorityTeam = z.infer<typeof ScoutingPriorityTeamSchema>;
 export type BriefContent = z.infer<typeof BriefContentSchema>;
 export type PickListTeam = z.infer<typeof PickListTeamSchema>;
 export type PickListContent = z.infer<typeof PickListContentSchema>;
