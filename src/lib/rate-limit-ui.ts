@@ -1,7 +1,7 @@
 export type RateLimitKind = "ai" | "sync";
 
 export const TEAM_AI_RATE_LIMIT_MESSAGE =
-  "Your team has reached its shared AI usage limit. Supporter plans have higher limits. Please try again soon.";
+  "Your team has reached its shared AI usage limit. Supporter access has higher limits. Please try again soon.";
 
 export const TEAM_SYNC_RATE_LIMIT_MESSAGE =
   "Your team has reached its sync rate limit. Please wait a few minutes before trying again.";

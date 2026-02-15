@@ -8,7 +8,7 @@ import { LeaveTeamButton } from "@/components/leave-team-button";
 import { CopyInviteLink } from "@/components/copy-invite-link";
 import { SortableEvents } from "@/components/sortable-events";
 import { AnimateIn, StaggerGroup, StaggerChild } from "@/components/ui/animate-in";
-import { TEAM_AI_WINDOW_MS, peekRateLimit } from "@/lib/rate-limit";
+import { TEAM_AI_WINDOW_MS, hasSupporterAccess, peekRateLimit } from "@/lib/rate-limit";
 import { getTeamAiPromptLimits } from "@/lib/platform-settings";
 import { UsageLimitMeter } from "./usage-limit-meter";
 import { UpgradeSupporterButton } from "@/components/upgrade-supporter-button";
@@ -45,10 +45,10 @@ export default async function DashboardPage() {
   }
 
   const org = profile.organizations;
-  const isSupporter = org?.plan_tier === "supporter";
+  const hasSupporterPlanAccess = hasSupporterAccess(org?.plan_tier);
+  const isGiftedSupporter = org?.plan_tier === "gifted_supporter";
   const teamAiPromptLimits = await getTeamAiPromptLimits(supabase);
-  const aiWindowHours = Math.round(TEAM_AI_WINDOW_MS / (60 * 60 * 1000));
-  const currentPlanAiLimit = teamAiPromptLimits[isSupporter ? "supporter" : "free"];
+  const currentPlanAiLimit = teamAiPromptLimits[hasSupporterPlanAccess ? "supporter" : "free"];
   const aiUsage = await peekRateLimit(
     `ai-interactions:${profile.org_id}`,
     TEAM_AI_WINDOW_MS,
@@ -156,10 +156,10 @@ export default async function DashboardPage() {
                 <h2 className="text-2xl font-bold text-white">
                   {org?.team_number ? `Team ${org.team_number}` : org?.name}
                 </h2>
-                {isSupporter && (
+                {hasSupporterPlanAccess && (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-300 ring-1 ring-emerald-500/30">
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
-                    Supporter
+                    {isGiftedSupporter ? "Gifted Supporter" : "Supporter"}
                   </span>
                 )}
               </div>
@@ -177,9 +177,11 @@ export default async function DashboardPage() {
                 </span>
                 {org?.join_code && <CopyInviteLink joinCode={org.join_code} />}
               </div>
-              {isSupporter && (
+              {hasSupporterPlanAccess && (
                 <p className="mt-3 text-xs font-medium text-green-400">
-                  Thank you for supporting us.
+                  {isGiftedSupporter
+                    ? "Gifted Supporter is active. Thanks for helping test PitPilot early."
+                    : "Thank you for supporting us."}
                 </p>
               )}
               <p className="mt-4 text-sm leading-relaxed text-gray-300">
@@ -189,7 +191,6 @@ export default async function DashboardPage() {
                 limit={currentPlanAiLimit}
                 remaining={aiUsage.remaining}
                 resetAt={aiUsage.resetAt}
-                windowHours={aiWindowHours}
               />
             </div>
           </StaggerChild>
@@ -280,7 +281,18 @@ export default async function DashboardPage() {
               </Link>
               <LeaveTeamButton />
             </div>
-            {profile.role === "captain" && !isSupporter && (
+            {hasSupporterPlanAccess ? (
+              <div className="mt-3 rounded-xl border border-white/10 px-3 py-3 text-xs text-gray-400 dashboard-panel">
+                <p className="font-semibold text-gray-300">
+                  {isGiftedSupporter ? "Gifted Supporter" : "Supporter"}
+                </p>
+                <p className="mt-1">
+                  {isGiftedSupporter
+                    ? "This team has complimentary Supporter access from the developer as thanks for early testing help."
+                    : "Thank you for supporting PitPilot and helping keep the platform free for the wider FRC community."}
+                </p>
+              </div>
+            ) : profile.role === "captain" ? (
               <div className="mt-3 rounded-xl border border-white/10 px-3 py-3 text-xs text-gray-400 dashboard-panel">
                 <p className="font-semibold text-gray-300">Upgrade to Supporter</p>
                 <p className="mt-1">
@@ -291,7 +303,7 @@ export default async function DashboardPage() {
                   <UpgradeSupporterButton />
                 </div>
               </div>
-            )}
+            ) : null}
           </div>
         </AnimateIn>
 

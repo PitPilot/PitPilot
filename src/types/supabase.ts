@@ -242,7 +242,7 @@ export type Database = {
           id: string
           join_code: string
           name: string
-          plan_tier: string
+          plan_tier: Database["public"]["Enums"]["plan_tier"]
           team_number: number | null
         }
         Insert: {
@@ -250,7 +250,7 @@ export type Database = {
           id?: string
           join_code: string
           name: string
-          plan_tier?: string
+          plan_tier?: Database["public"]["Enums"]["plan_tier"]
           team_number?: number | null
         }
         Update: {
@@ -258,7 +258,7 @@ export type Database = {
           id?: string
           join_code?: string
           name?: string
-          plan_tier?: string
+          plan_tier?: Database["public"]["Enums"]["plan_tier"]
           team_number?: number | null
         }
         Relationships: []
@@ -786,6 +786,7 @@ export type Database = {
       }
     }
     Enums: {
+      plan_tier: "free" | "supporter" | "gifted_supporter"
       user_role: "scout" | "captain"
     }
     CompositeTypes: {
@@ -914,6 +915,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      plan_tier: ["free", "supporter", "gifted_supporter"],
       user_role: ["scout", "captain"],
     },
   },

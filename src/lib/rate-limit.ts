@@ -369,8 +369,13 @@ export function retryAfterSeconds(resetAt: number): number {
   return Math.max(1, Math.ceil((resetAt - Date.now()) / 1000));
 }
 
+export function hasSupporterAccess(planTier: string | null | undefined): boolean {
+  const normalized = (planTier ?? "").trim().toLowerCase();
+  return normalized === "supporter" || normalized === "gifted_supporter";
+}
+
 export function normalizePlanTier(value: string | null | undefined): PlanTier {
-  return value === "supporter" ? "supporter" : "free";
+  return hasSupporterAccess(value) ? "supporter" : "free";
 }
 
 export function getTeamAiLimit(planTier: string | null | undefined): number {

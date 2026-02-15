@@ -41,12 +41,15 @@ export default async function AccountSettingsPage() {
             <p className="text-xs font-semibold uppercase tracking-widest text-teal-400">
               Account
             </p>
-            <h1 className="mt-2 text-3xl font-bold">Account settings</h1>
+            <h1 className="mt-2 text-3xl font-bold text-white">Account settings</h1>
             <p className="mt-2 text-sm text-gray-300">
               Update your profile details and view account info.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <Link href="/dashboard/settings" className="back-button">
+              Team settings
+            </Link>
             <Link
               href="/dashboard"
               className="back-button"

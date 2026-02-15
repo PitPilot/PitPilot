@@ -59,12 +59,15 @@ export default async function SettingsPage() {
             <p className="text-xs font-semibold uppercase tracking-widest text-teal-400">
               Settings
             </p>
-            <h1 className="mt-2 text-3xl font-bold">Team settings</h1>
+            <h1 className="mt-2 text-3xl font-bold text-white">Team settings</h1>
             <p className="mt-2 text-sm text-gray-300">
               Manage organization details, join codes, and member roles.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <Link href="/dashboard/settings/account" className="back-button">
+              Personal profile
+            </Link>
             <Link
               href="/dashboard"
               className="back-button"
@@ -79,11 +82,14 @@ export default async function SettingsPage() {
             name: org?.name ?? "",
             teamNumber: org?.team_number ?? null,
             joinCode: org?.join_code ?? "",
-            planTier: (org?.plan_tier as "free" | "supporter" | undefined) ?? "free",
+            planTier:
+              (org?.plan_tier as "free" | "supporter" | "gifted_supporter" | undefined) ??
+              "free",
           }}
           billingOverview={billingOverview}
           memberCount={memberCount ?? 0}
           isCaptain={profile.role === "captain"}
+          currentUserId={user.id}
           members={members ?? []}
         />
       </main>

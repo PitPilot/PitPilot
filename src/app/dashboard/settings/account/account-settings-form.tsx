@@ -81,39 +81,58 @@ export function AccountSettingsForm({ profile }: AccountSettingsFormProps) {
 
   return (
     <div className="space-y-6">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+          <p className="text-xs uppercase tracking-widest text-gray-400">Display Name</p>
+          <p className="mt-1 text-lg font-semibold text-white">{profile.displayName}</p>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+          <p className="text-xs uppercase tracking-widest text-gray-400">Account Role</p>
+          <p className="mt-1 text-lg font-semibold capitalize text-white">{profile.role}</p>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+          <p className="text-xs uppercase tracking-widest text-gray-400">Team Roles</p>
+          <p className="mt-1 text-lg font-semibold text-white">
+            {teamRoles.length}/{maxRoles}
+          </p>
+        </div>
+      </div>
 
-      <div className="rounded-2xl dashboard-panel p-6">
-        <h3 className="text-lg font-semibold text-white">Account</h3>
+      <div className="rounded-2xl dashboard-panel dashboard-card p-6">
+        <h3 className="text-lg font-semibold text-white">Profile Settings</h3>
         <p className="mt-1 text-sm text-gray-300">
-          Your personal account settings.
+          Manage your display name and role preferences.
         </p>
 
         <form onSubmit={handleAccountSubmit} className="mt-4 space-y-4">
-          <div>
-            <label htmlFor="displayName" className="block text-sm font-medium text-gray-300">
-              Display Name
-            </label>
-            <input
-              id="displayName"
-              type="text"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 text-sm text-white shadow-sm dashboard-input"
-            />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="displayName" className="block text-sm font-medium text-gray-300">
+                Display Name
+              </label>
+              <input
+                id="displayName"
+                type="text"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                className="mt-1 block w-full px-3 py-2 text-sm text-white shadow-sm dashboard-input"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300">
+                Email
+              </label>
+              <div className="mt-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white">
+                {profile.email}
+              </div>
+            </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300">
-              Email
-            </label>
-            <p className="mt-1 text-sm text-white">{profile.email}</p>
-          </div>
-
-          <div>
-            <p className="text-sm font-medium text-gray-300">Team Role</p>
+            <p className="text-sm font-medium text-gray-300">Team Roles</p>
             <p className="mt-1 text-xs text-gray-400">
-              Update the roles you selected during onboarding. Select up to{" "}
-              {maxRoles}. {teamRoles.length}/{maxRoles} selected.
+              Pick up to {maxRoles} roles. {teamRoles.length}/{maxRoles} selected.
             </p>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               {ROLE_OPTIONS.map((roleOption) => {
@@ -122,12 +141,12 @@ export function AccountSettingsForm({ profile }: AccountSettingsFormProps) {
                 return (
                   <label
                     key={roleOption.value}
-                    className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
+                    className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-sm transition ${
                       disabled
-                        ? "border-white/10 bg-white/5 text-gray-500 dark:text-gray-500"
+                        ? "border-white/10 bg-white/5 text-gray-500"
                         : checked
-                        ? "border-teal-500/40 bg-teal-500/10 text-teal-600 dark:text-teal-100"
-                        : "border-white/10 bg-white/5 text-gray-700 dark:text-gray-200"
+                          ? "border-teal-500/45 bg-teal-500/10 text-teal-100 shadow-[0_0_18px_-14px_rgba(45,212,191,0.9)]"
+                          : "border-white/10 bg-white/[0.02] text-gray-200 hover:border-cyan-300/35 hover:bg-cyan-300/10"
                     }`}
                   >
                     <input
@@ -152,7 +171,13 @@ export function AccountSettingsForm({ profile }: AccountSettingsFormProps) {
           </div>
 
           {accountMessage && (
-            <p className={`text-sm ${accountMessage.type === "success" ? "text-green-400" : "text-red-400"}`}>
+            <p
+              className={`rounded-lg border px-3 py-2 text-sm ${
+                accountMessage.type === "success"
+                  ? "border-green-400/30 bg-green-500/10 text-green-300"
+                  : "border-red-400/30 bg-red-500/10 text-red-300"
+              }`}
+            >
               {accountMessage.text}
             </p>
           )}
@@ -165,6 +190,16 @@ export function AccountSettingsForm({ profile }: AccountSettingsFormProps) {
             {accountLoading ? "Saving..." : "Save profile"}
           </button>
         </form>
+      </div>
+
+      <div className="rounded-2xl dashboard-panel dashboard-card p-6">
+        <h3 className="text-lg font-semibold text-white">Security</h3>
+        <p className="mt-1 text-sm text-gray-300">
+          Authentication for this account runs through email magic links.
+        </p>
+        <p className="mt-3 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-gray-300">
+          If you lose access to your email, ask a team captain to help update team access.
+        </p>
       </div>
 
       <div className="rounded-2xl border border-red-500/30 bg-red-500/5 p-6">

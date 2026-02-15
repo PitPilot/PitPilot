@@ -66,6 +66,25 @@ function getAdminClient() {
 
 async function applyOrgPlan(orgId: string, planTier: "free" | "supporter") {
   const admin = getAdminClient();
+  const { data: existing, error: readError } = await admin
+    .from("organizations")
+    .select("plan_tier")
+    .eq("id", orgId)
+    .maybeSingle();
+
+  if (readError) {
+    throw new Error(readError.message);
+  }
+
+  if (!existing) {
+    throw new Error("Organization not found.");
+  }
+
+  // Gifted supporter teams are manually managed and should not be overwritten by Stripe events.
+  if (existing.plan_tier === "gifted_supporter") {
+    return;
+  }
+
   const { error } = await admin
     .from("organizations")
     .update({ plan_tier: planTier })
@@ -178,4 +197,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

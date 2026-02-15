@@ -6,7 +6,6 @@ type UsageLimitMeterProps = {
   limit: number;
   remaining: number;
   resetAt: number;
-  windowHours: number;
 };
 
 function formatResetCountdown(resetAt: number): string {
@@ -34,7 +33,6 @@ export function UsageLimitMeter({
   limit,
   remaining,
   resetAt,
-  windowHours,
 }: UsageLimitMeterProps) {
   const used = Math.max(0, limit - remaining);
   const usedPct = useMemo(() => {
@@ -46,6 +44,7 @@ export function UsageLimitMeter({
   const fillBackground = isExhausted
     ? "linear-gradient(90deg, #fb7185 0%, #f59e0b 100%)"
     : "linear-gradient(90deg, #22d3ee 0%, #34d399 100%)";
+  const remainingPct = Math.max(0, 100 - usedPct);
 
   const [countdown, setCountdown] = useState("--");
 
@@ -62,17 +61,23 @@ export function UsageLimitMeter({
   }, [isExhausted, resetAt]);
 
   return (
-    <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-semibold uppercase tracking-widest text-blue-300">
-          Team AI Usage Limits
-        </p>
-        <p className="text-xs font-semibold text-white">
-          {used}/{limit} used
-        </p>
+    <div className="mt-4 rounded-xl border border-white/10 bg-gradient-to-b from-white/[0.08] to-white/[0.03] p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-blue-300">
+            Team AI Usage
+          </p>
+          <p className="mt-1 text-xs text-gray-400">
+            Shared across your team.
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-xl font-semibold leading-none text-white">{usedPct}%</p>
+          <p className="mt-1 text-xs text-gray-400">used this window</p>
+        </div>
       </div>
 
-      <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-white/10">
+      <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-white/10">
         <div
           className="h-full rounded-full transition-[width] duration-500 ease-out"
           style={{
@@ -85,22 +90,18 @@ export function UsageLimitMeter({
         />
       </div>
 
-      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs">
-        <p className="text-gray-300">
-          Current plan:{" "}
-          <span className="font-semibold text-white">
-            {limit} interactions per {windowHours}h
-          </span>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <p
+          className={
+            isExhausted
+              ? "rounded-full border border-amber-300/40 bg-amber-500/10 px-2.5 py-1 font-medium text-amber-200"
+              : "rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-gray-300"
+          }
+        >
+          {isExhausted ? `At limit · resets in ${countdown}` : `${remainingPct}% remaining`}
         </p>
-        <p className={isExhausted ? "font-medium text-amber-300" : "text-gray-400"}>
-          {isExhausted
-            ? `100% used · resets in ${countdown}`
-            : `${usedPct}% used this window`}
-        </p>
+        <p className="text-gray-500">Usage limits may vary with system load.</p>
       </div>
-      <p className="mt-1 text-xs text-gray-400">
-        Usage limits may vary over time depending on load.
-      </p>
     </div>
   );
 }

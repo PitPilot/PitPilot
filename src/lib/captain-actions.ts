@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/types/supabase";
 
 const ROLE_OPTIONS = ["scout", "captain"] as const;
 type UserRole = (typeof ROLE_OPTIONS)[number];
@@ -90,6 +92,81 @@ export async function updateMemberRole(formData: FormData) {
     return { error: error.message } as const;
   }
 
+  revalidatePath("/dashboard/settings");
+  return { success: true } as const;
+}
+
+export async function removeMemberFromOrganization(formData: FormData) {
+  const ctx = await requireCaptain();
+  if ("error" in ctx) return ctx;
+
+  const memberId = (formData.get("memberId") as string | null)?.trim();
+  if (!memberId) {
+    return { error: "Missing member id" } as const;
+  }
+
+  if (memberId === ctx.user.id) {
+    return { error: "Use Leave team to remove yourself." } as const;
+  }
+
+  const { data: target, error: targetError } = await ctx.supabase
+    .from("profiles")
+    .select("id, role")
+    .eq("id", memberId)
+    .eq("org_id", ctx.profile.org_id!)
+    .single();
+
+  if (targetError || !target) {
+    return { error: "Member not found" } as const;
+  }
+
+  if (target.role === "captain") {
+    const { count } = await ctx.supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("org_id", ctx.profile.org_id!)
+      .eq("role", "captain");
+
+    if ((count ?? 0) <= 1) {
+      return { error: "You must keep at least one captain in the organization." } as const;
+    }
+  }
+
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  if (!serviceRoleKey || !supabaseUrl) {
+    return { error: "Service role key not configured." } as const;
+  }
+
+  const admin = createAdminClient<Database>(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  const { error: assignmentError } = await admin
+    .from("scout_assignments")
+    .delete()
+    .eq("org_id", ctx.profile.org_id!)
+    .eq("assigned_to", memberId);
+  if (assignmentError) {
+    return { error: assignmentError.message } as const;
+  }
+
+  const { error: profileError } = await admin
+    .from("profiles")
+    .update({
+      org_id: null,
+      role: "scout",
+      team_roles: [],
+      onboarding_complete: false,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", memberId)
+    .eq("org_id", ctx.profile.org_id!);
+  if (profileError) {
+    return { error: profileError.message } as const;
+  }
+
+  revalidatePath("/dashboard");
   revalidatePath("/dashboard/settings");
   return { success: true } as const;
 }

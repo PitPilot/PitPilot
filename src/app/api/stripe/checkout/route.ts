@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/site-url";
 import { createStripeCheckoutSession } from "@/lib/stripe";
+import { hasSupporterAccess } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,9 +41,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Organization not found" }, { status: 404 });
   }
 
-  if (org.plan_tier === "supporter") {
+  if (hasSupporterAccess(org.plan_tier)) {
     return NextResponse.json(
-      { error: "Team is already on the Supporter plan." },
+      { error: "Team already has Supporter access." },
       { status: 409 }
     );
   }
@@ -74,4 +75,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-
