@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 import { updateOrganization } from "@/lib/auth-actions";
 import { removeMemberFromOrganization, updateMemberRole } from "@/lib/captain-actions";
 import { DeleteTeamButton } from "@/components/delete-team-button";
@@ -58,6 +59,7 @@ export function TeamSettingsForm({
 }: TeamSettingsFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const billingState = searchParams.get("billing");
   const [copied, setCopied] = useState(false);
   const [memberStatus, setMemberStatus] = useState<string | null>(null);
 
@@ -67,6 +69,7 @@ export function TeamSettingsForm({
   const [teamMessage, setTeamMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [planLoading, setPlanLoading] = useState(false);
   const [planMessage, setPlanMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [showCheckoutCelebration, setShowCheckoutCelebration] = useState(false);
   const [kickLoadingMemberId, setKickLoadingMemberId] = useState<string | null>(null);
   const [kickCandidate, setKickCandidate] = useState<{
     id: string;
@@ -76,16 +79,36 @@ export function TeamSettingsForm({
   const hasSupporterPlanAccess = hasSupporterAccess(org.planTier);
 
   useEffect(() => {
-    const billingState = searchParams.get("billing");
-    if (!billingState) return;
+    let reloadTimer: number | null = null;
 
-    if (billingState === "success") {
-      setPlanMessage({
-        type: "success",
-        text: "Supporter checkout completed. Plan updates after webhook confirmation.",
-      });
+    if (!billingState) {
+      setShowCheckoutCelebration(false);
       return;
     }
+
+    if (billingState === "success") {
+      setShowCheckoutCelebration(true);
+      setPlanMessage({
+        type: "success",
+        text: "Supporter checkout completed. Updating your team plan...",
+      });
+
+      if (typeof window !== "undefined") {
+        reloadTimer = window.setTimeout(() => {
+          const nextUrl = new URL(window.location.href);
+          nextUrl.searchParams.delete("billing");
+          window.location.replace(nextUrl.toString());
+        }, 2400);
+      }
+
+      return () => {
+        if (reloadTimer !== null) {
+          window.clearTimeout(reloadTimer);
+        }
+      };
+    }
+
+    setShowCheckoutCelebration(false);
 
     if (billingState === "cancel") {
       setPlanMessage({
@@ -101,7 +124,13 @@ export function TeamSettingsForm({
         text: "Returned from billing portal.",
       });
     }
-  }, [searchParams]);
+
+    return () => {
+      if (reloadTimer !== null) {
+        window.clearTimeout(reloadTimer);
+      }
+    };
+  }, [billingState]);
 
   async function handleTeamSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -257,6 +286,70 @@ export function TeamSettingsForm({
 
   return (
     <div className="space-y-6">
+      <AnimatePresence>
+        {showCheckoutCelebration && (
+          <motion.div
+            key="checkout-celebration"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[999] flex items-center justify-center bg-[#020617]/80 px-4 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 24, scale: 0.92 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.96 }}
+              transition={{ type: "spring", stiffness: 320, damping: 24 }}
+              className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-cyan-300/25 bg-slate-950/95 p-8 text-center shadow-[0_0_100px_rgba(56,189,248,0.22)]"
+            >
+              <motion.div
+                className="pointer-events-none absolute inset-0 rounded-3xl border border-cyan-300/25"
+                initial={{ scale: 0.85, opacity: 0.7 }}
+                animate={{ scale: 1.2, opacity: 0 }}
+                transition={{ duration: 1.5, ease: "easeOut", repeat: Infinity }}
+              />
+              <motion.div
+                className="pointer-events-none absolute inset-0 rounded-3xl border border-blue-300/20"
+                initial={{ scale: 0.85, opacity: 0 }}
+                animate={{ scale: 1.15, opacity: [0, 0.35, 0] }}
+                transition={{
+                  duration: 1.8,
+                  ease: "easeOut",
+                  repeat: Infinity,
+                  delay: 0.2,
+                }}
+              />
+
+              <motion.div
+                initial={{ rotate: -10, scale: 0.8 }}
+                animate={{ rotate: 0, scale: 1 }}
+                transition={{ type: "spring", stiffness: 260, damping: 18 }}
+                className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 shadow-[0_0_40px_rgba(59,130,246,0.6)]"
+              >
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                  <motion.path
+                    d="M5 13l4 4L19 7"
+                    stroke="white"
+                    strokeWidth="2.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 0.55, ease: "easeOut", delay: 0.2 }}
+                  />
+                </svg>
+              </motion.div>
+
+              <h4 className="mt-5 text-2xl font-semibold text-white">Payment Confirmed</h4>
+              <p className="mt-2 text-sm text-cyan-100/90">
+                Supporter unlock is processing. Reloading your team settings...
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
           <p className="text-xs uppercase tracking-widest text-gray-400">Team</p>
@@ -474,10 +567,15 @@ export function TeamSettingsForm({
                 <p className="mt-2 text-xs text-red-300">{billingOverview.error}</p>
               ) : billingOverview.subscription ? (
                 <div className="mt-2 space-y-1 text-xs text-gray-300">
-                  <p>
-                    Current period: {formatBillingDate(billingOverview.subscription.currentPeriodStart)} to{" "}
-                    {formatBillingDate(billingOverview.subscription.currentPeriodEnd)}
-                  </p>
+                  {billingOverview.subscription.currentPeriodStart !== null &&
+                  billingOverview.subscription.currentPeriodEnd !== null ? (
+                    <p>
+                      Current period: {formatBillingDate(billingOverview.subscription.currentPeriodStart)} to{" "}
+                      {formatBillingDate(billingOverview.subscription.currentPeriodEnd)}
+                    </p>
+                  ) : (
+                    <p>Current period dates are still syncing from billing provider.</p>
+                  )}
                   <p>
                     Renewal behavior:{" "}
                     {billingOverview.subscription.cancelAtPeriodEnd

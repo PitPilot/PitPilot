@@ -96,6 +96,9 @@ export function SiteFooter({ className = "" }: { className?: string }) {
             &copy; {new Date().getFullYear()} PitPilot. Built with Next.js &amp; Supabase.
           </p>
           <div className="flex items-center gap-4">
+            <Link href="/privacy" className="text-[11px] text-gray-500 transition hover:text-gray-300">
+              Privacy
+            </Link>
             <a
               href="https://github.com"
               target="_blank"

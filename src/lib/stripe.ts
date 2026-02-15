@@ -267,14 +267,28 @@ export async function getOrgBillingOverview(
   }
 
   try {
-    const subscription = await findStripeSubscriptionByOrgId(orgId);
-    if (!subscription) {
+    const foundSubscription = await findStripeSubscriptionByOrgId(orgId);
+    if (!foundSubscription) {
       return {
         stripeConfigured: true,
         subscription: null,
         invoices: [],
         error: null,
       };
+    }
+
+    let subscription = foundSubscription;
+    // Stripe search responses can omit period fields on some API versions.
+    // Fetch the full subscription object when period fields are missing.
+    if (
+      subscription.current_period_start == null ||
+      subscription.current_period_end == null
+    ) {
+      try {
+        subscription = await retrieveStripeSubscription(subscription.id);
+      } catch {
+        // Keep using the search result if retrieve fails.
+      }
     }
 
     const invoices = await listStripeInvoices({

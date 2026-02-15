@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/navbar";
+import { SiteFooter } from "@/components/site-footer";
 
 export const metadata: Metadata = {
   title: "Sign In | PitPilot",
@@ -14,8 +15,11 @@ export default function AuthLayout({
   return (
     <div className="marketing-shell">
       <Navbar />
-      <div className="marketing-content pt-16">
-        {children}
+      <div className="flex min-h-screen flex-col pt-16">
+        <div className="marketing-content flex-1">
+          {children}
+        </div>
+        <SiteFooter />
       </div>
     </div>
   );

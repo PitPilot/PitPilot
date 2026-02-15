@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { sendMagicLink } from "@/lib/auth-actions";
 
 export default function SignUpPage() {
@@ -103,6 +104,13 @@ export default function SignUpPage() {
 
         <p className="text-center text-sm text-gray-500">
           We&apos;ll send you a magic link to sign in. No password needed.
+        </p>
+        <p className="text-center text-xs text-gray-500">
+          By continuing, you agree to our{" "}
+          <Link href="/privacy" className="text-teal-400 hover:text-teal-300">
+            Privacy Policy
+          </Link>
+          .
         </p>
       </div>
     </div>
