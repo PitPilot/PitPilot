@@ -278,11 +278,20 @@ export default async function DashboardPage() {
                 Open settings
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
               </Link>
-              {profile.role === "captain" && !isSupporter && (
-                <UpgradeSupporterButton />
-              )}
               <LeaveTeamButton />
             </div>
+            {profile.role === "captain" && !isSupporter && (
+              <div className="mt-3 rounded-xl border border-white/10 px-3 py-3 text-xs text-gray-400 dashboard-panel">
+                <p className="font-semibold text-gray-300">Upgrade to Supporter</p>
+                <p className="mt-1">
+                  Supporter helps keep PitPilot sustainable while we continue offering free access
+                  for teams across the community.
+                </p>
+                <div className="mt-3">
+                  <UpgradeSupporterButton />
+                </div>
+              </div>
+            )}
           </div>
         </AnimateIn>
 
