@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
-import { BriefContentSchema } from "@/types/strategy";
+import { BriefContentSchema, type BriefContent } from "@/types/strategy";
 import { summarizeScouting } from "@/lib/scouting-summary";
 import {
   buildRateLimitHeaders,
@@ -17,6 +17,580 @@ import {
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
+
+type JsonObject = Record<string, unknown>;
+type AllianceColor = "red" | "blue";
+type PriorityLevel = "high" | "medium" | "low";
+
+interface MatchBriefNormalizationContext {
+  allTeams: number[];
+  redTeams: number[];
+  blueTeams: number[];
+  statsMap: Record<
+    number,
+    {
+      epa: number | null;
+      auto_epa: number | null;
+      teleop_epa: number | null;
+      endgame_epa: number | null;
+      win_rate: number | null;
+    }
+  >;
+  scoutingSummary: Record<number, ReturnType<typeof summarizeScouting>>;
+  scoutingCoverage: Record<
+    number,
+    {
+      alliance: AllianceColor;
+      entries: number;
+      coverage: "none" | "limited" | "moderate" | "strong";
+    }
+  >;
+}
+
+function parseAiJson(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    // Continue to fallback parsing.
+  }
+
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const candidate = fenced ? fenced[1] : text;
+  const start = candidate.indexOf("{");
+  const end = candidate.lastIndexOf("}");
+  if (start === -1 || end === -1 || end <= start) {
+    throw new Error("No JSON object found in AI response");
+  }
+
+  return JSON.parse(candidate.slice(start, end + 1));
+}
+
+function asObject(value: unknown): JsonObject | null {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return null;
+  }
+  return value as JsonObject;
+}
+
+function toFiniteNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const normalized = value.replaceAll(",", "").trim();
+    if (normalized.length === 0) return null;
+    const parsed = Number.parseFloat(normalized);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+
+function toNonEmptyString(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function toStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => toNonEmptyString(item))
+    .filter((item): item is string => item !== null);
+}
+
+function dedupeStrings(values: string[]): string[] {
+  const seen = new Set<string>();
+  const output: string[] = [];
+  for (const value of values) {
+    const key = value.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    output.push(value);
+  }
+  return output;
+}
+
+function toTeamNumber(value: unknown): number | null {
+  const numeric = toFiniteNumber(value);
+  if (numeric !== null) {
+    const team = Math.trunc(numeric);
+    return Number.isFinite(team) ? team : null;
+  }
+  if (typeof value === "string") {
+    const match = value.match(/\d+/);
+    if (!match) return null;
+    const parsed = Number.parseInt(match[0], 10);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+function toTeamNumberArray(value: unknown): number[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => toTeamNumber(item))
+    .filter((item): item is number => item !== null);
+}
+
+function roundOne(value: number): number {
+  return Math.round(value * 10) / 10;
+}
+
+function normalizeAlliance(
+  value: unknown,
+  fallback: AllianceColor
+): AllianceColor {
+  const text = toNonEmptyString(value)?.toLowerCase() ?? "";
+  if (text.includes("red")) return "red";
+  if (text.includes("blue")) return "blue";
+  return fallback;
+}
+
+function normalizePriority(
+  value: unknown,
+  fallback: PriorityLevel
+): PriorityLevel {
+  const text = toNonEmptyString(value)?.toLowerCase() ?? "";
+  if (text.includes("high")) return "high";
+  if (text.includes("med")) return "medium";
+  if (text.includes("low")) return "low";
+  return fallback;
+}
+
+function normalizeConfidence(
+  value: unknown,
+  scoreDiff: number,
+  fallback: "high" | "medium" | "low"
+): "high" | "medium" | "low" {
+  const text = toNonEmptyString(value)?.toLowerCase() ?? "";
+  if (text.includes("high")) return "high";
+  if (text.includes("med")) return "medium";
+  if (text.includes("low")) return "low";
+
+  if (scoreDiff >= 18) return "high";
+  if (scoreDiff >= 8) return "medium";
+  return fallback;
+}
+
+function normalizeRole(
+  value: unknown,
+  fallback: "scorer" | "defender" | "support"
+): "scorer" | "defender" | "support" {
+  const text = toNonEmptyString(value)?.toLowerCase() ?? "";
+  if (text.includes("score")) return "scorer";
+  if (text.includes("def")) return "defender";
+  if (text.includes("support")) return "support";
+  return fallback;
+}
+
+function scoutingInsightsFromSummary(
+  summary: ReturnType<typeof summarizeScouting>
+): string {
+  if (!summary || summary.count === 0) {
+    return "No scouting data available";
+  }
+
+  const note = summary.notes.length > 0 ? ` Top notes: ${summary.notes.join(" | ")}.` : "";
+  return `Scouting sample of ${summary.count}: auto ${summary.avg_auto}, teleop ${summary.avg_teleop}, endgame ${summary.avg_endgame}, reliability ${summary.avg_reliability}/5.${note}`;
+}
+
+function buildFallbackBrief(
+  context: MatchBriefNormalizationContext
+): BriefContent {
+  const teamAnalysis = context.allTeams.map((teamNumber) => {
+    const stats = context.statsMap[teamNumber];
+    const scouting = context.scoutingSummary[teamNumber];
+    const alliance: AllianceColor = context.redTeams.includes(teamNumber)
+      ? "red"
+      : "blue";
+    const epaBreakdown = {
+      total: roundOne(stats?.epa ?? 0),
+      auto: roundOne(stats?.auto_epa ?? 0),
+      teleop: roundOne(stats?.teleop_epa ?? 0),
+      endgame: roundOne(stats?.endgame_epa ?? 0),
+    };
+
+    const role: "scorer" | "defender" | "support" =
+      (scouting?.avg_defense ?? 0) >= 4 && epaBreakdown.total < 18
+        ? "defender"
+        : epaBreakdown.total >= 15 ||
+          (scouting?.avg_auto ?? 0) + (scouting?.avg_teleop ?? 0) >= 18
+        ? "scorer"
+        : "support";
+
+    return {
+      teamNumber,
+      alliance,
+      epaBreakdown,
+      scoutingInsights: scoutingInsightsFromSummary(scouting),
+      role,
+    };
+  });
+
+  const redTotalEPA = roundOne(
+    context.redTeams.reduce(
+      (sum, teamNumber) => sum + (context.statsMap[teamNumber]?.epa ?? 0),
+      0
+    )
+  );
+  const blueTotalEPA = roundOne(
+    context.blueTeams.reduce(
+      (sum, teamNumber) => sum + (context.statsMap[teamNumber]?.epa ?? 0),
+      0
+    )
+  );
+
+  const redReliabilityBoost = context.redTeams.reduce(
+    (sum, teamNumber) =>
+      sum + ((context.scoutingSummary[teamNumber]?.avg_reliability ?? 3) - 3) * 1.8,
+    0
+  );
+  const blueReliabilityBoost = context.blueTeams.reduce(
+    (sum, teamNumber) =>
+      sum + ((context.scoutingSummary[teamNumber]?.avg_reliability ?? 3) - 3) * 1.8,
+    0
+  );
+
+  const redScore = Math.max(0, Math.round(redTotalEPA + redReliabilityBoost));
+  const blueScore = Math.max(0, Math.round(blueTotalEPA + blueReliabilityBoost));
+  const scoreDiff = Math.abs(redScore - blueScore);
+  const winner: AllianceColor = redScore >= blueScore ? "red" : "blue";
+  const confidence: "high" | "medium" | "low" =
+    scoreDiff >= 18 ? "high" : scoreDiff >= 8 ? "medium" : "low";
+
+  const keyPlayersForAlliance = (teams: number[]) =>
+    teams
+      .slice()
+      .sort(
+        (a, b) =>
+          (context.statsMap[b]?.epa ?? Number.NEGATIVE_INFINITY) -
+          (context.statsMap[a]?.epa ?? Number.NEGATIVE_INFINITY)
+      )
+      .slice(0, 2);
+
+  const fallbackAlliance = (
+    teams: number[],
+    totalEPA: number
+  ): BriefContent["redAlliance"] => {
+    const missingEpa = teams.filter(
+      (teamNumber) => context.statsMap[teamNumber]?.epa == null
+    ).length;
+    const noCoverage = teams.filter(
+      (teamNumber) => context.scoutingCoverage[teamNumber]?.coverage === "none"
+    ).length;
+
+    const strengths = dedupeStrings([
+      `Projected around ${totalEPA.toFixed(1)} combined EPA entering this match.`,
+      `Primary scoring pressure likely from Team ${keyPlayersForAlliance(teams)[0] ?? teams[0]}.`,
+      noCoverage === 0
+        ? "Scouting data exists across this alliance, improving role clarity."
+        : "Available scouting notes provide partial role signal for this alliance.",
+    ]).slice(0, 3);
+
+    const weaknesses = dedupeStrings([
+      noCoverage > 0
+        ? `${noCoverage} team(s) on this alliance still need direct scouting coverage.`
+        : "Lane traffic and cycle timing are likely to decide ceiling performance.",
+      missingEpa > 0
+        ? `EPA signal is missing for ${missingEpa} team(s), which increases uncertainty.`
+        : "Endgame coordination remains a key swing factor.",
+    ]).slice(0, 3);
+
+    return {
+      totalEPA,
+      strengths,
+      weaknesses,
+      keyPlayers: keyPlayersForAlliance(teams),
+    };
+  };
+
+  const teamsNeedingCoverage = context.allTeams
+    .map((teamNumber) => {
+      const coverage = context.scoutingCoverage[teamNumber];
+      if (!coverage) return null;
+      if (coverage.coverage === "none") {
+        return {
+          teamNumber,
+          alliance: coverage.alliance,
+          priority: "high" as const,
+          reason: "No scouting entries logged yet for this team at this event.",
+          focus:
+            "Capture auto start behavior, cycle pace, defense impact, and endgame attempt/success.",
+        };
+      }
+      if (coverage.coverage === "limited") {
+        return {
+          teamNumber,
+          alliance: coverage.alliance,
+          priority: "medium" as const,
+          reason: "Only one scouting entry is available so the sample is still thin.",
+          focus: "Confirm role consistency and note where points are most reliably scored.",
+        };
+      }
+      return null;
+    })
+    .filter(
+      (
+        item
+      ): item is {
+        teamNumber: number;
+        alliance: AllianceColor;
+        priority: PriorityLevel;
+        reason: string;
+        focus: string;
+      } => item !== null
+    );
+
+  return {
+    prediction: {
+      winner,
+      confidence,
+      redScore,
+      blueScore,
+    },
+    redAlliance: fallbackAlliance(context.redTeams, redTotalEPA),
+    blueAlliance: fallbackAlliance(context.blueTeams, blueTotalEPA),
+    teamAnalysis,
+    strategy: {
+      redRecommendations: [
+        "Prioritize clean cycle lanes for your strongest scorer and avoid traffic overlap.",
+        "Assign one robot to protect endgame timing and prevent late climb congestion.",
+      ],
+      blueRecommendations: [
+        "Use your highest-output scorer as the pace setter and feed them clear possession chains.",
+        "If trailing late, force defensive pressure on the opposing primary scorer.",
+      ],
+      keyMatchups: [
+        `Team ${
+          keyPlayersForAlliance(context.redTeams)[0] ?? context.redTeams[0]
+        } vs Team ${keyPlayersForAlliance(context.blueTeams)[0] ?? context.blueTeams[0]} in scoring tempo.`,
+      ],
+    },
+    scoutingPriorities: {
+      teamsNeedingCoverage,
+      scoutActions: [
+        "Prioritize one full-cycle observation for every high-priority team before mid-match.",
+        "Log endgame attempt type, success/failure, and the exact failure mode when it misses.",
+      ],
+    },
+  };
+}
+
+function normalizeBriefContent(
+  raw: unknown,
+  fallback: BriefContent,
+  context: MatchBriefNormalizationContext
+): BriefContent {
+  const source = asObject(raw);
+  if (!source) return fallback;
+
+  const predictionSource = asObject(source.prediction);
+  const redScore = Math.max(
+    0,
+    Math.round(
+      toFiniteNumber(predictionSource?.redScore) ?? fallback.prediction.redScore
+    )
+  );
+  const blueScore = Math.max(
+    0,
+    Math.round(
+      toFiniteNumber(predictionSource?.blueScore) ?? fallback.prediction.blueScore
+    )
+  );
+  const inferredWinner: AllianceColor = redScore >= blueScore ? "red" : "blue";
+  const winner = normalizeAlliance(
+    predictionSource?.winner,
+    inferredWinner
+  );
+  const confidence = normalizeConfidence(
+    predictionSource?.confidence,
+    Math.abs(redScore - blueScore),
+    fallback.prediction.confidence
+  );
+
+  const normalizeAllianceSection = (
+    rawAlliance: unknown,
+    fallbackAlliance: BriefContent["redAlliance"]
+  ): BriefContent["redAlliance"] => {
+    const allianceSource = asObject(rawAlliance);
+    const strengths = dedupeStrings(
+      toStringArray(allianceSource?.strengths)
+    ).slice(0, 5);
+    const weaknesses = dedupeStrings(
+      toStringArray(allianceSource?.weaknesses)
+    ).slice(0, 5);
+    const keyPlayers = toTeamNumberArray(allianceSource?.keyPlayers);
+
+    return {
+      totalEPA:
+        roundOne(
+          toFiniteNumber(allianceSource?.totalEPA) ?? fallbackAlliance.totalEPA
+        ),
+      strengths:
+        strengths.length > 0 ? strengths : fallbackAlliance.strengths,
+      weaknesses:
+        weaknesses.length > 0 ? weaknesses : fallbackAlliance.weaknesses,
+      keyPlayers: keyPlayers.length > 0 ? keyPlayers : fallbackAlliance.keyPlayers,
+    };
+  };
+
+  const fallbackTeamAnalysisByTeam = new Map(
+    fallback.teamAnalysis.map((item) => [item.teamNumber, item])
+  );
+  const rawTeamAnalysis = Array.isArray(source.teamAnalysis)
+    ? source.teamAnalysis
+    : [];
+  const normalizedTeams = new Map<number, BriefContent["teamAnalysis"][number]>();
+  for (const item of rawTeamAnalysis) {
+    const teamSource = asObject(item);
+    if (!teamSource) continue;
+    const teamNumber = toTeamNumber(teamSource.teamNumber);
+    if (teamNumber === null || !fallbackTeamAnalysisByTeam.has(teamNumber)) continue;
+
+    const fallbackTeam = fallbackTeamAnalysisByTeam.get(teamNumber)!;
+    const epaSource = asObject(teamSource.epaBreakdown);
+
+    normalizedTeams.set(teamNumber, {
+      teamNumber,
+      alliance: normalizeAlliance(teamSource.alliance, fallbackTeam.alliance),
+      epaBreakdown: {
+        total: roundOne(
+          toFiniteNumber(epaSource?.total) ?? fallbackTeam.epaBreakdown.total
+        ),
+        auto: roundOne(
+          toFiniteNumber(epaSource?.auto) ?? fallbackTeam.epaBreakdown.auto
+        ),
+        teleop: roundOne(
+          toFiniteNumber(epaSource?.teleop) ?? fallbackTeam.epaBreakdown.teleop
+        ),
+        endgame: roundOne(
+          toFiniteNumber(epaSource?.endgame) ?? fallbackTeam.epaBreakdown.endgame
+        ),
+      },
+      scoutingInsights:
+        toNonEmptyString(teamSource.scoutingInsights) ??
+        fallbackTeam.scoutingInsights,
+      role: normalizeRole(teamSource.role, fallbackTeam.role),
+    });
+  }
+
+  const teamAnalysis = context.allTeams.map(
+    (teamNumber) =>
+      normalizedTeams.get(teamNumber) ?? fallbackTeamAnalysisByTeam.get(teamNumber)!
+  );
+
+  const strategySource = asObject(source.strategy);
+  const redRecommendations = dedupeStrings(
+    toStringArray(strategySource?.redRecommendations)
+  );
+  const blueRecommendations = dedupeStrings(
+    toStringArray(strategySource?.blueRecommendations)
+  );
+  const keyMatchups = dedupeStrings(toStringArray(strategySource?.keyMatchups));
+
+  const scoutingSource = asObject(source.scoutingPriorities);
+  const coverageSource = Array.isArray(scoutingSource?.teamsNeedingCoverage)
+    ? scoutingSource.teamsNeedingCoverage
+    : [];
+  const normalizedCoverageMap = new Map<
+    number,
+    BriefContent["scoutingPriorities"]["teamsNeedingCoverage"][number]
+  >();
+  for (const item of coverageSource) {
+    const teamSource = asObject(item);
+    if (!teamSource) continue;
+    const teamNumber = toTeamNumber(teamSource.teamNumber);
+    if (teamNumber === null || !context.allTeams.includes(teamNumber)) continue;
+
+    const fallbackCoverage = context.scoutingCoverage[teamNumber];
+    const fallbackAlliance: AllianceColor = fallbackCoverage?.alliance ?? "red";
+    const fallbackPriority: PriorityLevel =
+      fallbackCoverage?.coverage === "none"
+        ? "high"
+        : fallbackCoverage?.coverage === "limited"
+        ? "medium"
+        : "low";
+
+    normalizedCoverageMap.set(teamNumber, {
+      teamNumber,
+      alliance: normalizeAlliance(teamSource.alliance, fallbackAlliance),
+      priority: normalizePriority(teamSource.priority, fallbackPriority),
+      reason:
+        toNonEmptyString(teamSource.reason) ??
+        (fallbackCoverage?.coverage === "none"
+          ? "No scouting entries logged yet for this team at this event."
+          : "Coverage is limited for this team."),
+      focus:
+        toNonEmptyString(teamSource.focus) ??
+        "Capture auto behavior, cycle pace, defense interaction, and endgame attempt/success.",
+    });
+  }
+
+  for (const teamNumber of context.allTeams) {
+    const coverage = context.scoutingCoverage[teamNumber];
+    if (!coverage || coverage.coverage !== "none") continue;
+    const existing = normalizedCoverageMap.get(teamNumber);
+    if (existing) {
+      existing.priority = "high";
+      continue;
+    }
+    normalizedCoverageMap.set(teamNumber, {
+      teamNumber,
+      alliance: coverage.alliance,
+      priority: "high",
+      reason: "No scouting entries logged yet for this team at this event.",
+      focus:
+        "Capture auto behavior, cycle pace, defense interaction, and endgame attempt/success.",
+    });
+  }
+
+  const normalizedCoverage = Array.from(normalizedCoverageMap.values()).sort(
+    (a, b) => {
+      const weight: Record<PriorityLevel, number> = {
+        high: 0,
+        medium: 1,
+        low: 2,
+      };
+      return weight[a.priority] - weight[b.priority];
+    }
+  );
+
+  const scoutActions = dedupeStrings(
+    toStringArray(scoutingSource?.scoutActions)
+  ).slice(0, 6);
+
+  return {
+    prediction: {
+      winner,
+      confidence,
+      redScore,
+      blueScore,
+    },
+    redAlliance: normalizeAllianceSection(source.redAlliance, fallback.redAlliance),
+    blueAlliance: normalizeAllianceSection(source.blueAlliance, fallback.blueAlliance),
+    teamAnalysis,
+    strategy: {
+      redRecommendations:
+        redRecommendations.length > 0
+          ? redRecommendations
+          : fallback.strategy.redRecommendations,
+      blueRecommendations:
+        blueRecommendations.length > 0
+          ? blueRecommendations
+          : fallback.strategy.blueRecommendations,
+      keyMatchups:
+        keyMatchups.length > 0 ? keyMatchups : fallback.strategy.keyMatchups,
+    },
+    scoutingPriorities: {
+      teamsNeedingCoverage:
+        normalizedCoverage.length > 0
+          ? normalizedCoverage
+          : fallback.scoutingPriorities.teamsNeedingCoverage,
+      scoutActions:
+        scoutActions.length > 0
+          ? scoutActions
+          : fallback.scoutingPriorities.scoutActions,
+    },
+  };
+}
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -269,6 +843,15 @@ export async function POST(request: NextRequest) {
     scoutingCoverage,
   };
 
+  const normalizationContext: MatchBriefNormalizationContext = {
+    allTeams,
+    redTeams: match.red_teams,
+    blueTeams: match.blue_teams,
+    statsMap,
+    scoutingSummary,
+    scoutingCoverage,
+  };
+
   const systemPrompt = `You are an expert FRC (FIRST Robotics Competition) strategy analyst. Analyze the provided match data and generate a strategic brief.
 
 ${buildFrcGamePrompt(match.events?.year ?? null)}
@@ -372,29 +955,34 @@ Guidelines:
 
     let parsedJson: unknown;
     try {
-      const fenced = textOutput.match(/```(?:json)?\s*([\s\S]*?)```/i);
-      let candidate = fenced ? fenced[1] : textOutput;
-      const start = candidate.indexOf("{");
-      const end = candidate.lastIndexOf("}");
-      if (start !== -1 && end !== -1 && end > start) {
-        candidate = candidate.slice(start, end + 1);
-      }
-      parsedJson = JSON.parse(candidate);
+      parsedJson = parseAiJson(textOutput);
     } catch {
       return NextResponse.json(
         { error: "Failed to parse AI response as JSON" },
         { status: 500 }
       );
     }
-    const parsed = BriefContentSchema.safeParse(parsedJson);
+
+    const initialParsed = BriefContentSchema.safeParse(parsedJson);
+    const briefContent =
+      initialParsed.success
+        ? initialParsed.data
+        : normalizeBriefContent(
+            parsedJson,
+            buildFallbackBrief(normalizationContext),
+            normalizationContext
+          );
+    const parsed = BriefContentSchema.safeParse(briefContent);
     if (!parsed.success) {
-      console.warn("Invalid AI brief schema:", parsed.error.flatten());
+      console.warn("Invalid AI brief schema after normalization:", parsed.error.flatten());
       return NextResponse.json(
         { error: "AI response did not match expected schema" },
         { status: 500 }
       );
     }
-    const briefContent = parsed.data;
+    if (!initialParsed.success) {
+      console.warn("Invalid AI brief schema; normalized fallback applied:", initialParsed.error.flatten());
+    }
 
     // Upsert the brief
     const { data: brief, error: briefError } = await supabase
