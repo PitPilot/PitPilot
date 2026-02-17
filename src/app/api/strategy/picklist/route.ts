@@ -66,7 +66,7 @@ function normalizeTeamProfile(value: unknown): TeamProfile | null {
       )
     : [];
 
-  const legacyShootingRange =
+  const legacyShootingRange: "close" | "mid" | "long" | null =
     source.shootingRange === "close" ||
     source.shootingRange === "mid" ||
     source.shootingRange === "long"
