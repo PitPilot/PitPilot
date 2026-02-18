@@ -48,6 +48,3 @@ __pycache__/
 !scripts/models/*.joblib
 venv/
 scripts/data/
-
-# Word temp files
-~$*.docx
