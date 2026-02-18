@@ -12,7 +12,7 @@ import {
 } from "@/lib/rate-limit-ui";
 
 type ShootingRange = "close" | "mid" | "long";
-type IntakeAbility = "floor" | "station" | "chute" | "shelf";
+type IntakeAbility = "depot" | "human_intake";
 
 type TeamProfile = {
   autoStartPositions: Array<"left" | "center" | "right">;
@@ -41,11 +41,22 @@ const SHOOTING_RANGE_OPTIONS: Array<{ key: ShootingRange; label: string }> = [
 ];
 
 const INTAKE_ABILITY_OPTIONS: Array<{ key: IntakeAbility; label: string }> = [
-  { key: "floor", label: "Floor / Ground" },
-  { key: "station", label: "Station Feed" },
-  { key: "chute", label: "Chute Feed" },
-  { key: "shelf", label: "Shelf / Source" },
+  { key: "depot", label: "Ground" },
+  { key: "human_intake", label: "Human Player" },
 ];
+
+function normalizeIntakeAbility(value: unknown): IntakeAbility | null {
+  if (value === "depot" || value === "floor") return "depot";
+  if (
+    value === "human_intake" ||
+    value === "station" ||
+    value === "chute" ||
+    value === "shelf"
+  ) {
+    return "human_intake";
+  }
+  return null;
+}
 
 function clampStar(value: number): number {
   return Math.max(1, Math.min(5, Math.round(value)));
@@ -134,12 +145,12 @@ export function GeneratePickListButton({
           ? [legacyShootingRange]
           : [],
         intakeAbilities: Array.isArray(parsed.intakeAbilities)
-          ? parsed.intakeAbilities.filter(
-              (value): value is IntakeAbility =>
-                value === "floor" ||
-                value === "station" ||
-                value === "chute" ||
-                value === "shelf"
+          ? Array.from(
+              new Set(
+                parsed.intakeAbilities
+                  .map((value) => normalizeIntakeAbility(value))
+                  .filter((value): value is IntakeAbility => value !== null)
+              )
             )
           : [],
         cycleTimeRating: clampStar(Number(parsed.cycleTimeRating ?? 3)),
@@ -186,13 +197,27 @@ export function GeneratePickListButton({
         toast(formatRateLimitUsageMessage(usage, "ai"), "info");
       }
 
-      const data = await res.json();
+      const responseText = await res.text();
+      let data: Record<string, unknown> | null = null;
+      if (responseText) {
+        try {
+          data = JSON.parse(responseText) as Record<string, unknown>;
+        } catch {
+          data = null;
+        }
+      }
 
-      if (!res.ok || !data.success) {
+      if (!res.ok || data?.success !== true) {
+        const fallbackError =
+          typeof data?.error === "string" && data.error.trim().length > 0
+            ? data.error
+            : responseText.trim().length > 0
+            ? responseText.trim().slice(0, 180)
+            : `Request failed (${res.status})`;
         setError(
           resolveRateLimitMessage(
             res.status,
-            data.error ?? "Failed to generate pick list",
+            fallbackError,
             "ai"
           )
         );
@@ -243,12 +268,20 @@ export function GeneratePickListButton({
           void handleGenerate(null);
         }}
         disabled={loading}
-        className="inline-flex items-center justify-center gap-2 rounded-xl border border-purple-300/35 bg-gradient-to-r from-fuchsia-600 via-purple-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(139,92,246,0.35)] transition duration-200 hover:-translate-y-0.5 hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 hover:shadow-[0_14px_34px_rgba(139,92,246,0.45)] disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+        className="dashboard-action dashboard-action-primary dashboard-action-holo min-h-10 px-4 text-sm disabled:cursor-not-allowed disabled:opacity-65"
       >
-        {loading && (
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/80 border-t-transparent" />
+        {loading ? (
+          <>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-white/90 [animation:ping_1.05s_ease-in-out_infinite]" />
+              <span className="h-2 w-2 rounded-full bg-white/75 [animation:ping_1.05s_ease-in-out_120ms_infinite]" />
+              <span className="h-2 w-2 rounded-full bg-white/55 [animation:ping_1.05s_ease-in-out_240ms_infinite]" />
+            </span>
+            Generating best pick list
+          </>
+        ) : (
+          label
         )}
-        {loading ? "Generating Pick List..." : label}
       </button>
       {showDataHint && (
         <p className="mt-2 text-xs text-gray-400">
@@ -374,7 +407,7 @@ export function GeneratePickListButton({
                     </button>
                   ))}
                 </div>
-                <p className="mt-1.5 text-[11px] text-gray-500">Select every game piece source your robot can intake from.</p>
+                <p className="mt-1.5 text-[11px] text-gray-500">Select every source your robot can intake from.</p>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
@@ -453,12 +486,20 @@ export function GeneratePickListButton({
                       void handleGenerate(teamProfile);
                     }}
                     disabled={loading}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-purple-300/35 bg-gradient-to-r from-fuchsia-600 via-purple-600 to-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(139,92,246,0.35)] transition duration-200 hover:-translate-y-0.5 hover:from-fuchsia-500 hover:via-purple-500 hover:to-indigo-500 hover:shadow-[0_14px_34px_rgba(139,92,246,0.45)] disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="dashboard-action dashboard-action-primary dashboard-action-holo px-4 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-65"
                   >
-                    {loading && (
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/80 border-t-transparent" />
+                    {loading ? (
+                      <>
+                        <span className="inline-flex items-center gap-1.5">
+                          <span className="h-2 w-2 rounded-full bg-white/90 [animation:ping_1.05s_ease-in-out_infinite]" />
+                          <span className="h-2 w-2 rounded-full bg-white/75 [animation:ping_1.05s_ease-in-out_120ms_infinite]" />
+                          <span className="h-2 w-2 rounded-full bg-white/55 [animation:ping_1.05s_ease-in-out_240ms_infinite]" />
+                        </span>
+                        Generating...
+                      </>
+                    ) : (
+                      "Generate AI Suggestions"
                     )}
-                    {loading ? "Generating..." : "Generate AI Suggestions"}
                   </button>
                 </div>
                 </motion.div>

@@ -38,7 +38,7 @@ export async function Navbar() {
           {announcement.message}
         </div>
       )}
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="font-outfit text-lg font-bold tracking-tight text-white">
           Pit<span className="text-teal-400">Pilot</span>
         </Link>

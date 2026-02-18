@@ -258,9 +258,9 @@ export default async function MatchListPage({
   const eventTitle = event.year ? `${event.year} ${event.name}` : event.name;
 
   return (
-    <div className="min-h-screen dashboard-page">
+    <div className="min-h-screen overflow-x-hidden dashboard-page">
       <Navbar />
-      <main className="mx-auto max-w-2xl px-4 pb-12 pt-24 space-y-6">
+      <main className="mx-auto max-w-2xl px-4 pb-12 pt-28 space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">

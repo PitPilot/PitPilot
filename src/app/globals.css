@@ -3,11 +3,10 @@
 html,
 body {
   scroll-behavior: smooth;
-}
-
-html,
-body {
   background-color: #06080f;
+  max-width: 100%;
+  overflow-x: clip;
+  overscroll-behavior-x: none;
 }
 
 :root {
@@ -79,6 +78,7 @@ body {
 body {
   background: var(--background);
   color: var(--foreground);
+  overflow-x: hidden;
 }
 
 html.theme-transition,
@@ -100,6 +100,20 @@ a[class*="rounded-"][class*="px-"][class*="py-"]:not([class*="rounded-full"]):no
 .back-button,
 .dashboard-action {
   border-radius: 8px;
+}
+
+/* Consistent pointer cursor for interactive controls */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+a[href]:not([aria-disabled="true"]),
+summary {
+  cursor: pointer;
+}
+
+button:disabled,
+[role="button"][aria-disabled="true"],
+a[aria-disabled="true"] {
+  cursor: not-allowed;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -227,6 +241,7 @@ a[class*="rounded-"][class*="px-"][class*="py-"]:not([class*="rounded-full"]):no
 .dashboard-page {
   min-height: 100vh;
   color: var(--dash-text);
+  overflow-x: clip;
 }
 
 .dashboard-shell nav {
@@ -473,6 +488,7 @@ a[class*="rounded-"][class*="px-"][class*="py-"]:not([class*="rounded-full"]):no
   background: var(--scout-bg);
   color: var(--scout-text);
   font-family: var(--font-inter), sans-serif;
+  overflow-x: clip;
 }
 
 .scout-backdrop {
@@ -520,12 +536,16 @@ a[class*="rounded-"][class*="px-"][class*="py-"]:not([class*="rounded-full"]):no
 .ai-brief-markdown > :last-child { margin-bottom: 0 !important; }
 
 /* ── Landing page noise texture ── */
+.landing-noise {
+  position: relative;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
 .landing-noise::before {
   content: "";
   position: fixed;
-  inset: -50%;
-  width: 200%;
-  height: 200%;
+  inset: 0;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   opacity: 0.018;
   pointer-events: none;

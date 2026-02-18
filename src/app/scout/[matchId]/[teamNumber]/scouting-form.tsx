@@ -133,6 +133,19 @@ function parseClimbLevels(
   return [];
 }
 
+function clampScore(value: number, min = 0, max = 99): number {
+  if (!Number.isFinite(value)) return min;
+  return Math.max(min, Math.min(max, Math.round(value)));
+}
+
+function parseScoreInput(raw: string, fallback: number): number {
+  const trimmed = raw.trim();
+  if (!trimmed) return 0;
+  const parsed = Number.parseInt(trimmed, 10);
+  if (!Number.isFinite(parsed)) return fallback;
+  return clampScore(parsed);
+}
+
 function stripUnsupportedScoutingColumns<T extends Record<string, unknown>>(
   payload: T,
   errorMessage: string
@@ -463,7 +476,7 @@ export function ScoutingForm({
   }
 
   return (
-      <div className="space-y-6 pb-8">
+      <div className="space-y-6 overflow-x-hidden pb-8">
       {error && (
         <div className="rounded-md border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">
           {error}
@@ -495,7 +508,7 @@ export function ScoutingForm({
                   block: "start",
                 })
               }
-              className="text-center"
+              className="min-w-0 text-center"
             >
               <span className="block h-1.5 overflow-hidden rounded-full bg-white/10">
                 <span
@@ -505,7 +518,7 @@ export function ScoutingForm({
                 />
               </span>
               <span
-                className={`mt-1 block whitespace-nowrap text-[10px] font-medium uppercase tracking-[0.1em] transition-colors duration-300 sm:text-[11px] ${
+                className={`mt-1 block truncate text-[10px] font-medium uppercase tracking-[0.1em] transition-colors duration-300 sm:text-[11px] ${
                   index === activeStep ? "text-cyan-200" : "text-gray-400"
                 }`}
               >
@@ -526,13 +539,23 @@ export function ScoutingForm({
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-teal-300">
           Autonomous
         </h2>
-        <div className="space-y-4">
-          <div className="flex flex-wrap justify-center gap-6">
-            <CounterButton
-              label="Points"
-              value={autoScore}
-              onChange={setAutoScore}
-            />
+          <div className="space-y-4">
+          <div className="flex flex-wrap items-end justify-center gap-6">
+            <CounterButton label="Points" value={autoScore} onChange={setAutoScore} />
+            <label className="w-28 text-xs font-semibold uppercase tracking-widest text-gray-400">
+              Type points
+              <input
+                type="number"
+                min={0}
+                max={99}
+                inputMode="numeric"
+                value={autoScore}
+                onChange={(event) =>
+                  setAutoScore(parseScoreInput(event.target.value, autoScore))
+                }
+                className="scout-input mt-2 w-full rounded-md px-2 py-1.5 text-center text-sm font-semibold"
+              />
+            </label>
           </div>
 
           <div className="space-y-2">
@@ -582,12 +605,26 @@ export function ScoutingForm({
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-emerald-300">
           Teleop
         </h2>
-        <div className="flex flex-wrap justify-center gap-6">
-            <CounterButton
-              label="Points"
+        <div className="flex flex-wrap items-end justify-center gap-6">
+          <CounterButton
+            label="Points"
+            value={teleopScore}
+            onChange={setTeleopScore}
+          />
+          <label className="w-28 text-xs font-semibold uppercase tracking-widest text-gray-400">
+            Type points
+            <input
+              type="number"
+              min={0}
+              max={99}
+              inputMode="numeric"
               value={teleopScore}
-              onChange={setTeleopScore}
+              onChange={(event) =>
+                setTeleopScore(parseScoreInput(event.target.value, teleopScore))
+              }
+              className="scout-input mt-2 w-full rounded-md px-2 py-1.5 text-center text-sm font-semibold"
             />
+          </label>
         </div>
 
         <div className="mt-4 space-y-2">
@@ -633,12 +670,26 @@ export function ScoutingForm({
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-purple-300">
           Endgame
         </h2>
-        <div className="flex flex-wrap justify-center gap-6">
+        <div className="flex flex-wrap items-end justify-center gap-6">
           <CounterButton
             label="Points"
             value={endgameScore}
             onChange={setEndgameScore}
           />
+          <label className="w-28 text-xs font-semibold uppercase tracking-widest text-gray-400">
+            Type points
+            <input
+              type="number"
+              min={0}
+              max={99}
+              inputMode="numeric"
+              value={endgameScore}
+              onChange={(event) =>
+                setEndgameScore(parseScoreInput(event.target.value, endgameScore))
+              }
+              className="scout-input mt-2 w-full rounded-md px-2 py-1.5 text-center text-sm font-semibold"
+            />
+          </label>
         </div>
 
         <div className="mt-4 space-y-2">

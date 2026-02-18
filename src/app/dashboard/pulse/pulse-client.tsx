@@ -64,6 +64,13 @@ const ROLE_LABELS: Record<string, string> = {
   other: "Other",
 };
 
+const TEAM_PULSE_MAX_WORDS = 200;
+const TEAM_PULSE_RATE_LIMIT_PER_MINUTE = 6;
+
+function countWords(value: string): number {
+  return value.trim().split(/\s+/).filter(Boolean).length;
+}
+
 function buildOnlineList(
   state: Record<string, Array<{ userId: string; name: string; roles?: string[] }>>
 ) {
@@ -436,6 +443,9 @@ export function PulseClient({
     if (filter === "all") return messages;
     return messages.filter((m) => m.message_type === filter);
   }, [messages, filter]);
+  const trimmedContent = content.trim();
+  const wordCount = useMemo(() => countWords(content), [content]);
+  const exceedsWordLimit = wordCount > TEAM_PULSE_MAX_WORDS;
   const lastMessageAt =
     messages.length > 0 ? messages[messages.length - 1].created_at : null;
 
@@ -516,18 +526,20 @@ export function PulseClient({
 
   async function handleSend(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!content.trim()) return;
+    if (!trimmedContent) return;
+    if (exceedsWordLimit) {
+      setError(`Message is too long (${wordCount}/${TEAM_PULSE_MAX_WORDS} words).`);
+      return;
+    }
 
     setSending(true);
     setError(null);
 
     const payload = {
-      org_id: orgId,
-      author_id: userId,
-      content: content.trim(),
-      message_type: messageType,
-      match_key: matchKey.trim() || null,
-      reply_to_id: replyTo?.id ?? null,
+      content: trimmedContent,
+      messageType,
+      matchKey: matchKey.trim() || null,
+      replyToId: replyTo?.id ?? null,
     };
 
     tempCounterRef.current += 1;
@@ -535,11 +547,11 @@ export function PulseClient({
     const optimisticMessage: RawMessage = {
       id: tempId,
       content: payload.content,
-      message_type: payload.message_type,
-      match_key: payload.match_key,
+      message_type: payload.messageType,
+      match_key: payload.matchKey,
       created_at: new Date().toISOString(),
       author_id: userId,
-      reply_to_id: payload.reply_to_id ?? null,
+      reply_to_id: payload.replyToId ?? null,
       profiles: {
         display_name: displayName,
         team_roles: teamRoles,
@@ -562,19 +574,47 @@ export function PulseClient({
     setReplyTo(null);
     sendTyping(false);
 
-    const { data, error: insertError } = await supabase
-      .from("team_messages")
-      .insert(payload)
-      .select("id, content, message_type, match_key, created_at, author_id, reply_to_id")
-      .single();
-
-    if (insertError) {
-      setError(insertError.message);
+    let response: Response | null = null;
+    let raw = "";
+    let result: Record<string, unknown> | null = null;
+    try {
+      response = await fetch("/api/pulse/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      raw = await response.text();
+      if (raw) {
+        try {
+          result = JSON.parse(raw) as Record<string, unknown>;
+        } catch {
+          result = null;
+        }
+      }
+    } catch {
+      setError("Network error. Please try posting again.");
       setMessages((prev) => prev.filter((message) => message.id !== tempId));
       optimisticIdsRef.current.delete(tempId);
       setSending(false);
       return;
     }
+
+    if (!response || !response.ok) {
+      const errorMessage =
+        typeof result?.error === "string" && result.error.trim().length > 0
+          ? result.error
+          : "Failed to post update.";
+      setError(errorMessage);
+      setMessages((prev) => prev.filter((message) => message.id !== tempId));
+      optimisticIdsRef.current.delete(tempId);
+      setSending(false);
+      return;
+    }
+
+    const data =
+      result && typeof result.message === "object"
+        ? (result.message as RawMessage)
+        : null;
 
     authorMapRef.current[userId] = displayName;
     if (teamRoles.length > 0) {
@@ -858,8 +898,16 @@ export function PulseClient({
                 placeholder="Share the quick takeaway..."
                 className="mt-2 w-full rounded-lg px-3 py-2 text-sm pulse-text placeholder:text-gray-500 dashboard-input"
               />
-              <p className="mt-2 text-xs pulse-muted">
-                Use @everyone or @driver/@coach/etc to ping teammates.
+              <p
+                className={`mt-2 text-xs ${
+                  exceedsWordLimit ? "text-red-300" : "pulse-muted"
+                }`}
+              >
+                {wordCount}/{TEAM_PULSE_MAX_WORDS} words. Use @everyone or
+                @driver/@coach/etc to ping teammates.
+              </p>
+              <p className="mt-1 text-xs pulse-muted">
+                Rate limit: {TEAM_PULSE_RATE_LIMIT_PER_MINUTE} posts per minute per user.
               </p>
             </div>
 
@@ -867,7 +915,7 @@ export function PulseClient({
 
             <button
               type="submit"
-              disabled={sending || !content.trim()}
+              disabled={sending || !trimmedContent || exceedsWordLimit}
               className="w-full rounded-lg bg-teal-500 px-4 py-2.5 text-sm font-semibold text-slate-50 transition hover:bg-teal-400 disabled:opacity-50"
             >
               {sending ? "Posting..." : "Post to channel"}

@@ -1,7 +1,7 @@
 export default function DashboardLoading() {
   return (
     <div className="min-h-screen dashboard-page">
-      <main className="mx-auto max-w-7xl px-4 pb-12 pt-24">
+      <main className="mx-auto max-w-7xl px-4 pb-12 pt-28">
         <div className="mb-8 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
           <div className="rounded-2xl dashboard-panel p-6">
             <div className="h-4 w-32 animate-pulse rounded bg-white/10" />

@@ -43,7 +43,7 @@ function parseAiJson(text: string): unknown {
 type TeamProfile = {
   autoStartPositions: Array<"left" | "center" | "right">;
   shootingRanges: Array<"close" | "mid" | "long">;
-  intakeAbilities: Array<"floor" | "station" | "chute" | "shelf">;
+  intakeAbilities: Array<"depot" | "human_intake">;
   cycleTimeRating: number | null;
   reliabilityRating: number | null;
   preferredRole: "scorer" | "defender" | "support" | "versatile" | null;
@@ -53,6 +53,19 @@ type TeamProfile = {
 function asObject(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   return value as Record<string, unknown>;
+}
+
+function normalizeIntakeAbility(value: unknown): "depot" | "human_intake" | null {
+  if (value === "depot" || value === "floor") return "depot";
+  if (
+    value === "human_intake" ||
+    value === "station" ||
+    value === "chute" ||
+    value === "shelf"
+  ) {
+    return "human_intake";
+  }
+  return null;
 }
 
 function normalizeTeamProfile(value: unknown): TeamProfile | null {
@@ -83,12 +96,14 @@ function normalizeTeamProfile(value: unknown): TeamProfile | null {
     : [];
 
   const intakeAbilities = Array.isArray(source.intakeAbilities)
-    ? source.intakeAbilities.filter(
-        (item): item is "floor" | "station" | "chute" | "shelf" =>
-          item === "floor" ||
-          item === "station" ||
-          item === "chute" ||
-          item === "shelf"
+    ? Array.from(
+        new Set(
+          source.intakeAbilities
+            .map((item) => normalizeIntakeAbility(item))
+            .filter(
+              (item): item is "depot" | "human_intake" => item !== null
+            )
+        )
       )
     : [];
 

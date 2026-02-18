@@ -147,7 +147,7 @@ export default async function Home() {
   const stats = await getStats();
 
   return (
-    <div className="landing-noise min-h-screen bg-[#03070a] text-white">
+    <div className="landing-noise min-h-screen overflow-x-clip bg-[#03070a] text-white">
       <Navbar />
 
       <section className="relative overflow-hidden pt-20">
@@ -284,13 +284,13 @@ export default async function Home() {
             </p>
           </div>
 
-          <div className="mt-14 grid justify-items-center gap-4 md:grid-cols-2">
-            <div className="w-full max-w-[360px] rounded-2xl border border-white/10 bg-[#0f1115]/80 p-8 backdrop-blur-md transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-teal-300/30 hover:shadow-[0_0_34px_-18px_rgba(67,217,162,0.34)]">
+          <div className="mt-14 grid items-stretch justify-items-center gap-4 md:grid-cols-2">
+            <div className="flex h-full w-full max-w-[360px] flex-col rounded-2xl border border-white/10 bg-[#0f1115]/80 p-8 backdrop-blur-md transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-teal-300/30 hover:shadow-[0_0_34px_-18px_rgba(67,217,162,0.34)]">
               <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-slate-400">Free</p>
               <p className="font-outfit mt-4 text-5xl font-bold">$0</p>
               <p className="mt-1 text-sm text-slate-500">forever</p>
               <div className="my-6 h-px bg-white/10" />
-              <ul className="space-y-3 text-sm text-slate-300">
+              <ul className="flex-1 space-y-3 text-sm text-slate-300">
                 <PricingItem included>Unlimited scouting entries</PricingItem>
                 <PricingItem included>TBA + Statbotics sync</PricingItem>
                 <PricingItem included>Pre-match briefs + pick optimizer</PricingItem>
@@ -305,7 +305,7 @@ export default async function Home() {
               </Link>
             </div>
 
-            <div className="relative w-full max-w-[360px] rounded-2xl border border-teal-300/35 bg-gradient-to-b from-teal-300/15 to-transparent p-8 shadow-[0_0_40px_-20px_rgba(67,217,162,0.55)] transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-teal-200/60 hover:shadow-[0_0_44px_-18px_rgba(67,217,162,0.78)]">
+            <div className="relative flex h-full w-full max-w-[360px] flex-col rounded-2xl border border-teal-300/35 bg-gradient-to-b from-teal-300/15 to-transparent p-8 shadow-[0_0_40px_-20px_rgba(67,217,162,0.55)] transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-teal-200/60 hover:shadow-[0_0_44px_-18px_rgba(67,217,162,0.78)]">
               <div className="absolute -top-3 left-6 rounded-full border border-teal-200/70 bg-teal-300 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.15em] text-[#042116] shadow-[0_8px_18px_-10px_rgba(67,217,162,0.8)]">
                 Support us
               </div>
@@ -313,7 +313,7 @@ export default async function Home() {
               <p className="font-outfit mt-4 text-5xl font-bold">$5.99</p>
               <p className="mt-1 text-sm text-slate-300">per team / month</p>
               <div className="my-6 h-px bg-teal-200/25" />
-              <ul className="space-y-3 text-sm text-slate-100">
+              <ul className="flex-1 space-y-3 text-sm text-slate-100">
                 <PricingItem included>Everything in Free</PricingItem>
                 <PricingItem included>Higher AI usage limits</PricingItem>
                 <PricingItem included>Priority model capacity</PricingItem>

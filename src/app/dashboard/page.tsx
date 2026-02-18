@@ -152,7 +152,7 @@ export default async function DashboardPage() {
       <Navbar />
 
       {/* Main content */}
-      <main className="mx-auto max-w-7xl px-4 pb-12 pt-24">
+      <main className="mx-auto max-w-7xl px-4 pb-12 pt-28">
         {/* ─── Hero + Stats ─── */}
         <StaggerGroup className="mb-8 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
           <StaggerChild className="relative overflow-hidden rounded-3xl dashboard-panel dashboard-card p-6">
