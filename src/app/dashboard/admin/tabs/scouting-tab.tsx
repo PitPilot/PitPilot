@@ -245,7 +245,7 @@ export function ScoutingTab({
 
   const showStatus = useCallback((msg: string) => {
     setStatus(msg);
-    setTimeout(() => setStatus(null), 4000);
+    setTimeout(() => setStatus(null), 3000);
   }, []);
 
   async function handleSaveQuestions() {

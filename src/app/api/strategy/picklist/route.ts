@@ -16,7 +16,7 @@ import {
 } from "@/lib/platform-settings";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 function parseAiJson(text: string): unknown {
   // Try raw first.
@@ -453,7 +453,7 @@ IMPORTANT:
 
     const message = await client.messages.create({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 8000,
+      max_tokens: 12000,
       temperature: 0.3,
       system: systemPrompt,
       messages: [

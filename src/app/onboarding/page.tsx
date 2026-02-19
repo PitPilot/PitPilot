@@ -43,6 +43,7 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(1);
   const [displayName, setDisplayName] = useState("");
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [confirmed, setConfirmed] = useState(false);
 
   const maxRoles = 4;
   const maxRolesReached = selectedRoles.length >= maxRoles;
@@ -65,6 +66,7 @@ export default function OnboardingPage() {
 
   function handleBack() {
     setError(null);
+    setConfirmed(false);
     setStep((prev) => Math.max(1, prev - 1));
   }
 
@@ -82,6 +84,7 @@ export default function OnboardingPage() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
+    // If not on the final step, advance to next step (don't submit)
     if (step < totalSteps) {
       const stepError = validateStep(step);
       if (stepError) {
@@ -91,6 +94,12 @@ export default function OnboardingPage() {
 
       setError(null);
       setStep((prev) => Math.min(totalSteps, prev + 1));
+      return;
+    }
+
+    // On the final step, require explicit confirmation before saving
+    if (!confirmed) {
+      setConfirmed(true);
       return;
     }
 
@@ -334,9 +343,15 @@ export default function OnboardingPage() {
                         )}
                       </div>
                     </div>
-                    <p className="text-xs text-slate-400">
-                      You can update these later in team settings.
-                    </p>
+                    {confirmed ? (
+                      <div className="rounded-xl border border-[#43d9a2]/30 bg-[#43d9a2]/8 px-3 py-2 text-sm text-[#a4f4d7]">
+                        Everything looks right — click <span className="font-semibold text-white">Finish setup</span> to complete.
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-400">
+                        Review and click <span className="font-medium text-slate-200">Looks good</span> to confirm. You can update these later in settings.
+                      </p>
+                    )}
                   </div>
                 )}
               </motion.div>
@@ -361,6 +376,14 @@ export default function OnboardingPage() {
                 className="rounded-full bg-gradient-to-r from-[#2bcf9f] via-[#43d9a2] to-[#35c9ee] px-6 py-2.5 text-sm font-semibold text-[#041117] shadow-[0_0_28px_-12px_rgba(67,217,162,0.95)] transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Continue
+              </button>
+            ) : !confirmed ? (
+              <button
+                type="submit"
+                disabled={loading}
+                className="rounded-full bg-gradient-to-r from-[#2bcf9f] via-[#43d9a2] to-[#35c9ee] px-6 py-2.5 text-sm font-semibold text-[#041117] shadow-[0_0_28px_-12px_rgba(67,217,162,0.95)] transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Looks good
               </button>
             ) : (
               <button

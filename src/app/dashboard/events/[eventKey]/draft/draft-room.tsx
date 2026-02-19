@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } fro
 import { createClient } from "@/lib/supabase/client";
 import type { PickListContent } from "@/types/strategy";
 import { GeneratePickListButton } from "../picklist/generate-button";
+import type { ScoutingFormConfig } from "@/lib/platform-settings";
 import { AnimatePresence, motion } from "framer-motion";
 import { z } from "zod";
 
@@ -253,6 +254,7 @@ export function DraftRoom({
   pickList,
   existingSession,
   storageEnabled,
+  formConfig,
 }: {
   eventId: string;
   orgId: string;
@@ -261,6 +263,7 @@ export function DraftRoom({
   pickList: PickListContent | null;
   existingSession: DraftSessionRow | null;
   storageEnabled: boolean;
+  formConfig?: ScoutingFormConfig;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const rankMap = useMemo(() => {
@@ -942,6 +945,8 @@ export function DraftRoom({
                     label="Regenerate"
                     showDataHint={false}
                     requireTeamProfile
+                    formConfig={formConfig}
+                    compact
                   />
                 )}
                 <span className="text-xs text-gray-500">{bestAvailable.length} teams</span>
@@ -957,6 +962,7 @@ export function DraftRoom({
                   eventId={eventId}
                   label="Generate Pick List"
                   requireTeamProfile
+                  formConfig={formConfig}
                 />
               </div>
             )}

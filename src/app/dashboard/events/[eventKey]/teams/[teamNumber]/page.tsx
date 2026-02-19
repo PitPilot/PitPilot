@@ -6,6 +6,7 @@ import { Navbar } from "@/components/navbar";
 import { TeamAIBriefButton } from "./team-ai-brief-button";
 import { TeamDetailCharts } from "./team-detail-charts";
 import { ExportCsvButton } from "@/components/export-csv-button";
+import { getScoutingFormConfig, buildLabelMap, resolveLabels } from "@/lib/platform-settings";
 
 export async function generateMetadata({
   params,
@@ -150,6 +151,12 @@ export default async function TeamDetailPage({
     return null;
   }
 
+  // Fetch form config for label resolution
+  const formConfig = await getScoutingFormConfig(supabase);
+  const intakeLabelMap = buildLabelMap(formConfig.intakeOptions);
+  const climbLabelMap = buildLabelMap(formConfig.climbLevelOptions);
+  const shootingLabelMap = buildLabelMap(formConfig.shootingRangeOptions);
+
   // Compute aggregated scouting stats
   const entries = scoutingEntries ?? [];
   const entryCount = entries.length;
@@ -188,9 +195,9 @@ export default async function TeamDetailPage({
         minTotal: Math.min(
           ...entries.map((e) => e.auto_score + e.teleop_score + e.endgame_score)
         ),
-        topIntake: topValues(entries.map((e) => toStringArray(e.intake_methods))),
-        topClimb: topValues(entries.map((e) => toStringArray(e.climb_levels))),
-        topShooting: topValues(entries.map((e) => toStringArray(e.shooting_ranges))),
+        topIntake: resolveLabels(topValues(entries.map((e) => toStringArray(e.intake_methods))), intakeLabelMap),
+        topClimb: resolveLabels(topValues(entries.map((e) => toStringArray(e.climb_levels))), climbLabelMap),
+        topShooting: resolveLabels(topValues(entries.map((e) => toStringArray(e.shooting_ranges))), shootingLabelMap),
       }
     : null;
 
@@ -578,11 +585,11 @@ export default async function TeamDetailPage({
                     entry.auto_start_position ?? "",
                     entry.auto_notes || "",
                     entry.teleop_score,
-                    toStringArray(entry.intake_methods).join(", "),
+                    resolveLabels(toStringArray(entry.intake_methods), intakeLabelMap).join(", "),
                     entry.endgame_score,
-                    toStringArray(entry.climb_levels).join(", "),
+                    resolveLabels(toStringArray(entry.climb_levels), climbLabelMap).join(", "),
                     entry.auto_score + entry.teleop_score + entry.endgame_score,
-                    toStringArray(entry.shooting_ranges).join(", "),
+                    resolveLabels(toStringArray(entry.shooting_ranges), shootingLabelMap).join(", "),
                     entry.shooting_reliability ?? "",
                     entry.cycle_time_rating ?? "",
                     entry.defense_rating,
@@ -600,9 +607,9 @@ export default async function TeamDetailPage({
                 const match = matchMap.get(entry.match_id);
                 const total =
                   entry.auto_score + entry.teleop_score + entry.endgame_score;
-                const entryIntake = toStringArray(entry.intake_methods);
-                const entryClimb = toStringArray(entry.climb_levels);
-                const entryShooting = toStringArray(entry.shooting_ranges);
+                const entryIntake = resolveLabels(toStringArray(entry.intake_methods), intakeLabelMap);
+                const entryClimb = resolveLabels(toStringArray(entry.climb_levels), climbLabelMap);
+                const entryShooting = resolveLabels(toStringArray(entry.shooting_ranges), shootingLabelMap);
                 const entryAbilities = toBoolRecord(entry.ability_answers);
                 return (
                   <div

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Navbar } from "@/components/navbar";
 import { AnalyticsDashboard } from "./analytics-dashboard";
+import { getScoutingFormConfig, buildLabelMap, resolveLabels } from "@/lib/platform-settings";
 
 export async function generateMetadata({
   params,
@@ -159,6 +160,12 @@ export default async function AnalyticsPage({
     return null;
   }
 
+  // Fetch form config for label resolution
+  const formConfig = await getScoutingFormConfig(supabase);
+  const intakeLabelMap = buildLabelMap(formConfig.intakeOptions);
+  const climbLabelMap = buildLabelMap(formConfig.climbLevelOptions);
+  const shootingLabelMap = buildLabelMap(formConfig.shootingRangeOptions);
+
   // Build data for client
   const scoutingRows = scoutingEntries.map((entry) => {
     const match = matchMap.get(entry.match_id);
@@ -171,10 +178,10 @@ export default async function AnalyticsPage({
       autoStartPosition: entry.auto_start_position ?? null,
       autoNotes: entry.auto_notes || "",
       teleopScore: entry.teleop_score,
-      intakeMethods: toStringArray(entry.intake_methods),
+      intakeMethods: resolveLabels(toStringArray(entry.intake_methods), intakeLabelMap),
       endgameScore: entry.endgame_score,
-      climbLevels: toStringArray(entry.climb_levels),
-      shootingRanges: toStringArray(entry.shooting_ranges),
+      climbLevels: resolveLabels(toStringArray(entry.climb_levels), climbLabelMap),
+      shootingRanges: resolveLabels(toStringArray(entry.shooting_ranges), shootingLabelMap),
       shootingReliability: entry.shooting_reliability ?? null,
       cycleTimeRating: entry.cycle_time_rating ?? null,
       defenseRating: entry.defense_rating,

@@ -10,14 +10,13 @@ import {
   readRateLimitSnapshot,
   resolveRateLimitMessage,
 } from "@/lib/rate-limit-ui";
-
-type ShootingRange = "close" | "mid" | "long";
-type IntakeAbility = "depot" | "human_intake";
+import type { ScoutingFormConfig, FormOptionItem } from "@/lib/platform-settings";
+import { usePickListLoading } from "./picklist-content";
 
 type TeamProfile = {
-  autoStartPositions: Array<"left" | "center" | "right">;
-  shootingRanges: ShootingRange[];
-  intakeAbilities: IntakeAbility[];
+  autoStartPositions: string[];
+  shootingRanges: string[];
+  intakeAbilities: string[];
   cycleTimeRating: number;
   reliabilityRating: number;
   preferredRole: "scorer" | "defender" | "support" | "versatile";
@@ -33,30 +32,6 @@ const defaultTeamProfile: TeamProfile = {
   preferredRole: "versatile",
   notes: "",
 };
-
-const SHOOTING_RANGE_OPTIONS: Array<{ key: ShootingRange; label: string }> = [
-  { key: "close", label: "Close" },
-  { key: "mid", label: "Mid" },
-  { key: "long", label: "Long" },
-];
-
-const INTAKE_ABILITY_OPTIONS: Array<{ key: IntakeAbility; label: string }> = [
-  { key: "depot", label: "Ground" },
-  { key: "human_intake", label: "Human Player" },
-];
-
-function normalizeIntakeAbility(value: unknown): IntakeAbility | null {
-  if (value === "depot" || value === "floor") return "depot";
-  if (
-    value === "human_intake" ||
-    value === "station" ||
-    value === "chute" ||
-    value === "shelf"
-  ) {
-    return "human_intake";
-  }
-  return null;
-}
 
 function clampStar(value: number): number {
   return Math.max(1, Math.min(5, Math.round(value)));
@@ -97,11 +72,16 @@ export function GeneratePickListButton({
   label = "Generate Pick List",
   showDataHint = true,
   requireTeamProfile = false,
+  formConfig,
+  compact = false,
 }: {
   eventId: string;
   label?: string;
   showDataHint?: boolean;
   requireTeamProfile?: boolean;
+  formConfig?: ScoutingFormConfig;
+  /** Use a smaller, subtler button style for tight spaces (e.g. draft room header). */
+  compact?: boolean;
 }) {
   const router = useRouter();
   const { toast } = useToast();
@@ -110,6 +90,7 @@ export function GeneratePickListButton({
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [teamProfile, setTeamProfile] = useState<TeamProfile>(defaultTeamProfile);
+  const pickListLoading = usePickListLoading();
   const storageKey = useMemo(
     () => `scoutai:picklist-team-profile:v1:${eventId}`,
     [eventId]
@@ -118,6 +99,20 @@ export function GeneratePickListButton({
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Build valid-key sets from config for filtering cached values
+  const startPosSet = useMemo(
+    () => new Set(formConfig?.autoStartPositions ?? ["left", "center", "right"]),
+    [formConfig]
+  );
+  const shootingKeySet = useMemo(
+    () => new Set((formConfig?.shootingRangeOptions ?? [{ key: "close" }, { key: "mid" }, { key: "long" }]).map((o) => o.key)),
+    [formConfig]
+  );
+  const intakeKeySet = useMemo(
+    () => new Set((formConfig?.intakeOptions ?? [{ key: "depot" }, { key: "human_intake" }]).map((o) => o.key)),
+    [formConfig]
+  );
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -129,29 +124,15 @@ export function GeneratePickListButton({
       const legacyShootingRange = (parsed as { shootingRange?: unknown }).shootingRange;
       setTeamProfile({
         autoStartPositions: Array.isArray(parsed.autoStartPositions)
-          ? parsed.autoStartPositions.filter(
-              (value): value is "left" | "center" | "right" =>
-                value === "left" || value === "center" || value === "right"
-            )
+          ? parsed.autoStartPositions.filter((v): v is string => typeof v === "string" && startPosSet.has(v))
           : [],
         shootingRanges: Array.isArray(parsed.shootingRanges)
-          ? parsed.shootingRanges.filter(
-              (value): value is ShootingRange =>
-                value === "close" || value === "mid" || value === "long"
-            )
-          : legacyShootingRange === "close" ||
-            legacyShootingRange === "mid" ||
-            legacyShootingRange === "long"
+          ? parsed.shootingRanges.filter((v): v is string => typeof v === "string" && shootingKeySet.has(v))
+          : typeof legacyShootingRange === "string" && shootingKeySet.has(legacyShootingRange)
           ? [legacyShootingRange]
           : [],
         intakeAbilities: Array.isArray(parsed.intakeAbilities)
-          ? Array.from(
-              new Set(
-                parsed.intakeAbilities
-                  .map((value) => normalizeIntakeAbility(value))
-                  .filter((value): value is IntakeAbility => value !== null)
-              )
-            )
+          ? Array.from(new Set(parsed.intakeAbilities.filter((v): v is string => typeof v === "string" && intakeKeySet.has(v))))
           : [],
         cycleTimeRating: clampStar(Number(parsed.cycleTimeRating ?? 3)),
         reliabilityRating: clampStar(Number(parsed.reliabilityRating ?? 3)),
@@ -167,7 +148,7 @@ export function GeneratePickListButton({
     } catch {
       // Ignore malformed cache.
     }
-  }, [storageKey]);
+  }, [storageKey, startPosSet, shootingKeySet, intakeKeySet]);
 
   function updateTeamProfile(next: TeamProfile) {
     setTeamProfile(next);
@@ -181,6 +162,7 @@ export function GeneratePickListButton({
 
   async function handleGenerate(profile: TeamProfile | null = null) {
     setLoading(true);
+    pickListLoading.setLoading(true);
     setError(null);
 
     try {
@@ -221,41 +203,38 @@ export function GeneratePickListButton({
             "ai"
           )
         );
+        setLoading(false);
+        pickListLoading.setLoading(false);
         return;
       }
 
       setShowProfileModal(false);
-      router.refresh();
+      // Keep skeleton visible until the router finishes fetching new server data.
+      await router.refresh();
     } catch {
       setError("Network error. Please try again.");
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
+    pickListLoading.setLoading(false);
   }
 
-  function toggleStartPosition(position: "left" | "center" | "right") {
-    const hasPosition = teamProfile.autoStartPositions.includes(position);
-    const next = hasPosition
-      ? teamProfile.autoStartPositions.filter((value) => value !== position)
-      : [...teamProfile.autoStartPositions, position];
-    updateTeamProfile({ ...teamProfile, autoStartPositions: next });
+  function toggleArrayItem(field: "autoStartPositions" | "shootingRanges" | "intakeAbilities", value: string) {
+    const arr = teamProfile[field];
+    const next = arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
+    updateTeamProfile({ ...teamProfile, [field]: next });
   }
 
-  function toggleShootingRange(range: ShootingRange) {
-    const hasRange = teamProfile.shootingRanges.includes(range);
-    const next = hasRange
-      ? teamProfile.shootingRanges.filter((value) => value !== range)
-      : [...teamProfile.shootingRanges, range];
-    updateTeamProfile({ ...teamProfile, shootingRanges: next });
-  }
-
-  function toggleIntakeAbility(ability: IntakeAbility) {
-    const hasAbility = teamProfile.intakeAbilities.includes(ability);
-    const next = hasAbility
-      ? teamProfile.intakeAbilities.filter((value) => value !== ability)
-      : [...teamProfile.intakeAbilities, ability];
-    updateTeamProfile({ ...teamProfile, intakeAbilities: next });
-  }
+  // Resolved option arrays from config (with fallback defaults)
+  const startPositionOptions = formConfig?.autoStartPositions ?? ["left", "center", "right"];
+  const shootingRangeOptions: FormOptionItem[] = formConfig?.shootingRangeOptions ?? [
+    { key: "close", label: "Close" },
+    { key: "mid", label: "Mid" },
+    { key: "long", label: "Long" },
+  ];
+  const intakeAbilityOptions: FormOptionItem[] = formConfig?.intakeOptions ?? [
+    { key: "depot", label: "Ground" },
+    { key: "human_intake", label: "Human Player" },
+  ];
 
   return (
     <div>
@@ -268,19 +247,28 @@ export function GeneratePickListButton({
           void handleGenerate(null);
         }}
         disabled={loading}
-        className="dashboard-action dashboard-action-primary dashboard-action-holo min-h-10 px-4 text-sm disabled:cursor-not-allowed disabled:opacity-65"
+        className={
+          compact
+            ? "inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-medium text-gray-300 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+            : "dashboard-action dashboard-action-primary dashboard-action-holo min-h-10 px-4 text-sm disabled:cursor-not-allowed disabled:opacity-65"
+        }
       >
         {loading ? (
           <>
             <span className="inline-flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-white/90 [animation:ping_1.05s_ease-in-out_infinite]" />
-              <span className="h-2 w-2 rounded-full bg-white/75 [animation:ping_1.05s_ease-in-out_120ms_infinite]" />
-              <span className="h-2 w-2 rounded-full bg-white/55 [animation:ping_1.05s_ease-in-out_240ms_infinite]" />
+              <span className={`rounded-full bg-white/90 [animation:ping_1.05s_ease-in-out_infinite] ${compact ? "h-1.5 w-1.5" : "h-2 w-2"}`} />
+              <span className={`rounded-full bg-white/75 [animation:ping_1.05s_ease-in-out_120ms_infinite] ${compact ? "h-1.5 w-1.5" : "h-2 w-2"}`} />
+              <span className={`rounded-full bg-white/55 [animation:ping_1.05s_ease-in-out_240ms_infinite] ${compact ? "h-1.5 w-1.5" : "h-2 w-2"}`} />
             </span>
-            Generating best pick list
+            {compact ? "Generating..." : "Generating best pick list"}
           </>
         ) : (
-          label
+          <>
+            {compact && (
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+            )}
+            {label}
+          </>
         )}
       </button>
       {showDataHint && (
@@ -342,16 +330,17 @@ export function GeneratePickListButton({
                 </div>
 
                 <div className="mt-4 space-y-4 rounded-xl border border-white/10 bg-white/5 p-4">
+              {startPositionOptions.length > 0 && (
               <div>
                 <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-400">
                   Auto Starting Positions
                 </p>
-                <div className="grid grid-cols-3 gap-2">
-                  {(["left", "center", "right"] as const).map((position) => (
+                <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(startPositionOptions.length, 3)}, minmax(0, 1fr))` }}>
+                  {startPositionOptions.map((position) => (
                     <button
                       key={position}
                       type="button"
-                      onClick={() => toggleStartPosition(position)}
+                      onClick={() => toggleArrayItem("autoStartPositions", position)}
                       className={`rounded-md border px-3 py-2 text-xs font-semibold uppercase tracking-wide transition ${
                         teamProfile.autoStartPositions.includes(position)
                           ? "border-cyan-400/70 bg-cyan-500/15 text-cyan-200"
@@ -363,17 +352,19 @@ export function GeneratePickListButton({
                   ))}
                 </div>
               </div>
+              )}
 
+              {shootingRangeOptions.length > 0 && (
               <div>
                 <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-400">
                   Shooting Range
                 </p>
-                <div className="grid grid-cols-3 gap-2">
-                  {SHOOTING_RANGE_OPTIONS.map((range) => (
+                <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(shootingRangeOptions.length, 3)}, minmax(0, 1fr))` }}>
+                  {shootingRangeOptions.map((range) => (
                     <button
                       key={range.key}
                       type="button"
-                      onClick={() => toggleShootingRange(range.key)}
+                      onClick={() => toggleArrayItem("shootingRanges", range.key)}
                       className={`rounded-md border px-3 py-2 text-xs font-semibold uppercase tracking-wide transition ${
                         teamProfile.shootingRanges.includes(range.key)
                           ? "border-cyan-400/70 bg-cyan-500/15 text-cyan-200"
@@ -386,17 +377,19 @@ export function GeneratePickListButton({
                 </div>
                 <p className="mt-1.5 text-[11px] text-gray-500">Select all ranges your robot can reliably score from.</p>
               </div>
+              )}
 
+              {intakeAbilityOptions.length > 0 && (
               <div>
                 <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-gray-400">
                   Intake Abilities
                 </p>
-                <div className="grid grid-cols-2 gap-2">
-                  {INTAKE_ABILITY_OPTIONS.map((ability) => (
+                <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(intakeAbilityOptions.length, 2)}, minmax(0, 1fr))` }}>
+                  {intakeAbilityOptions.map((ability) => (
                     <button
                       key={ability.key}
                       type="button"
-                      onClick={() => toggleIntakeAbility(ability.key)}
+                      onClick={() => toggleArrayItem("intakeAbilities", ability.key)}
                       className={`rounded-md border px-3 py-2 text-xs font-semibold uppercase tracking-wide transition ${
                         teamProfile.intakeAbilities.includes(ability.key)
                           ? "border-cyan-400/70 bg-cyan-500/15 text-cyan-200"
@@ -409,6 +402,7 @@ export function GeneratePickListButton({
                 </div>
                 <p className="mt-1.5 text-[11px] text-gray-500">Select every source your robot can intake from.</p>
               </div>
+              )}
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <StarRow

@@ -5,6 +5,8 @@ import type { PickListContent } from "@/types/strategy";
 import { GeneratePickListButton } from "./generate-button";
 import { Navbar } from "@/components/navbar";
 import { StrategyChat } from "../strategy-chat";
+import { getScoutingFormConfig } from "@/lib/platform-settings";
+import { PickListLoadingProvider, PickListContentArea } from "./picklist-content";
 
 export default async function PickListPage({
   params,
@@ -65,6 +67,7 @@ export default async function PickListPage({
     .single();
 
   const content = pickList?.content as PickListContent | null;
+  const scoutingFormConfig = await getScoutingFormConfig(supabase);
 
   function synergyColor(synergy: string) {
     if (synergy === "high") return "bg-green-500/20 text-green-200";
@@ -95,6 +98,7 @@ export default async function PickListPage({
     <div className="min-h-screen dashboard-page">
       <Navbar />
       <main className="mx-auto max-w-6xl px-4 pb-12 pt-32 space-y-6">
+        <PickListLoadingProvider>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
@@ -107,7 +111,7 @@ export default async function PickListPage({
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {!content && (
-              <GeneratePickListButton eventId={event.id} showDataHint={false} />
+              <GeneratePickListButton eventId={event.id} showDataHint={false} formConfig={scoutingFormConfig} />
             )}
             <Link href={`/dashboard/events/${eventKey}`} className="back-button">
               Back
@@ -115,6 +119,7 @@ export default async function PickListPage({
           </div>
         </div>
 
+        <PickListContentArea>
         {!content ? (
           <div className="rounded-2xl dashboard-panel p-8 text-center">
             <h2 className="text-lg font-semibold text-white mb-2">
@@ -125,7 +130,7 @@ export default async function PickListPage({
               scouting data. For best suggestions, log plenty of scouting entries
               before generating.
             </p>
-            <GeneratePickListButton eventId={event.id} />
+            <GeneratePickListButton eventId={event.id} formConfig={scoutingFormConfig} />
           </div>
         ) : (
           <div className="grid gap-6 lg:grid-cols-[1.6fr_0.9fr]">
@@ -334,12 +339,15 @@ export default async function PickListPage({
                     eventId={event.id}
                     label="Regenerate Pick List"
                     showDataHint={false}
+                    formConfig={scoutingFormConfig}
                   />
                 </div>
               </section>
             </aside>
           </div>
         )}
+        </PickListContentArea>
+        </PickListLoadingProvider>
       </main>
     </div>
   );

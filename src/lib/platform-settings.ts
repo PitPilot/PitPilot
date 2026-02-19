@@ -53,6 +53,16 @@ export function getDefaultScoutingFormConfig(): ScoutingFormConfig {
   return JSON.parse(JSON.stringify(DEFAULT_SCOUTING_FORM_CONFIG));
 }
 
+/** Build a key→label map from a FormOptionItem array for display purposes. */
+export function buildLabelMap(items: FormOptionItem[]): Map<string, string> {
+  return new Map(items.map((i) => [i.key, i.label]));
+}
+
+/** Resolve an array of raw keys to their configured labels (falling back to the key itself). */
+export function resolveLabels(keys: string[], labelMap: Map<string, string>): string[] {
+  return keys.map((k) => labelMap.get(k) ?? k);
+}
+
 function normalizeFormOptionItem(value: unknown): FormOptionItem | null {
   if (!value || typeof value !== "object") return null;
   const obj = value as Record<string, unknown>;

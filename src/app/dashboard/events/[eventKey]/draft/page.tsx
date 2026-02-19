@@ -5,6 +5,7 @@ import { fetchEventRankings } from "@/lib/tba";
 import { Navbar } from "@/components/navbar";
 import type { PickListContent } from "@/types/strategy";
 import { DraftRoom } from "./draft-room";
+import { getScoutingFormConfig } from "@/lib/platform-settings";
 
 export default async function DraftRoomPage({
   params,
@@ -99,7 +100,10 @@ export default async function DraftRoomPage({
     .maybeSingle();
   const storageEnabled = !draftSessionError;
 
-  const eventTitle = event.year ? `${event.year} ${event.name}` : event.name;
+  const [eventTitle, scoutingFormConfig] = await Promise.all([
+    Promise.resolve(event.year ? `${event.year} ${event.name}` : event.name),
+    getScoutingFormConfig(supabase),
+  ]);
 
   return (
     <div className="min-h-screen dashboard-page">
@@ -128,6 +132,7 @@ export default async function DraftRoomPage({
           pickList={pickList}
           existingSession={draftSession ?? null}
           storageEnabled={storageEnabled}
+          formConfig={scoutingFormConfig}
         />
       </main>
     </div>

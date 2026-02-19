@@ -321,7 +321,7 @@ export function AdminPanel({
                   }}
                   className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
                     activeTab === tab.key
-                      ? "bg-teal-500/15 text-teal-200 ring-1 ring-blue-400/30"
+                      ? "bg-teal-500/15 text-teal-200 ring-1 ring-teal-400/30"
                       : "text-gray-400 hover:bg-white/5 hover:text-white"
                   }`}
                 >
