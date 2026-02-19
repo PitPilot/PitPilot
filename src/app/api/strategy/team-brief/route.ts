@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { chatCompletion } from "@/lib/openai";
 import { createClient } from "@/lib/supabase/server";
 import { summarizeScouting } from "@/lib/scouting-summary";
 import {
@@ -140,10 +140,10 @@ function seasonSummary(year: number, data: JsonObject | null) {
 }
 
 export async function POST(request: NextRequest) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { error: "ANTHROPIC_API_KEY not configured" },
+      { error: "OPENAI_API_KEY not configured" },
       { status: 500 }
     );
   }
@@ -425,14 +425,16 @@ export async function POST(request: NextRequest) {
     },
   };
 
-  const systemPrompt = `You are PitPilot Team Briefing for FRC.
+  const systemPrompt = `You are PitPilot Team Briefing, an FRC robotics strategy assistant.
 
 ${buildFrcGamePrompt(event.year)}
 
-Generate a concise markdown briefing for a single team using ONLY the provided JSON data.
+Generate a concise markdown briefing for a single team using ONLY the provided JSON data. Output markdown only — no JSON, no code fences wrapping the output.
 
-Required output format:
+Required sections (use exactly these headings):
+
 ## Team Introduction
+Start with a 2-3 sentence narrative, then cover:
 - Years active
 - Location
 - Overall performance in past events/seasons
@@ -445,8 +447,7 @@ Required output format:
 - 1 to 3 bullets covering reliability concerns or missing data.
 
 Rules:
-- Start with a 2-3 sentence narrative introduction before the bullet lists.
-- Prefer concrete numbers when available.
+- Prefer concrete numbers when available (e.g., "EPA 18.4, 6-2 record").
 - Use professional, respectful language throughout.
 - Do not use demeaning, insulting, sarcastic, or mocking phrasing.
 - Be candid and honest about performance limitations when data supports it.
@@ -460,33 +461,18 @@ Rules:
 - Do not use location-based claims as strengths (for example: "local knowledge", "familiar with this venue", "home crowd advantage").
 - For Alliance Fit bullets, only use performance evidence from the provided JSON (EPA, record, scouting), not geography.
 - Keep total output under 260 words.
-- End with exactly one or two closing sentence after all sections. Do not mention limited scouting data.
+- End with exactly one or two closing sentences after all sections. Do not mention limited scouting data.
 - No emojis.`;
 
   try {
-    const client = new Anthropic({ apiKey });
-    const response = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
+    const reply = await chatCompletion(apiKey, {
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: JSON.stringify(responsePayload) },
+      ],
       max_tokens: 700,
       temperature: 0.2,
-      system: systemPrompt,
-      messages: [
-        {
-          role: "user",
-          content: JSON.stringify(responsePayload),
-        },
-      ],
     });
-
-    const reply = response.content
-      .filter((block) => block.type === "text")
-      .map((block) => block.text)
-      .join("\n")
-      .trim();
-
-    if (!reply) {
-      return NextResponse.json({ error: "No response from AI" }, { status: 500 });
-    }
 
     return NextResponse.json(
       { success: true, reply },

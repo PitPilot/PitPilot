@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { chatCompletion } from "@/lib/openai";
 import { createClient } from "@/lib/supabase/server";
 import { BriefContentSchema, type BriefContent } from "@/types/strategy";
 import { summarizeScouting } from "@/lib/scouting-summary";
@@ -642,10 +642,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { error: "ANTHROPIC_API_KEY not configured" },
+      { error: "OPENAI_API_KEY not configured" },
       { status: 500 }
     );
   }
@@ -861,7 +861,9 @@ You will receive:
 - EPA (Expected Points Added) statistics from Statbotics for each team (higher is better)
 - Scouting summaries per team: { count, avg_auto, avg_teleop, avg_endgame, avg_defense, avg_reliability, notes[] } or null if no data
 
-Respond with ONLY valid JSON matching this exact structure:
+OUTPUT FORMAT: Respond with ONLY a raw JSON object. Do NOT wrap it in markdown code fences. Do NOT include any text before or after the JSON. The response must start with { and end with }.
+
+Required JSON structure:
 {
   "prediction": {
     "winner": "red" or "blue",
@@ -912,7 +914,8 @@ Respond with ONLY valid JSON matching this exact structure:
   }
 }
 
-Guidelines:
+IMPORTANT:
+- Output ONLY valid JSON. No markdown, no commentary, no code fences.
 - If EPA data is missing for a team, note it and base analysis on scouting data
 - If scouting data is missing, note it and base analysis on EPA stats
 - Predictions should factor in both EPA and scouting observations
@@ -927,31 +930,17 @@ Guidelines:
 - Teams with limited data should usually be medium priority unless other data already gives high confidence.
 - scoutActions should be concrete, short, and directly usable by scouts in the stands.
 - Keep insights concise but informative
-- Do not use emojis or markdown`;
+- Do not use emojis`;
 
   try {
-    const client = new Anthropic({ apiKey });
-
-    const message = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
+    const textOutput = await chatCompletion(apiKey, {
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: JSON.stringify(promptData) },
+      ],
       max_tokens: 2000,
       temperature: 0.3,
-      system: systemPrompt,
-      messages: [
-        {
-          role: "user",
-          content: JSON.stringify(promptData),
-        },
-      ],
     });
-
-    const textOutput = message.content
-      .filter((b) => b.type === "text")
-      .map((b) => b.text)
-      .join("\n");
-    if (!textOutput) {
-      return NextResponse.json({ error: "No text response from AI" }, { status: 500 });
-    }
 
     let parsedJson: unknown;
     try {

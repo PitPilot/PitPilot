@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { chatCompletion } from "@/lib/openai";
 import { createClient } from "@/lib/supabase/server";
 import { summarizeScouting } from "@/lib/scouting-summary";
 import {
@@ -18,10 +18,10 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { error: "ANTHROPIC_API_KEY not configured" },
+      { error: "OPENAI_API_KEY not configured" },
       { status: 500 }
     );
   }
@@ -198,21 +198,22 @@ export async function POST(request: NextRequest) {
     scouting: scoutingSummary.find((s) => s.teamNumber === team)?.summary ?? null,
   }));
 
-  const systemPrompt = `You are PitPilot Strategy Chat for FRC.
+  const systemPrompt = `You are PitPilot Strategy Chat, an FRC robotics scouting assistant.
 
 ${buildFrcGamePrompt(event.year)}
 
 Rules:
 - Answer ONLY robotics scouting and match strategy questions for this event.
 - If asked about non-robotics topics (math, homework, general trivia), politely redirect to robotics strategy.
-- Ground answers in the provided EPA stats and scouting summaries. If data is missing, say so.
+- Ground every answer in the provided EPA stats and scouting summaries. Cite specific numbers. If data is missing, say so.
 - Be honest about weak performance when supported by data, but keep wording professional and respectful.
 - Avoid comparative labels like "lower", "low-tier", "below average", or similar phrasing.
 - Prefer neutral alternatives such as "currently limited scoring output" or "not a top-priority pick for this role."
 - Do not cite location-based advantages (for example: "local knowledge", "familiar with this venue", "home crowd advantage") unless explicit supporting data is provided.
 - Remind the user that more scouting entries improve response quality when relevant.
-- Do not use emojis or markdown. Use short, plain-text responses.
-- If asked what model you are, say: "This assistant runs on a Sonnet 4-based model that is being fine-tuned on FRC game data; full fine-tuning is planned soon."`;
+- Use markdown formatting: **bold** for team numbers and key stats, bullet lists for comparisons, ### headings for sections when the answer is long. Keep responses concise.
+- Do not use emojis.
+- If asked what model you are, say: "This assistant is powered by GPT-5-mini, tuned for FRC strategy analysis."`;
 
   const userPayload = {
     event: {
@@ -226,40 +227,29 @@ Rules:
   };
 
   try {
-    const client = new Anthropic({ apiKey });
-    // Build messages array: context payload first, then conversation history, then new question
-    const messages: Array<{ role: "user" | "assistant"; content: string }> = [
+    // Build messages array: system prompt, context payload, conversation history, new question
+    const openaiMessages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
+      { role: "system", content: systemPrompt },
       { role: "user", content: `[Event context]\n${JSON.stringify(userPayload)}` },
       { role: "assistant", content: "Got it — I have the event context loaded. What would you like to know?" },
     ];
 
     // Append conversation history (prior turns)
     for (const msg of conversationHistory) {
-      messages.push(msg);
+      openaiMessages.push(msg);
     }
 
     // Append the new question
-    messages.push({ role: "user", content: message });
+    openaiMessages.push({ role: "user", content: message });
 
-    const response = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
+    const textOutput = await chatCompletion(apiKey, {
+      messages: openaiMessages,
       max_tokens: 700,
       temperature: 0.3,
-      system: systemPrompt,
-      messages,
     });
 
-    const textOutput = response.content
-      .filter((b) => b.type === "text")
-      .map((b) => b.text)
-      .join("\n");
-
-    if (!textOutput) {
-      return NextResponse.json({ error: "No response from AI" }, { status: 500 });
-    }
-
     return NextResponse.json(
-      { success: true, reply: textOutput.trim() },
+      { success: true, reply: textOutput },
       { headers: limitHeaders }
     );
   } catch (err) {

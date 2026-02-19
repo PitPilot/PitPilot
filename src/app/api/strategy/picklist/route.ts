@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { chatCompletion } from "@/lib/openai";
 import { createClient } from "@/lib/supabase/server";
 import { PickListContentSchema, type PickListContent } from "@/types/strategy";
 import { summarizeScouting } from "@/lib/scouting-summary";
@@ -190,10 +190,10 @@ function normalizePickListRoles(content: PickListContent): PickListContent {
 }
 
 export async function POST(request: NextRequest) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { error: "ANTHROPIC_API_KEY not configured" },
+      { error: "OPENAI_API_KEY not configured" },
       { status: 500 }
     );
   }
@@ -402,7 +402,9 @@ Consider:
 4. Role fit (scorer vs defender vs support)
 5. Auto-teleop-endgame balance to build a well-rounded alliance
 
-Respond with ONLY valid JSON matching this exact structure:
+OUTPUT FORMAT: Respond with ONLY a raw JSON object. Do NOT wrap it in markdown code fences. Do NOT include any text before or after the JSON. The response must start with { and end with }.
+
+Required JSON structure:
 {
   "yourTeamNumber": number,
   "summary": "2-3 sentence overview of your alliance strategy recommendation",
@@ -413,11 +415,11 @@ Respond with ONLY valid JSON matching this exact structure:
       "overallScore": number (0-100, your composite ranking score),
       "epa": { "total": number, "auto": number, "teleop": number, "endgame": number },
       "winRate": number or null,
-      "synergy": "high", "medium", or "low",
+      "synergy": "high" | "medium" | "low",
       "synergyReason": "Brief explanation of why they complement or don't complement your team",
       "strengths": ["strength1", "strength2"],
       "weaknesses": ["weakness1"],
-      "role": "scorer", "defender", "support", or "versatile",
+      "role": "scorer" | "defender" | "support" | "versatile",
       "scoutingSummary": "Brief summary of scouting observations or 'No scouting data'",
       "pickReason": "1-sentence reason this team is ranked here"
     }
@@ -425,6 +427,7 @@ Respond with ONLY valid JSON matching this exact structure:
 }
 
 IMPORTANT:
+- Output ONLY valid JSON. No markdown, no commentary, no code fences.
 - Rank EVERY team (exclude only the user's own team)
 - overallScore should be 0-100, with top pick around 90-100 and worst around 10-20
 - Use professional, respectful language for every team.
@@ -452,33 +455,14 @@ IMPORTANT:
 - The user's team number may be null if not set; in that case, rank purely on individual team strength`;
 
   try {
-    const client = new Anthropic({ apiKey });
-
-    const message = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
+    const textOutput = await chatCompletion(apiKey, {
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: JSON.stringify(promptData) },
+      ],
       max_tokens: 12000,
       temperature: 0.3,
-      system: systemPrompt,
-      messages: [
-        {
-          role: "user",
-          content: JSON.stringify(promptData),
-        },
-      ],
     });
-
-    const textOutput = message.content
-      .filter((block) => block.type === "text")
-      .map((block) => block.text)
-      .join("\n")
-      .trim();
-
-    if (!textOutput) {
-      return NextResponse.json(
-        { error: "No text response from AI" },
-        { status: 500 }
-      );
-    }
 
     let parsedJson: unknown;
     try {
