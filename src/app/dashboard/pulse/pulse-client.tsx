@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/components/toast";
+import { UserAvatar } from "@/components/user-avatar";
 
 type RawMessage = {
   id: string;
@@ -717,12 +718,6 @@ export function PulseClient({
                 const name = resolveName(message);
                 const roles = resolveRoles(message);
                 const mentioned = isMentioned(message);
-                const initials = name
-                  .split(/\s+/)
-                  .slice(0, 2)
-                  .map((part) => part[0])
-                  .join("")
-                  .toUpperCase();
                 const isSelf = message.author_id === userId;
                 const tone = TYPE_STYLES[message.message_type] ?? TYPE_STYLES.note;
                 const replyPreview = message.reply_to ?? null;
@@ -735,9 +730,7 @@ export function PulseClient({
                     }`}
                   >
                     <div className="flex items-start gap-2">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 text-[11px] font-semibold text-white">
-                        {initials || "T"}
-                      </div>
+                      <UserAvatar name={name || "Team"} size={32} />
                       <div className="flex-1">
                       <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                         <div className="flex flex-wrap items-center gap-2">

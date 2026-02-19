@@ -7,23 +7,12 @@ import { useTranslation } from "@/components/i18n-provider";
 import { LOCALES, LOCALE_LABELS, type Locale } from "@/lib/i18n";
 import { getPendingCount } from "@/lib/offline-queue";
 import { clearAllOfflineData } from "@/lib/offline-cleanup";
+import { UserAvatar } from "@/components/user-avatar";
 
 interface UserMenuProps {
   name: string;
   email: string;
   isStaff: boolean;
-}
-
-function initialsFor(name: string, email: string) {
-  const trimmed = name.trim();
-  if (trimmed) {
-    const parts = trimmed.split(/\s+/).slice(0, 2);
-    return parts.map((p) => p[0]?.toUpperCase()).join("") || "U";
-  }
-  if (email) {
-    return email[0]?.toUpperCase() || "U";
-  }
-  return "U";
 }
 
 export function UserMenu({ name, email, isStaff }: UserMenuProps) {
@@ -68,21 +57,17 @@ export function UserMenu({ name, email, isStaff }: UserMenuProps) {
     };
   }, []);
 
-  const initials = initialsFor(name, email);
-
   return (
     <div ref={rootRef} className="relative">
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="group relative flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 text-sm font-semibold text-white transition-all duration-200 hover:scale-110 hover:shadow-lg hover:shadow-blue-500/30 active:scale-95"
+        className="group relative flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 hover:shadow-lg hover:shadow-blue-500/30 active:scale-95"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Open account menu"
       >
-        <span className="absolute inset-0 rounded-full bg-white/20 opacity-0 transition-opacity duration-200 group-active:opacity-100" />
-        <span className="absolute inset-0 animate-ping rounded-full bg-teal-400 opacity-0 group-active:opacity-30" style={{ animationDuration: '0.4s', animationIterationCount: 1 }} />
-        {initials}
+        <UserAvatar name={name || email} size={36} />
         {pendingCount > 0 && (
           <span
             className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-bold text-white shadow"

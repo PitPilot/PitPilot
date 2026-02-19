@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { UserAvatar } from "@/components/user-avatar";
 
 interface Testimonial {
   id?: string;
@@ -78,9 +79,7 @@ export function TestimonialsClient({ testimonials }: TestimonialsClientProps) {
                   </p>
 
                   <div className="mt-6 flex items-center gap-3 border-t border-white/10 pt-4">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-teal-300 to-cyan-300 text-xs font-bold text-[#042116] shadow-[0_0_20px_-10px_rgba(67,217,162,0.8)]">
-                      {testimonial.name.charAt(0).toUpperCase()}
-                    </div>
+                    <UserAvatar name={testimonial.name} size={36} />
                     <div>
                       <p className="text-sm font-semibold text-white">{testimonial.name}</p>
                       <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-slate-500">
