@@ -40,7 +40,7 @@ export async function chatCompletion(
     body: JSON.stringify({
       model: options.model ?? "gpt-5-mini",
       messages: options.messages,
-      max_tokens: options.max_tokens,
+      max_completion_tokens: options.max_tokens,
       temperature: options.temperature,
     }),
   });
