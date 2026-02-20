@@ -19,7 +19,8 @@ const MATCHES_TOUR_STEPS: TourStep[] = [
     descKey: "tour.matchesTipsDesc",
   },
   {
-    selector: "[data-tour='matches-grid']",
+    selector:
+      "[data-tour='matches-qual-first-card'], [data-tour='matches-playoff-first-card'], [data-tour='matches-qual-grid'], [data-tour='matches-playoff-grid'], [data-tour='matches-grid']",
     titleKey: "tour.matchesGrid",
     descKey: "tour.matchesGridDesc",
   },

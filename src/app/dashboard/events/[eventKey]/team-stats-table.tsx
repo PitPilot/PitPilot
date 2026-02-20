@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 
 interface TeamStat {
@@ -16,6 +16,7 @@ interface TeamStat {
 }
 
 type SortKey = keyof TeamStat;
+const ROWS_PER_PAGE = 24;
 
 function SortHeader({
   label,
@@ -54,6 +55,7 @@ export function TeamStatsTable({
   const [sortKey, setSortKey] = useState<SortKey>("epa");
   const [sortAsc, setSortAsc] = useState(false);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const missingEpaCount = useMemo(
     () => data.filter((team) => team.epa === null).length,
     [data]
@@ -86,7 +88,16 @@ export function TeamStatsTable({
     });
   }, [data, sortKey, sortAsc, search]);
 
+  const totalPages = Math.max(1, Math.ceil(sorted.length / ROWS_PER_PAGE));
+  const safePage = Math.min(page, totalPages);
+  const pageStart = (safePage - 1) * ROWS_PER_PAGE;
+  const pageRows = useMemo(
+    () => sorted.slice(pageStart, pageStart + ROWS_PER_PAGE),
+    [sorted, pageStart]
+  );
+
   function handleSort(key: SortKey) {
+    setPage(1);
     if (sortKey === key) {
       setSortAsc(!sortAsc);
     } else {
@@ -113,7 +124,10 @@ export function TeamStatsTable({
         type="text"
         placeholder="Search by team number or name..."
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setPage(1);
+        }}
         className="w-full max-w-sm rounded-lg px-3 py-2 text-sm text-white shadow-sm dashboard-input"
       />
 
@@ -134,12 +148,12 @@ export function TeamStatsTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-white/10">
-            {sorted.map((team, i) => {
+            {pageRows.map((team, i) => {
               const isHighlighted = highlightTeam !== null && team.team_number === highlightTeam;
               return (
               <tr key={team.team_number} className={isHighlighted ? "bg-white/10 hover:bg-white/15" : "hover:bg-white/5"}>
                 <td className="whitespace-nowrap px-3 py-2 text-sm text-gray-400">
-                  {i + 1}
+                  {pageStart + i + 1}
                 </td>
                 <td className="whitespace-nowrap px-3 py-2 text-sm font-medium">
                   <Link
@@ -176,9 +190,41 @@ export function TeamStatsTable({
         </table>
       </div>
 
-      <p className="text-xs text-gray-400">
-        {sorted.length} team{sorted.length !== 1 ? "s" : ""} shown
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-400">
+        <p>
+          {sorted.length} team{sorted.length !== 1 ? "s" : ""} shown
+          {sorted.length > 0 && (
+            <> &middot; Showing {pageStart + 1}-{Math.min(pageStart + ROWS_PER_PAGE, sorted.length)}</>
+          )}
+        </p>
+        {totalPages > 1 && (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                setPage((prev) => Math.max(1, Math.min(prev, totalPages) - 1))
+              }
+              disabled={safePage === 1}
+              className="rounded-md border border-white/15 px-2 py-1 text-xs text-gray-300 transition hover:border-white/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              Prev
+            </button>
+            <span>
+              Page {safePage} / {totalPages}
+            </span>
+            <button
+              type="button"
+              onClick={() =>
+                setPage((prev) => Math.min(totalPages, Math.min(prev, totalPages) + 1))
+              }
+              disabled={safePage === totalPages}
+              className="rounded-md border border-white/15 px-2 py-1 text-xs text-gray-300 transition hover:border-white/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              Next
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

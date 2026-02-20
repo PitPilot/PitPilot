@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Tables } from "@/types/supabase";
@@ -16,6 +16,7 @@ interface Member {
 }
 
 const POSITIONS = ["red1", "red2", "red3", "blue1", "blue2", "blue3"] as const;
+const MATCHES_PER_PAGE = 10;
 
 interface AssignmentGridProps {
   matches: Match[];
@@ -41,6 +42,7 @@ export function AssignmentGrid({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [page, setPage] = useState(1);
 
   // Build assignment map: matchId-position -> scoutId
   const [assignmentMap, setAssignmentMap] = useState<
@@ -61,6 +63,17 @@ export function AssignmentGrid({
       return true;
     });
   }, [matches, filter]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredMatches.length / MATCHES_PER_PAGE)
+  );
+  const safePage = Math.min(page, totalPages);
+  const pageStart = (safePage - 1) * MATCHES_PER_PAGE;
+  const visibleMatches = useMemo(
+    () => filteredMatches.slice(pageStart, pageStart + MATCHES_PER_PAGE),
+    [filteredMatches, pageStart]
+  );
 
   function compLabel(m: Match) {
     const hasLegacy =
@@ -275,7 +288,10 @@ export function AssignmentGrid({
           ).map(([value, label]) => (
             <button
               key={value}
-              onClick={() => setFilter(value)}
+              onClick={() => {
+                setFilter(value);
+                setPage(1);
+              }}
               className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-200 ${
                 filter === value
                   ? "border border-sky-300/45 bg-sky-400/20 text-sky-100 shadow-[0_8px_20px_-14px_rgba(56,189,248,0.85)]"
@@ -356,7 +372,7 @@ export function AssignmentGrid({
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10">
-              {filteredMatches.map((match) => (
+              {visibleMatches.map((match) => (
                 <tr key={match.id} className="hover:bg-white/5">
                   <td className="sticky left-0 z-10 bg-gray-900/80 whitespace-nowrap px-3 py-1.5 font-medium text-white">
                     {compLabel(match)}
@@ -410,6 +426,45 @@ export function AssignmentGrid({
           </table>
         </motion.div>
       </AnimatePresence>
+
+      {filteredMatches.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-300">
+          <p>
+            Showing matches {pageStart + 1}-
+            {Math.min(pageStart + MATCHES_PER_PAGE, filteredMatches.length)} of{" "}
+            {filteredMatches.length}
+          </p>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setPage((prev) => Math.max(1, Math.min(prev, totalPages) - 1))
+                }
+                disabled={safePage === 1}
+                className="rounded-md border border-white/15 px-2 py-1 text-xs text-gray-300 transition hover:border-white/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                Prev
+              </button>
+              <span>
+                Page {safePage} / {totalPages}
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  setPage((prev) =>
+                    Math.min(totalPages, Math.min(prev, totalPages) + 1)
+                  )
+                }
+                disabled={safePage === totalPages}
+                className="rounded-md border border-white/15 px-2 py-1 text-xs text-gray-300 transition hover:border-white/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {filteredMatches.length === 0 && (
         <div className="rounded-2xl dashboard-panel p-8 text-center">

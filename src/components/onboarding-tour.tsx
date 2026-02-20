@@ -61,61 +61,42 @@ function computePosition(
   tooltipWidth: number,
   tooltipHeight: number
 ): TooltipPosition {
+  const clamp = (value: number, min: number, max: number) =>
+    Math.min(Math.max(value, min), max);
+
+  const padding = 16;
+  const minTop = padding;
+  const maxTop = Math.max(padding, window.innerHeight - tooltipHeight - padding);
+  const minLeft = padding;
+  const maxLeft = Math.max(padding, window.innerWidth - tooltipWidth - padding);
+
   if (!targetRect) {
     // Center in viewport
     return {
-      top: Math.max(80, (window.innerHeight - tooltipHeight) / 2),
-      left: Math.max(16, (window.innerWidth - tooltipWidth) / 2),
+      top: clamp((window.innerHeight - tooltipHeight) / 2, minTop, maxTop),
+      left: clamp((window.innerWidth - tooltipWidth) / 2, minLeft, maxLeft),
       arrowSide: "none",
     };
   }
 
   const gap = 12;
-  const padding = 16;
+  const preferredLeft = targetRect.left + targetRect.width / 2 - tooltipWidth / 2;
+  const left = clamp(preferredLeft, minLeft, maxLeft);
+  const spaceBelow = window.innerHeight - targetRect.bottom - gap - padding;
+  const spaceAbove = targetRect.top - gap - padding;
 
-  // Try bottom first
-  const bottomTop = targetRect.bottom + gap;
-  if (bottomTop + tooltipHeight < window.innerHeight - padding) {
+  if (spaceBelow >= tooltipHeight || spaceBelow >= spaceAbove) {
     return {
-      top: bottomTop,
-      left: Math.max(
-        padding,
-        Math.min(
-          targetRect.left + targetRect.width / 2 - tooltipWidth / 2,
-          window.innerWidth - tooltipWidth - padding
-        )
-      ),
+      top: clamp(targetRect.bottom + gap, minTop, maxTop),
+      left,
       arrowSide: "top",
     };
   }
 
-  // Try top
-  const topTop = targetRect.top - gap - tooltipHeight;
-  if (topTop > padding) {
-    return {
-      top: topTop,
-      left: Math.max(
-        padding,
-        Math.min(
-          targetRect.left + targetRect.width / 2 - tooltipWidth / 2,
-          window.innerWidth - tooltipWidth - padding
-        )
-      ),
-      arrowSide: "bottom",
-    };
-  }
-
-  // Fallback: below target with scroll
   return {
-    top: bottomTop,
-    left: Math.max(
-      padding,
-      Math.min(
-        targetRect.left + targetRect.width / 2 - tooltipWidth / 2,
-        window.innerWidth - tooltipWidth - padding
-      )
-    ),
-    arrowSide: "top",
+    top: clamp(targetRect.top - gap - tooltipHeight, minTop, maxTop),
+    left,
+    arrowSide: "bottom",
   };
 }
 
@@ -165,7 +146,7 @@ export function OnboardingTour({
           targetRect.top < 0 ||
           targetRect.bottom > window.innerHeight
         ) {
-          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.scrollIntoView({ behavior: "auto", block: "nearest" });
           // Re-measure after scroll
           requestAnimationFrame(() => {
             const newRect = el.getBoundingClientRect();
@@ -197,6 +178,18 @@ export function OnboardingTour({
       window.removeEventListener("scroll", positionTooltip, true);
     };
   }, [positionTooltip, visible]);
+
+  useEffect(() => {
+    if (!visible) return;
+    const tooltip = tooltipRef.current;
+    if (!tooltip || typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(() => {
+      positionTooltip();
+    });
+    observer.observe(tooltip);
+    return () => observer.disconnect();
+  }, [visible, positionTooltip]);
 
   const handleNext = useCallback(() => {
     if (step < steps.length - 1) {
@@ -266,10 +259,11 @@ export function OnboardingTour({
         role="dialog"
         aria-modal="true"
         aria-label="Onboarding tour"
-        className="fixed z-[10000] w-[340px] max-w-[calc(100vw-32px)] rounded-2xl border border-white/15 bg-gray-950/95 p-5 shadow-2xl backdrop-blur-lg transition-all duration-300"
+        className="fixed z-[10000] w-[340px] max-h-[calc(100vh-32px)] max-w-[calc(100vw-32px)] overflow-y-auto rounded-2xl border border-white/15 bg-gray-950/95 p-5 shadow-2xl backdrop-blur-lg transition-all duration-300"
         style={{
           top: position.top,
           left: position.left,
+          overscrollBehavior: "contain",
         }}
       >
         {/* Arrow indicator */}

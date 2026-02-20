@@ -19,7 +19,7 @@ const CAPTAIN_ASSIGNMENTS_TOUR_STEPS: TourStep[] = [
     descKey: "tour.assignmentsControlsDesc",
   },
   {
-    selector: "[data-tour='assignments-workspace']",
+    selector: "[data-tour='assignments-grid']",
     titleKey: "tour.assignmentsGrid",
     descKey: "tour.assignmentsGridDesc",
   },

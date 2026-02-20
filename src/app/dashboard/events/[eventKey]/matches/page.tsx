@@ -319,6 +319,8 @@ export default async function MatchListPage({
             <PaginatedMatchGrid
               label="Qualification Matches"
               totalCount={qualMatches.length}
+              tourId="matches-qual-grid"
+              tourFirstCardId="matches-qual-first-card"
             >
               {qualMatches.map((m) => (
                 <MatchCard key={m.id} match={m} />
@@ -331,6 +333,10 @@ export default async function MatchListPage({
             <PaginatedMatchGrid
               label="Playoff Matches"
               totalCount={playoffMatches.length}
+              tourId={qualMatches.length === 0 ? "matches-playoff-grid" : undefined}
+              tourFirstCardId={
+                qualMatches.length === 0 ? "matches-playoff-first-card" : undefined
+              }
             >
               {playoffMatches.map((m) => (
                 <MatchCard key={m.id} match={m} />
