@@ -1,5 +1,12 @@
 /**
  * Lightweight OpenAI Chat Completions client using fetch (no SDK required).
+ *
+ * GPT-5 series models are reasoning models. They do NOT support:
+ *   temperature, top_p, presence_penalty, frequency_penalty,
+ *   logprobs, top_logprobs, logit_bias, max_tokens (legacy).
+ *
+ * They DO support:
+ *   max_completion_tokens, reasoning_effort, tools, structured outputs.
  */
 
 const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
@@ -9,11 +16,15 @@ export type OpenAIMessage = {
   content: string;
 };
 
+export type ReasoningEffort = "minimal" | "low" | "medium" | "high";
+
 export type OpenAIChatOptions = {
   model?: string;
   messages: OpenAIMessage[];
+  /** Maps to max_completion_tokens in the API. */
   max_tokens?: number;
-  temperature?: number;
+  /** Controls how much reasoning the model does. Defaults to "medium". */
+  reasoning_effort?: ReasoningEffort;
 };
 
 type OpenAIChatResponse = {
@@ -31,23 +42,30 @@ export async function chatCompletion(
   apiKey: string,
   options: OpenAIChatOptions
 ): Promise<string> {
+  const body: Record<string, unknown> = {
+    model: options.model ?? "gpt-5-mini",
+    messages: options.messages,
+  };
+
+  if (options.max_tokens !== undefined) {
+    body.max_completion_tokens = options.max_tokens;
+  }
+  if (options.reasoning_effort !== undefined) {
+    body.reasoning_effort = options.reasoning_effort;
+  }
+
   const res = await fetch(OPENAI_CHAT_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({
-      model: options.model ?? "gpt-5-mini",
-      messages: options.messages,
-      max_completion_tokens: options.max_tokens,
-      temperature: options.temperature,
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`OpenAI API error ${res.status}: ${body.slice(0, 300)}`);
+    const text = await res.text().catch(() => "");
+    throw new Error(`OpenAI API error ${res.status}: ${text.slice(0, 300)}`);
   }
 
   const data = (await res.json()) as OpenAIChatResponse;

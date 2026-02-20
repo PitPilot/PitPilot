@@ -471,7 +471,7 @@ Rules:
         { role: "user", content: JSON.stringify(responsePayload) },
       ],
       max_tokens: 700,
-      temperature: 0.2,
+      reasoning_effort: "low",
     });
 
     return NextResponse.json(

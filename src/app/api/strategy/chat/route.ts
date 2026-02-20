@@ -245,7 +245,7 @@ Rules:
     const textOutput = await chatCompletion(apiKey, {
       messages: openaiMessages,
       max_tokens: 700,
-      temperature: 0.3,
+      reasoning_effort: "low",
     });
 
     return NextResponse.json(

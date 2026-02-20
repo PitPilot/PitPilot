@@ -939,7 +939,7 @@ IMPORTANT:
         { role: "user", content: JSON.stringify(promptData) },
       ],
       max_tokens: 2000,
-      temperature: 0.3,
+      reasoning_effort: "medium",
     });
 
     let parsedJson: unknown;
