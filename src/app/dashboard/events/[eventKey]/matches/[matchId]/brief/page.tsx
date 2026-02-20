@@ -403,10 +403,13 @@ export default async function BriefPage({
                     Teams Needing Coverage
                   </h3>
                   {scoutingPriorities.teamsNeedingCoverage.length > 0 ? (
-                    <ul className="space-y-1.5">
+                    <ul className="space-y-2.5">
                       {scoutingPriorities.teamsNeedingCoverage.map((item, i) => (
                         <li key={`${item.teamNumber}-${i}`} className="text-sm text-gray-200">
-                          • Team {item.teamNumber} ({item.alliance}, {item.priority}): {item.reason} Focus: {item.focus}
+                          <span>• Team {item.teamNumber} ({item.alliance}, {item.priority}): {item.reason}</span>
+                          {item.focus && (
+                            <p className="ml-4 mt-0.5 text-gray-400">↳ Focus: {item.focus}</p>
+                          )}
                         </li>
                       ))}
                     </ul>

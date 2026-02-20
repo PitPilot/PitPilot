@@ -242,31 +242,52 @@ Rules:
     // Append the new question
     openaiMessages.push({ role: "user", content: message });
 
-    let textOutput: string;
-    try {
-      textOutput = await chatCompletion(apiKey, {
-        model: "gpt-5-mini",
-        messages: openaiMessages,
-        max_tokens: 700,
-        reasoning_effort: "low",
-      });
-    } catch (firstError) {
-      const errorMessage =
-        firstError instanceof Error ? firstError.message : String(firstError);
-      if (!errorMessage.toLowerCase().includes("no text response from openai")) {
-        throw firstError;
-      }
+    const attempts = [
+      { max_tokens: 700, reasoning_effort: "low" as const },
+      { max_tokens: 1200, reasoning_effort: "minimal" as const },
+      { max_tokens: 1800, reasoning_effort: "minimal" as const },
+    ];
 
-      textOutput = await chatCompletion(apiKey, {
-        model: "gpt-5-mini",
-        messages: openaiMessages,
-        max_tokens: 950,
-        reasoning_effort: "low",
-      });
+    let lastRetryError: unknown = null;
+    for (const attempt of attempts) {
+      try {
+        const textOutput = await chatCompletion(apiKey, {
+          model: "gpt-5-mini",
+          messages: openaiMessages,
+          max_tokens: attempt.max_tokens,
+          reasoning_effort: attempt.reasoning_effort,
+        });
+
+        return NextResponse.json(
+          { success: true, reply: textOutput },
+          { headers: limitHeaders }
+        );
+      } catch (attemptError) {
+        const errorMessage =
+          attemptError instanceof Error ? attemptError.message : String(attemptError);
+        const lower = errorMessage.toLowerCase();
+        const retryableNoText =
+          lower.includes("no text response from openai") ||
+          lower.includes("finish_reason: length");
+
+        if (!retryableNoText) {
+          throw attemptError;
+        }
+        lastRetryError = attemptError;
+      }
+    }
+
+    const fallbackMessage =
+      "I hit an output limit while generating that response. Please try a shorter question or ask about one team at a time.";
+    if (lastRetryError) {
+      return NextResponse.json(
+        { success: true, reply: fallbackMessage },
+        { headers: limitHeaders }
+      );
     }
 
     return NextResponse.json(
-      { success: true, reply: textOutput },
+      { success: true, reply: fallbackMessage },
       { headers: limitHeaders }
     );
   } catch (err) {

@@ -340,10 +340,13 @@ export function MatchBriefOverlayButton({
                     <div>
                       <p className="mb-1 text-xs font-semibold text-amber-200">Teams Needing Coverage</p>
                       {scoutingPriorities.teamsNeedingCoverage.length > 0 ? (
-                        <ul className="space-y-1 text-sm text-gray-200">
+                        <ul className="space-y-2 text-sm text-gray-200">
                           {scoutingPriorities.teamsNeedingCoverage.map((item, index) => (
                             <li key={`${item.teamNumber}-${index}`}>
-                              • Team {item.teamNumber} ({item.alliance}, {item.priority}): {item.reason} Focus: {item.focus}
+                              <span>• Team {item.teamNumber} ({item.alliance}, {item.priority}): {item.reason}</span>
+                              {item.focus && (
+                                <p className="ml-4 mt-0.5 text-gray-400">↳ Focus: {item.focus}</p>
+                              )}
                             </li>
                           ))}
                         </ul>
