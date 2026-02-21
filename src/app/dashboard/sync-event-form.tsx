@@ -9,6 +9,22 @@ import {
   resolveRateLimitMessage,
 } from "@/lib/rate-limit-ui";
 
+type SyncJobPhase = "queued" | "syncing_event" | "syncing_stats" | "done" | "failed";
+
+type SyncJobStatus = {
+  id: string;
+  eventKey: string;
+  phase: SyncJobPhase;
+  progress: number;
+  warning: string | null;
+  statusMessage: string;
+  error: string | null;
+  result: {
+    synced: number;
+    total: number;
+  } | null;
+};
+
 export function SyncEventForm() {
   const { toast } = useToast();
   const [eventKey, setEventKey] = useState("");
@@ -19,33 +35,83 @@ export function SyncEventForm() {
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState<"idle" | "event" | "stats" | "done">("idle");
   const [slow, setSlow] = useState(false);
-  const rafRef = useRef<number | null>(null);
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [activeEventKey, setActiveEventKey] = useState<string | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading) {
-      setSlow(false);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-      return;
-    }
+    if (!jobId || !loading) return;
 
-    const tick = () => {
-      setProgress((prev) => {
-        const ceiling = phase === "event" ? 45 : phase === "stats" ? 90 : phase === "done" ? 100 : 0;
-        if (prev >= ceiling) return prev;
-        const next = prev + Math.max(0.4, (ceiling - prev) * 0.03);
-        return Math.min(next, ceiling);
+    const pollJobStatus = async () => {
+      const res = await fetch(`/api/events/sync/jobs/${jobId}`, {
+        method: "GET",
+        cache: "no-store",
       });
-      rafRef.current = requestAnimationFrame(tick);
+      const data = (await res.json().catch(() => null)) as
+        | { error?: string; job?: SyncJobStatus }
+        | null;
+
+      if (!res.ok || !data?.job) {
+        throw new Error(data?.error ?? "Failed to read sync job status.");
+      }
+
+      const job = data.job;
+      setProgress(Math.max(0, Math.min(100, job.progress ?? 0)));
+      setStatus(job.statusMessage ?? null);
+      if (job.warning) {
+        setWarning(job.warning);
+      }
+
+      if (job.phase === "syncing_event" || job.phase === "queued") {
+        setPhase("event");
+        return;
+      }
+      if (job.phase === "syncing_stats") {
+        setPhase("stats");
+        return;
+      }
+      if (job.phase === "done") {
+        setPhase("done");
+        setLoading(false);
+        setJobId(null);
+
+        const routeEventKey = (activeEventKey ?? eventKey).trim().toLowerCase();
+        setTimeout(() => {
+          router.push(`/dashboard/events/${routeEventKey}`);
+        }, 1200);
+        return;
+      }
+      if (job.phase === "failed") {
+        throw new Error(job.error ?? "Sync failed.");
+      }
     };
 
-    rafRef.current = requestAnimationFrame(tick);
+    void pollJobStatus().catch((pollError) => {
+      setError(pollError instanceof Error ? pollError.message : "Sync failed");
+      setLoading(false);
+      setJobId(null);
+      setStatus(null);
+      setPhase("idle");
+    });
+
+    pollRef.current = setInterval(() => {
+      void pollJobStatus().catch((pollError) => {
+        setError(pollError instanceof Error ? pollError.message : "Sync failed");
+        setLoading(false);
+        setJobId(null);
+        setStatus(null);
+        setPhase("idle");
+      });
+    }, 1500);
+
     return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
     };
-  }, [loading, phase]);
+  }, [activeEventKey, eventKey, jobId, loading, router]);
 
   useEffect(() => {
     if (!loading) return;
@@ -57,85 +123,53 @@ export function SyncEventForm() {
   async function handleSync() {
     if (!eventKey.trim()) return;
 
+    const normalizedEventKey = eventKey.trim().toLowerCase();
     setLoading(true);
     setError(null);
-    setStatus("Syncing event data from TBA...");
+    setStatus("Queueing sync job...");
     setWarning(null);
-    setProgress(6);
+    setProgress(4);
     setPhase("event");
+    setActiveEventKey(normalizedEventKey);
 
     try {
-      // Step 1: Sync event, teams, and matches
-      const eventRes = await fetch("/api/events/sync", {
+      const queueRes = await fetch("/api/events/sync/jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventKey: eventKey.trim() }),
+        body: JSON.stringify({ eventKey: normalizedEventKey }),
       });
-      const eventUsage = readRateLimitSnapshot(eventRes.headers);
-      if (eventUsage) {
-        toast(formatRateLimitUsageMessage(eventUsage, "sync"), "info");
+
+      const queueUsage = readRateLimitSnapshot(queueRes.headers);
+      if (queueUsage) {
+        toast(formatRateLimitUsageMessage(queueUsage, "sync"), "info");
       }
 
-      const eventData = await eventRes.json();
-      if (!eventRes.ok) {
+      const queueData = (await queueRes.json().catch(() => null)) as
+        | { error?: string; job?: SyncJobStatus }
+        | null;
+
+      if (!queueRes.ok || !queueData?.job) {
         throw new Error(
           resolveRateLimitMessage(
-            eventRes.status,
-            eventData.error ?? "Failed to sync event",
+            queueRes.status,
+            queueData?.error ?? "Failed to queue sync job",
             "sync"
           )
         );
       }
 
-      setStatus(
-        `Synced ${eventData.event}: ${eventData.teams} teams, ${eventData.matches} matches. Now syncing EPA stats...`
-      );
-      if (eventData.warning) {
-        setWarning(eventData.warning);
+      setJobId(queueData.job.id);
+      setProgress(Math.max(4, Math.min(100, queueData.job.progress ?? 4)));
+      setStatus(queueData.job.statusMessage || "Sync job started...");
+      if (queueData.job.warning) {
+        setWarning(queueData.job.warning);
       }
-      setPhase("stats");
-
-      // Step 2: Sync stats from Statbotics
-      const statsRes = await fetch("/api/stats/sync", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventKey: eventKey.trim() }),
-      });
-      const statsUsage = readRateLimitSnapshot(statsRes.headers);
-      if (statsUsage) {
-        toast(formatRateLimitUsageMessage(statsUsage, "sync"), "info");
-      }
-
-      const statsData = await statsRes.json();
-      if (!statsRes.ok) {
-        throw new Error(
-          resolveRateLimitMessage(
-            statsRes.status,
-            statsData.error ?? "Failed to sync stats",
-            "sync"
-          )
-        );
-      }
-
-      setStatus(
-        `Done! Synced EPA for ${statsData.synced}/${statsData.total} teams.`
-      );
-      setPhase("done");
-      setProgress(100);
-
-      // Redirect to event page after short delay
-      setTimeout(() => {
-        router.push(`/dashboard/events/${eventKey.trim()}`);
-      }, 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sync failed");
       setStatus(null);
-    } finally {
       setLoading(false);
-      setTimeout(() => {
-        setProgress(0);
-        setPhase("idle");
-      }, 800);
+      setJobId(null);
+      setPhase("idle");
     }
   }
 

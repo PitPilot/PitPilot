@@ -25,6 +25,19 @@ export type OpenAIChatOptions = {
   max_tokens?: number;
   /** Controls how much reasoning the model does. Defaults to "medium". */
   reasoning_effort?: ReasoningEffort;
+  /** Optional JSON output mode. */
+  response_format?:
+    | {
+        type: "json_object";
+      }
+    | {
+        type: "json_schema";
+        json_schema: {
+          name: string;
+          schema: Record<string, unknown>;
+          strict?: boolean;
+        };
+      };
 };
 
 export type OpenAIUsage = {
@@ -143,6 +156,9 @@ export async function chatCompletionWithUsage(
   }
   if (options.reasoning_effort !== undefined) {
     body.reasoning_effort = options.reasoning_effort;
+  }
+  if (options.response_format !== undefined) {
+    body.response_format = options.response_format;
   }
 
   const res = await fetch(OPENAI_CHAT_URL, {

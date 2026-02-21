@@ -16,6 +16,7 @@ import {
   getTeamAiLimitFromSettings,
   getTeamAiPromptLimits,
 } from "@/lib/platform-settings";
+import { BRIEF_RESPONSE_JSON_SCHEMA } from "@/lib/strategy-json-schema";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -948,6 +949,14 @@ IMPORTANT:
       ],
       max_tokens: 4000,
       reasoning_effort: "medium",
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "match_brief_response",
+          schema: BRIEF_RESPONSE_JSON_SCHEMA as unknown as Record<string, unknown>,
+          strict: true,
+        },
+      },
     });
     const textOutput = response.text;
     const usageCost = Math.max(

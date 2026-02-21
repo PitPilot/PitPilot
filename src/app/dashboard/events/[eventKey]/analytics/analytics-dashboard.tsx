@@ -139,7 +139,10 @@ export function AnalyticsDashboard({
   return (
     <div className="space-y-6">
       {/* Export bar */}
-      <div className="flex flex-wrap items-center gap-3 rounded-2xl dashboard-panel px-4 py-3">
+      <div
+        data-tour="analytics-export"
+        className="flex flex-wrap items-center gap-3 rounded-2xl dashboard-panel px-4 py-3"
+      >
         <span className="text-sm font-medium text-gray-300">Export:</span>
         <ExportCsvButton
           filename={`${eventKey}-scouting-data.csv`}
@@ -155,7 +158,7 @@ export function AnalyticsDashboard({
       </div>
 
       {/* Team selector */}
-      <div className="rounded-2xl dashboard-panel p-6">
+      <div data-tour="analytics-team-analysis" className="rounded-2xl dashboard-panel p-6">
         <h2 className="mb-4 text-lg font-semibold text-white">
           Team Analysis
         </h2>
@@ -220,7 +223,7 @@ export function AnalyticsDashboard({
       </div>
 
       {/* Quick stats overview */}
-      <div className="rounded-2xl dashboard-panel p-6">
+      <div data-tour="analytics-overview-table" className="rounded-2xl dashboard-panel p-6">
         <h2 className="mb-4 text-lg font-semibold text-white">
           Scouting Overview
         </h2>

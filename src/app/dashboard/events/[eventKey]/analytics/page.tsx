@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Navbar } from "@/components/navbar";
 import { AnalyticsDashboard } from "./analytics-dashboard";
+import { AnalyticsTour } from "./analytics-tour";
 import { getScoutingFormConfig, buildLabelMap, resolveLabels } from "@/lib/platform-settings";
 
 export async function generateMetadata({
@@ -230,8 +231,9 @@ export default async function AnalyticsPage({
   return (
     <div className="min-h-screen dashboard-page">
       <Navbar />
+      <AnalyticsTour />
       <main className="mx-auto max-w-7xl px-4 pb-12 pt-32 space-y-6">
-        <div className="flex items-center justify-between">
+        <div data-tour="analytics-header" className="flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
               {eventTitle}
