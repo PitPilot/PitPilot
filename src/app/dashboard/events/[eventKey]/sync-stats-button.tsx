@@ -8,7 +8,14 @@ import {
   resolveRateLimitMessage,
 } from "@/lib/rate-limit-ui";
 
-type SyncJobPhase = "queued" | "syncing_event" | "syncing_stats" | "done" | "failed";
+type SyncJobPhase =
+  | "queued"
+  | "retrying"
+  | "syncing_event"
+  | "syncing_stats"
+  | "done"
+  | "failed"
+  | "dead";
 
 type SyncJobStatus = {
   id: string;
@@ -67,7 +74,7 @@ export function SyncStatsButton({
         return;
       }
 
-      if (job.phase === "failed") {
+      if (job.phase === "failed" || job.phase === "dead") {
         throw new Error(job.error ?? "Sync failed.");
       }
     };

@@ -46,3 +46,11 @@ npm run dev
 - `npm run build` - Create production build
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
+- `npm run loadtest` - Run HTTP load test harness
+
+## Production Operations
+
+- P0 deployment checklist: `docs/production-p0-checklist.md`
+- Incident response runbook: `docs/incident-runbook.md`
+- SQL migration to run before heavy production use:
+  - `scripts/migrations/2026-02-21_p0_production_hardening.sql`

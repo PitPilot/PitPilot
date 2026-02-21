@@ -8,9 +8,11 @@ import {
 import {
   enqueueEventSyncJob,
   getActiveEventSyncJob,
+  kickSyncWorker,
   toPublicJob,
 } from "@/lib/sync-job-queue";
 import { EVENT_KEY_PATTERN } from "@/lib/event-sync";
+import { reportError } from "@/lib/observability";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -69,7 +71,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const activeJob = getActiveEventSyncJob(profile.org_id, eventKey);
+    const activeJob = await getActiveEventSyncJob(profile.org_id, eventKey);
     if (activeJob) {
       return NextResponse.json(
         {
@@ -133,13 +135,14 @@ export async function POST(request: Request) {
       orgTeamNumber = org?.team_number ?? null;
     }
 
-    const job = enqueueEventSyncJob({
+    const job = await enqueueEventSyncJob({
       orgId: profile.org_id,
       requestedBy: user.id,
       eventKey,
       orgTeamNumber,
       kind: mode === "stats" ? "stats_only" : "full",
     });
+    kickSyncWorker({ maxJobs: 2, workerId: `enqueue-${profile.org_id}` });
 
     return NextResponse.json(
       {
@@ -150,6 +153,12 @@ export async function POST(request: Request) {
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
+    await reportError({
+      source: "sync-jobs-api",
+      title: "Failed to enqueue sync job",
+      error,
+      severity: "error",
+    });
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
