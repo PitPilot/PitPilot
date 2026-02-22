@@ -55,9 +55,19 @@ export const CounterButton = memo(function CounterButton({
           aria-label={`Decrease ${label}`}
           onClick={() => onChange(Math.max(min, value - 1))}
           disabled={value <= min}
-          className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-lg font-bold text-gray-200 transition hover:bg-white/20 active:bg-white/30 disabled:opacity-30"
+          className="flex h-11 w-11 shrink-0 touch-manipulation select-none items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-gray-200 transition hover:bg-white/20 active:bg-white/30 disabled:opacity-30"
         >
-          &minus;
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            className="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+          >
+            <path d="M6 12h12" />
+          </svg>
         </button>
 
         {editing ? (
@@ -100,9 +110,20 @@ export const CounterButton = memo(function CounterButton({
           aria-label={`Increase ${label}`}
           onClick={() => onChange(Math.min(max, value + 1))}
           disabled={value >= max}
-          className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 via-sky-500 to-cyan-500 text-lg font-bold text-white shadow-sm transition hover:from-cyan-400 hover:via-sky-400 hover:to-teal-500 active:from-cyan-600 active:to-blue-700 disabled:opacity-30"
+          className="flex h-11 w-11 shrink-0 touch-manipulation select-none items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 via-sky-500 to-cyan-500 text-white shadow-sm transition hover:from-cyan-400 hover:via-sky-400 hover:to-teal-500 active:from-cyan-600 active:to-blue-700 disabled:opacity-30"
         >
-          +
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            className="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+          >
+            <path d="M12 6v12" />
+            <path d="M6 12h12" />
+          </svg>
         </button>
       </div>
     </div>

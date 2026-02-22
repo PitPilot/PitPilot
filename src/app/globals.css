@@ -499,7 +499,6 @@ a[aria-disabled="true"] {
   background: var(--scout-bg);
   color: var(--scout-text);
   font-family: var(--font-inter), sans-serif;
-  overflow-x: clip;
 }
 
 .scout-backdrop {
@@ -521,6 +520,17 @@ a[aria-disabled="true"] {
   border: 1px solid var(--scout-border);
   box-shadow: var(--scout-shadow);
   backdrop-filter: blur(16px);
+  border-radius: var(--scout-radius);
+}
+
+.scout-progress-sticky {
+  position: -webkit-sticky;
+  position: sticky;
+  top: calc(env(safe-area-inset-top) + 0.5rem);
+  z-index: 40;
+  background: color-mix(in srgb, var(--scout-surface) 94%, #020617 6%);
+  border: 1px solid var(--scout-border);
+  box-shadow: var(--scout-shadow);
   border-radius: var(--scout-radius);
 }
 

@@ -1,6 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/supabase";
-import { getEventSyncMinYear } from "@/lib/platform-settings";
 import {
   fetchEvent,
   fetchEventMatches,
@@ -12,6 +11,7 @@ export const EVENT_KEY_PATTERN = /^\d{4}[a-z0-9]+$/;
 const STATBOTICS_BASE = "https://api.statbotics.io/v3";
 const STATBOTICS_CONCURRENCY = 6;
 const STATBOTICS_TIMEOUT_MS = 12000;
+const EVENT_SYNC_MIN_ALLOWED_DATE = "2025-01-01";
 
 interface StatboticsTeamEvent {
   epa: {
@@ -76,28 +76,31 @@ export async function syncEventData(params: {
 }): Promise<EventSyncDataResult> {
   const { supabase, eventKey, orgId, orgTeamNumber } = params;
 
-  const minSyncYear = await getEventSyncMinYear(supabase);
-  const minAllowedDate = `${minSyncYear}-01-01`;
-  const today = new Date().toISOString().slice(0, 10);
+  const maxAllowed = new Date();
+  maxAllowed.setUTCFullYear(maxAllowed.getUTCFullYear() + 1);
+  const maxAllowedDate = maxAllowed.toISOString().slice(0, 10);
 
   const tbaEvent = await fetchEvent(eventKey);
   const eventDate = tbaEvent.start_date ?? tbaEvent.end_date;
+  const eventYear = tbaEvent.year;
+  const minAllowedYear = Number.parseInt(EVENT_SYNC_MIN_ALLOWED_DATE.slice(0, 4), 10);
+  const maxAllowedYear = Number.parseInt(maxAllowedDate.slice(0, 4), 10);
 
-  if (tbaEvent.year < minSyncYear) {
+  if (eventYear < minAllowedYear) {
     throw new Error(
-      `This event is outside the available sync window. Allowed range: ${minAllowedDate} to ${today}.`
+      `This event is outside the available sync window. Allowed range: ${EVENT_SYNC_MIN_ALLOWED_DATE} to ${maxAllowedDate}.`
     );
   }
 
   if (eventDate) {
-    if (eventDate < minAllowedDate || eventDate > today) {
+    if (eventDate < EVENT_SYNC_MIN_ALLOWED_DATE || eventDate > maxAllowedDate) {
       throw new Error(
-        `This event is outside the available sync window. Allowed range: ${minAllowedDate} to ${today}.`
+        `This event is outside the available sync window. Allowed range: ${EVENT_SYNC_MIN_ALLOWED_DATE} to ${maxAllowedDate}.`
       );
     }
-  } else if (tbaEvent.year > new Date().getFullYear()) {
+  } else if (eventYear > maxAllowedYear) {
     throw new Error(
-      `This event is outside the available sync window. Allowed range: ${minAllowedDate} to ${today}.`
+      `This event is outside the available sync window. Allowed range: ${EVENT_SYNC_MIN_ALLOWED_DATE} to ${maxAllowedDate}.`
     );
   }
 

@@ -544,7 +544,7 @@ export function ScoutingForm({
   }
 
   return (
-      <div className="space-y-6 overflow-x-clip pb-8">
+      <div className="space-y-6 pb-8">
       {error && (
         <div role="alert" className="rounded-md border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">
           {error}
@@ -567,7 +567,7 @@ export function ScoutingForm({
 
       <nav
         aria-label="Scouting form progress"
-        className="sticky top-2 z-20 scout-panel p-3"
+        className="scout-progress-sticky p-3"
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-xs font-semibold uppercase tracking-widest text-cyan-200">

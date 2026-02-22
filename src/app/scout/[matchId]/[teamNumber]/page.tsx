@@ -64,7 +64,7 @@ export default async function ScoutPage({
 
   if (isSelfScoutingBlocked) {
     return (
-      <div className="min-h-screen overflow-x-hidden">
+      <div className="min-h-screen">
         <header className="border-b border-white/10 bg-black/30 backdrop-blur">
           <div className="mx-auto flex max-w-lg items-center justify-between gap-3 px-4 py-3">
             <div>
@@ -140,7 +140,7 @@ export default async function ScoutPage({
   ]);
 
   return (
-    <div className="min-h-screen overflow-x-hidden">
+    <div className="min-h-screen">
       <header className="border-b border-white/10 bg-black/30 backdrop-blur">
         <div className="mx-auto flex max-w-lg items-center justify-between gap-3 px-4 py-3">
           <div>
