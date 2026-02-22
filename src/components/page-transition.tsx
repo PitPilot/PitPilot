@@ -10,6 +10,7 @@ export function PageTransition({
 }) {
   const pathname = usePathname();
   const prefersReducedMotion = useReducedMotion();
+  const disableTransformTransition = pathname.startsWith("/scout/");
 
   return (
     <motion.div
@@ -19,12 +20,11 @@ export function PageTransition({
       initial={
         prefersReducedMotion
           ? false
-          : {
-              opacity: 0,
-              y: 8,
-            }
+          : disableTransformTransition
+          ? { opacity: 0 }
+          : { opacity: 0, y: 8 }
       }
-      animate={{ opacity: 1, y: 0 }}
+      animate={disableTransformTransition ? { opacity: 1 } : { opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
     >
       {children}
