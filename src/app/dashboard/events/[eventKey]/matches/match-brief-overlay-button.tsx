@@ -173,7 +173,7 @@ export function MatchBriefOverlayButton({
                   {eventTitle ?? "Event"}
                 </p>
                 <h3 className="mt-1 text-lg font-semibold text-white">
-                  {matchLabel} — {hasScore ? "Match Brief (Reference)" : "Pre-Match Brief"}
+                  {matchLabel}: {hasScore ? "Match Brief (Reference)" : "Pre-Match Brief"}
                 </h3>
                 <div className="mt-2">
                   <span

@@ -256,10 +256,10 @@ export function GeneratePickListButton({
       >
         {loading ? (
           <>
-            <span className="inline-flex items-center gap-1.5">
-              <span className={`rounded-full bg-white/90 [animation:ping_1.05s_ease-in-out_infinite] ${compact ? "h-1.5 w-1.5" : "h-2 w-2"}`} />
-              <span className={`rounded-full bg-white/75 [animation:ping_1.05s_ease-in-out_120ms_infinite] ${compact ? "h-1.5 w-1.5" : "h-2 w-2"}`} />
-              <span className={`rounded-full bg-white/55 [animation:ping_1.05s_ease-in-out_240ms_infinite] ${compact ? "h-1.5 w-1.5" : "h-2 w-2"}`} />
+            <span className="inline-flex items-center gap-1">
+              <span className="h-1 w-1 rounded-full bg-white/90 [animation:ping_1.05s_ease-in-out_infinite]" />
+              <span className="h-1 w-1 rounded-full bg-white/75 [animation:ping_1.05s_ease-in-out_120ms_infinite]" />
+              <span className="h-1 w-1 rounded-full bg-white/55 [animation:ping_1.05s_ease-in-out_240ms_infinite]" />
             </span>
             {compact ? "Generating..." : "Generating best pick list"}
           </>
@@ -485,10 +485,10 @@ export function GeneratePickListButton({
                   >
                     {loading ? (
                       <>
-                        <span className="inline-flex items-center gap-1.5">
-                          <span className="h-2 w-2 rounded-full bg-white/90 [animation:ping_1.05s_ease-in-out_infinite]" />
-                          <span className="h-2 w-2 rounded-full bg-white/75 [animation:ping_1.05s_ease-in-out_120ms_infinite]" />
-                          <span className="h-2 w-2 rounded-full bg-white/55 [animation:ping_1.05s_ease-in-out_240ms_infinite]" />
+                        <span className="inline-flex items-center gap-1">
+                          <span className="h-1 w-1 rounded-full bg-white/90 [animation:ping_1.05s_ease-in-out_infinite]" />
+                          <span className="h-1 w-1 rounded-full bg-white/75 [animation:ping_1.05s_ease-in-out_120ms_infinite]" />
+                          <span className="h-1 w-1 rounded-full bg-white/55 [animation:ping_1.05s_ease-in-out_240ms_infinite]" />
                         </span>
                         Generating...
                       </>

@@ -830,10 +830,10 @@ export function DraftRoom({
                 <div>
                   <p className="text-sm text-gray-400">
                     Alliance <span className="font-semibold text-white">{currentAllianceIndex !== null ? currentAllianceIndex + 1 : ""}</span>
-                    {" "}up next — Round <span className="font-semibold text-white">{currentRound}</span>
+                    {" "}up next, Round <span className="font-semibold text-white">{currentRound}</span>
                   </p>
                   <p className="text-xs text-gray-500">
-                    Pick {currentPickIndex + 1} of {totalPicks} — {state.pool.length} teams remaining
+                    Pick {currentPickIndex + 1} of {totalPicks}, {state.pool.length} teams remaining
                   </p>
                 </div>
               </div>
@@ -1299,7 +1299,7 @@ export function DraftRoom({
               <div className="flex items-start gap-2">
                 <span className="mt-1 inline-block h-2 w-2 rounded-full bg-white/85" />
                 <p className="text-sm">
-                  <span className="font-semibold">Team {selectedTeam.teamNumber}</span> selected — tap a slot to place, or tap the team again to deselect
+                  <span className="font-semibold">Team {selectedTeam.teamNumber}</span> selected. Tap a slot to place, or tap the team again to deselect.
                 </p>
               </div>
               <button

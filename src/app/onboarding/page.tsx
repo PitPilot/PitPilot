@@ -345,7 +345,7 @@ export default function OnboardingPage() {
                     </div>
                     {confirmed ? (
                       <div className="rounded-xl border border-[#43d9a2]/30 bg-[#43d9a2]/8 px-3 py-2 text-sm text-[#a4f4d7]">
-                        Everything looks right — click <span className="font-semibold text-white">Finish setup</span> to complete.
+                        Everything looks right. Click <span className="font-semibold text-white">Finish setup</span> to complete.
                       </div>
                     ) : (
                       <p className="text-xs text-slate-400">

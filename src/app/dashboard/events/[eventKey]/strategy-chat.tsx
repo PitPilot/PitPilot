@@ -27,7 +27,7 @@ export function StrategyChat({
     {
       role: "assistant",
       content: compact
-        ? "Ask me anything about this event — matchups, team comparisons, draft advice."
+        ? "Ask me anything about this event: matchups, team comparisons, draft advice."
         : "Ask about opponents, alliance matchups, or who fits your team best. I will answer using EPA and your scouting data for this event.",
     },
   ]);

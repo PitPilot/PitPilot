@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { useToast } from "@/components/toast";
 import {
   formatRateLimitUsageMessage,
@@ -213,23 +214,63 @@ export function SyncEventForm() {
         </button>
       </div>
       {(loading || progress > 0) && (
-        <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
-          <div
-            className="h-full rounded-full bg-blue-500 transition-all duration-300 ease-out"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      )}
+        <div className="space-y-3">
+          {/* Gradient progress bar */}
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+            <motion.div
+              className="h-full rounded-full bg-gradient-to-r from-teal-500 via-cyan-400 to-teal-300 shadow-[0_0_10px_-2px_rgba(45,212,191,0.55)]"
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            />
+          </div>
 
-      {status && (
-        <p className="rounded-lg bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">
-          {status}
-        </p>
-      )}
-      {slow && loading && (
-        <p className="rounded-lg bg-white/5 px-3 py-2 text-sm text-gray-300">
-          This is taking a while — please keep this tab open.
-        </p>
+          {/* Phase step indicators */}
+          {loading && (() => {
+            const stepIndex = phase === "event" ? 0 : phase === "stats" ? 1 : 2;
+            const steps = [
+              { label: "Event data" },
+              { label: "EPA stats" },
+            ];
+            return (
+              <div className="flex items-center gap-4">
+                {steps.map(({ label }, i) => {
+                  const complete = stepIndex > i;
+                  const active = stepIndex === i;
+                  return (
+                    <div key={label} className="flex items-center gap-1.5">
+                      {complete ? (
+                        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-teal-500/20 text-teal-400">
+                          <svg viewBox="0 0 12 12" width="8" height="8" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="1.5 6.5 4.5 9.5 10.5 2.5" />
+                          </svg>
+                        </span>
+                      ) : active ? (
+                        <span className="relative flex h-4 w-4">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-teal-400/35" />
+                          <span className="relative inline-flex h-4 w-4 rounded-full bg-teal-400/70" />
+                        </span>
+                      ) : (
+                        <span className="h-4 w-4 rounded-full border border-white/15" />
+                      )}
+                      <span className={`text-xs ${active ? "font-medium text-white" : complete ? "text-teal-300/55" : "text-gray-600"}`}>
+                        {label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
+          {status && (
+            <p className="text-xs text-gray-400">{status}</p>
+          )}
+          {slow && loading && (
+            <p className="rounded-md bg-white/5 px-2.5 py-1.5 text-xs text-gray-400">
+              This is taking a while, please keep this tab open.
+            </p>
+          )}
+        </div>
       )}
       {warning && (
         <p className="rounded-lg bg-teal-500/10 px-3 py-2 text-sm text-teal-200">

@@ -189,7 +189,7 @@ export default async function BriefPage({
               {eventTitle}
             </p>
             <h1 className="text-lg font-bold">
-              {matchLabel} — {matchCompleted ? "Match Brief (Reference)" : "Pre-Match Brief"}
+              {matchLabel}: {matchCompleted ? "Match Brief (Reference)" : "Pre-Match Brief"}
             </h1>
           </div>
           <Link

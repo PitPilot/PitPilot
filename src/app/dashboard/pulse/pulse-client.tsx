@@ -333,7 +333,7 @@ export function PulseClient({
                 : next.content;
             toast(
               mentioned
-                ? `Mentioned you: ${authorName} — ${snippet}`
+                ? `Mentioned you: ${authorName}: ${snippet}`
                 : `${authorName}: ${snippet}`,
               "info"
             );

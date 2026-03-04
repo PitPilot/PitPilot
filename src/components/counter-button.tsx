@@ -97,7 +97,7 @@ export const CounterButton = memo(function CounterButton({
             onClick={startEditing}
             role="status"
             aria-live="polite"
-            aria-label={`${label}: ${value} — tap to type`}
+            aria-label={`${label}: ${value}, tap to type`}
             className="flex h-10 w-14 cursor-text items-center justify-center rounded-lg border border-transparent text-xl font-bold text-white transition hover:border-white/20 hover:bg-white/5 active:bg-white/10"
             title="Tap to type a value"
           >

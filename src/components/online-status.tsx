@@ -177,7 +177,7 @@ export function OnlineStatus() {
     void checkStorageQuota().then((estimate) => {
       if (estimate?.isNearFull) {
         toast(
-          `Storage is ${Math.round(estimate.percentUsed)}% full — consider clearing old event data`,
+          `Storage is ${Math.round(estimate.percentUsed)}% full. Consider clearing old event data.`,
           "info"
         );
       }
@@ -318,7 +318,7 @@ export function OnlineStatus() {
         );
       } else if (synced > 0 && errors > 0) {
         toast(
-          `${synced} synced, ${errors} failed — will retry automatically`,
+          `${synced} synced, ${errors} failed. Will retry automatically.`,
           "info"
         );
       } else if (errors > 0 && synced === 0) {
@@ -382,7 +382,7 @@ export function OnlineStatus() {
               : syncErrors > 0
               ? `${syncErrors} failed to sync`
               : "Online"}
-            {pendingCount > 0 && !syncing && ` — ${pendingCount} queued`}
+            {pendingCount > 0 && !syncing && ` (${pendingCount} queued)`}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -424,7 +424,7 @@ export function OnlineStatus() {
 
       {!isOnline && (
         <p className="mt-2 text-xs text-yellow-900/80">
-          You&apos;re offline — cached data may be stale.
+          You&apos;re offline. Cached data may be stale.
           Your entries will sync automatically when you&apos;re back online.
         </p>
       )}

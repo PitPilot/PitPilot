@@ -467,8 +467,8 @@ IMPORTANT:
         { role: "system", content: systemPrompt },
         { role: "user", content: JSON.stringify(promptData) },
       ],
-      max_tokens: 24000,
-      reasoning_effort: "medium",
+      max_tokens: 10000,
+      reasoning_effort: "low",
       response_format: {
         type: "json_schema",
         json_schema: {
