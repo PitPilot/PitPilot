@@ -478,7 +478,7 @@ Rules:
         { role: "system", content: systemPrompt },
         { role: "user", content: JSON.stringify(responsePayload) },
       ],
-      max_tokens: 700,
+      max_tokens: 1400,
       reasoning_effort: "low",
     });
     const usageCost = Math.max(

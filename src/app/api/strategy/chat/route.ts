@@ -18,7 +18,7 @@ import {
 export const runtime = "nodejs";
 export const maxDuration = 60;
 const CHAT_HISTORY_MESSAGE_LIMIT = 6;
-const CHAT_MAX_COMPLETION_TOKENS = 700;
+const CHAT_MAX_COMPLETION_TOKENS = 1400;
 
 function estimateTokensFromText(value: string): number {
   return Math.max(1, Math.ceil(value.length / 4));
