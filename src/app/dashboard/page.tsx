@@ -7,7 +7,7 @@ import { SyncEventForm } from "./sync-event-form";
 import { LeaveTeamButton } from "@/components/leave-team-button";
 import { CopyInviteLink } from "@/components/copy-invite-link";
 import { SortableEvents } from "@/components/sortable-events";
-import { AnimateIn } from "@/components/ui/animate-in";
+import { AnimateIn, StaggerGroup, StaggerChild } from "@/components/ui/animate-in";
 import {
   TEAM_AI_WINDOW_MS,
   getTeamAiRateLimitKey,
@@ -16,6 +16,7 @@ import {
 } from "@/lib/rate-limit";
 import { getTeamAiPromptLimits } from "@/lib/platform-settings";
 import { UsageLimitMeter } from "./usage-limit-meter";
+import { UpgradeSupporterButton } from "@/components/upgrade-supporter-button";
 import { DashboardTour } from "./dashboard-tour";
 
 export const metadata: Metadata = {
@@ -164,29 +165,29 @@ export default async function DashboardPage() {
 
       {/* Main content */}
       <main className="mx-auto max-w-7xl px-4 pb-12 pt-28">
-
-        {/* ─── Hero (Team Overview + inline stats) ─── */}
-        <AnimateIn delay={0.05} className="mb-8">
-          <div className="relative overflow-hidden rounded-3xl dashboard-panel dashboard-card p-6">
-            <div className="pointer-events-none absolute top-0 right-0 h-40 w-40 rounded-full bg-teal-500/10 blur-3xl" />
+        {/* ─── Hero + Stats ─── */}
+        <StaggerGroup className="mb-8 grid gap-6 md:grid-cols-2 lg:grid-cols-[1.6fr_1fr]">
+          <StaggerChild className="relative overflow-hidden rounded-3xl dashboard-panel dashboard-card p-6">
+            {/* Subtle gradient accent */}
+            <div className="pointer-events-none absolute top-0 right-0 h-32 w-32 rounded-full bg-teal-500/10 blur-3xl" />
             <div className="relative">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
-                  Team Overview
-                </p>
-                <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ${planTagClass}`}>
+              <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
+                Team Overview
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-2.5">
+                <h2 className="text-2xl font-bold text-white">
+                  {org?.team_number ? `Team ${org.team_number}` : org?.name}
+                </h2>
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ${planTagClass}`}
+                >
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
                   {planTagLabel}
                 </span>
               </div>
-              <div className="mt-2">
-                <h2 className="text-4xl font-black tracking-tight text-white">
-                  {org?.team_number ? `Team ${org.team_number}` : org?.name}
-                </h2>
-                {org?.team_number && org?.name && (
-                  <p className="mt-1 text-base font-medium text-gray-300">{org.name}</p>
-                )}
-              </div>
+              {org?.team_number && org?.name && (
+                <p className="mt-1 text-sm text-gray-300">{org.name}</p>
+              )}
               <div className="mt-4 flex flex-wrap items-center gap-2.5">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-500/15 px-3 py-1.5 text-xs font-semibold capitalize text-teal-400 dark:text-teal-300 ring-1 ring-teal-500/20">
                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
@@ -213,64 +214,49 @@ export default async function DashboardPage() {
                 remaining={aiUsage.remaining}
                 resetAt={aiUsage.resetAt}
               />
-              {/* Inline stats row */}
-              <div className="mt-5 grid grid-cols-3 divide-x divide-white/8 overflow-hidden rounded-xl border border-white/8">
-                {[
-                  { label: "Events Synced", value: eventsCount },
-                  { label: "Team Members", value: memberCount ?? 0 },
-                  { label: "Scouting Entries", value: scoutingCount ?? 0 },
-                ].map((stat) => (
-                  <div key={stat.label} className="py-3 text-center">
-                    <p className="text-2xl font-bold text-white">{stat.value}</p>
-                    <p className="mt-0.5 text-xs text-gray-500">{stat.label}</p>
+            </div>
+          </StaggerChild>
+
+          <StaggerChild className="flex">
+            <div className="grid flex-1 gap-4 sm:grid-cols-2 lg:grid-cols-1">
+              {[
+                {
+                  label: "Events Synced",
+                  value: eventsCount,
+                  sub: "Across all seasons",
+                },
+                {
+                  label: "Team Members",
+                  value: memberCount ?? 0,
+                  sub: "Scouts and captains",
+                },
+                {
+                  label: "Scouting Entries",
+                  value: scoutingCount ?? 0,
+                  sub: "Total logged this season",
+                },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  className="flex items-center rounded-2xl dashboard-panel dashboard-card p-4"
+                >
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                      {stat.label}
+                    </p>
+                    <p className="mt-0.5 text-2xl font-bold text-white">
+                      {stat.value}
+                    </p>
+                    <p className="text-xs text-gray-400">{stat.sub}</p>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
-          </div>
-        </AnimateIn>
-
-        {/* ─── Events List ─── */}
-        <AnimateIn delay={0.15} className="mb-8 space-y-4">
-          <div data-tour="events-list" className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-500/10 text-teal-400">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            </div>
-            <h3 className="text-lg font-semibold text-white">Your Events</h3>
-          </div>
-
-          {!orgEvents || orgEvents.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-white/10 dashboard-panel p-8 text-center">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 text-gray-400">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              </div>
-              <p className="text-sm font-medium text-gray-300">No events synced yet</p>
-              <p className="mt-1 text-xs text-gray-400">
-                Use Quick Sync below to import your first event.
-              </p>
-            </div>
-          ) : (
-            <SortableEvents
-              orgEvents={orgEvents.map((oe) => ({
-                id: oe.id,
-                is_attending: oe.is_attending,
-                events: oe.events ? {
-                  id: oe.events.id,
-                  tba_key: oe.events.tba_key,
-                  name: oe.events.name,
-                  location: oe.events.location,
-                  start_date: oe.events.start_date,
-                  end_date: oe.events.end_date,
-                  year: oe.events.year,
-                } : null,
-              }))}
-              isCaptain={profile.role === "captain"}
-            />
-          )}
-        </AnimateIn>
+          </StaggerChild>
+        </StaggerGroup>
 
         {/* ─── Quick Actions ─── */}
-        <AnimateIn delay={0.25} className="mb-8 grid gap-4 md:grid-cols-2">
+        <AnimateIn delay={0.2} className="mb-8 grid gap-4 md:grid-cols-2">
           <div data-tour="quick-sync" className="rounded-2xl dashboard-panel dashboard-card p-6">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-500/10 text-teal-400">
@@ -278,7 +264,9 @@ export default async function DashboardPage() {
               </div>
               <div>
                 <h3 className="text-base font-semibold text-white">Quick Sync</h3>
-                <p className="text-sm text-gray-400">Import teams, matches &amp; EPA from TBA.</p>
+                <p className="text-sm text-gray-400">
+                  Import teams, matches &amp; EPA from TBA.
+                </p>
               </div>
             </div>
             <div className="mt-4">
@@ -297,8 +285,12 @@ export default async function DashboardPage() {
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
               </div>
               <div>
-                <h3 className="text-base font-semibold text-white">Team Settings</h3>
-                <p className="text-sm text-gray-400">Manage roles, codes &amp; org details.</p>
+                <h3 className="text-base font-semibold text-white">
+                  Team Settings
+                </h3>
+                <p className="text-sm text-gray-400">
+                  Manage roles, codes &amp; org details.
+                </p>
               </div>
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -311,19 +303,46 @@ export default async function DashboardPage() {
               </Link>
               <LeaveTeamButton />
             </div>
+            {hasSupporterPlanAccess ? (
+              <div className="mt-3 rounded-xl border border-white/10 px-3 py-3 text-xs text-gray-400 dashboard-panel">
+                <p className="font-semibold text-gray-300">
+                  {isGiftedSupporter ? "Gifted Supporter" : "Supporter"}
+                </p>
+                <p className="mt-1">
+                  {isGiftedSupporter
+                    ? "Enjoy complimentary Supporter access as a thank-you from our team for helping us test PitPilot early."
+                    : "Thank you for supporting PitPilot and helping keep the platform free for the wider FRC community."}
+                </p>
+              </div>
+            ) : profile.role === "captain" ? (
+              <div className="mt-3 rounded-xl border border-white/10 px-3 py-3 text-xs text-gray-400 dashboard-panel">
+                <p className="font-semibold text-gray-300">Upgrade to Supporter</p>
+                <p className="mt-1">
+                  Being a supporter helps keep PitPilot sustainable while we continue offering free access
+                  for teams across the community.
+                </p>
+                <div className="mt-3">
+                  <UpgradeSupporterButton />
+                </div>
+              </div>
+            ) : null}
           </div>
         </AnimateIn>
 
         {/* ─── Scouting Reports ─── */}
-        <AnimateIn delay={0.35} className="mb-10 space-y-4">
+        <AnimateIn delay={0.3} className="mb-10 space-y-4">
           <div data-tour="scouting-reports" className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-500/10 text-teal-400">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-white">Scouting Reports</h3>
-                <p className="text-sm text-gray-400">The latest entries across your team.</p>
+                <h3 className="text-lg font-semibold text-white">
+                  Scouting Reports
+                </h3>
+                <p className="text-sm text-gray-400">
+                  The latest entries across your team.
+                </p>
               </div>
             </div>
             <Link
@@ -355,7 +374,11 @@ export default async function DashboardPage() {
                 const scouterName = reportProfile?.display_name ?? "Teammate";
                 const matchLabel =
                   match?.comp_level && match?.match_number
-                    ? compLabel(match.comp_level, match.match_number, match.set_number)
+                    ? compLabel(
+                        match.comp_level,
+                        match.match_number,
+                        match.set_number
+                      )
                     : "Match";
 
                 return (
@@ -376,7 +399,11 @@ export default async function DashboardPage() {
                         </p>
                       </div>
                     </div>
-                    <p className="mt-2 text-xs text-gray-400">Scouted by {scouterName}</p>
+
+                    <p className="mt-2 text-xs text-gray-400">
+                      Scouted by {scouterName}
+                    </p>
+
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       <Link
                         href={`/scout/${report.match_id}/${report.team_number}`}
@@ -412,8 +439,49 @@ export default async function DashboardPage() {
           )}
         </AnimateIn>
 
+        {/* ─── Events List ─── */}
+        <AnimateIn delay={0.4} className="space-y-4">
+          <div data-tour="events-list" className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-500/10 text-teal-400">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <h3 className="text-lg font-semibold text-white">Your Events</h3>
+          </div>
+
+          {!orgEvents || orgEvents.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-white/10 dashboard-panel p-8 text-center">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              </div>
+              <p className="text-sm font-medium text-gray-300">
+                No events synced yet
+              </p>
+              <p className="mt-1 text-xs text-gray-400">
+                Use Quick Sync above to import your first event.
+              </p>
+            </div>
+          ) : (
+            <SortableEvents
+              orgEvents={orgEvents.map((oe) => ({
+                id: oe.id,
+                is_attending: oe.is_attending,
+                events: oe.events ? {
+                  id: oe.events.id,
+                  tba_key: oe.events.tba_key,
+                  name: oe.events.name,
+                  location: oe.events.location,
+                  start_date: oe.events.start_date,
+                  end_date: oe.events.end_date,
+                  year: oe.events.year,
+                } : null,
+              }))}
+              isCaptain={profile.role === "captain"}
+            />
+          )}
+        </AnimateIn>
+
         {/* ─── Team Pulse ─── */}
-        <AnimateIn delay={0.45} className="space-y-4">
+        <AnimateIn delay={0.5} className="mt-10 space-y-4">
           <div data-tour="team-pulse" className="flex items-center gap-3">
             <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-teal-500/10 text-teal-400">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -426,7 +494,9 @@ export default async function DashboardPage() {
             </div>
             <div>
               <h3 className="text-lg font-semibold text-white">Team Pulse</h3>
-              <p className="text-sm text-gray-400">Strategy chatter &amp; team updates.</p>
+              <p className="text-sm text-gray-400">
+                Strategy chatter &amp; team updates.
+              </p>
             </div>
           </div>
           <div className="rounded-2xl dashboard-panel dashboard-card p-6 flex flex-wrap items-center justify-between gap-4">
