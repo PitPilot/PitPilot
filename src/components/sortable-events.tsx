@@ -537,7 +537,7 @@ export function SortableEvents({
                   <div className="flex items-center gap-2">
                     {orgEvent.is_attending ? (
                       <span
-                        className="inline-block h-2 w-2 shrink-0 rounded-full bg-green-400"
+                        className="inline-block h-2 w-2 shrink-0 rounded-full bg-emerald-600"
                         title="Attending"
                       />
                     ) : (
@@ -549,7 +549,7 @@ export function SortableEvents({
                     <h4
                       className={`truncate text-base font-semibold ${
                         orgEvent.is_attending
-                          ? "text-emerald-300"
+                          ? "text-emerald-500"
                           : "text-white"
                       }`}
                     >
