@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LogIn } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { UserMenu } from "@/components/user-menu";
 
@@ -54,8 +55,9 @@ export async function Navbar() {
             <>
               <Link
                 href="/login"
-                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-gray-400 transition hover:bg-white/5 hover:text-white"
+                className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-400 transition hover:bg-white/5 hover:text-white"
               >
+                <LogIn className="h-4 w-4" />
                 Sign In
               </Link>
               <Link

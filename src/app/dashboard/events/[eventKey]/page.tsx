@@ -201,7 +201,7 @@ export default async function EventPage({
       <main className="mx-auto max-w-7xl px-4 pb-12 pt-32">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div data-tour="event-header">
-            <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
+            <p className="text-xs font-semibold uppercase tracking-widest text-teal-400">
               Event overview
             </p>
             <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -271,10 +271,10 @@ export default async function EventPage({
 
         <div data-tour="event-team-stats">
           {tableData.length === 0 ? (
-            <div className="rounded-3xl border border-teal-500/30 bg-teal-500/10 p-8 text-center">
-              <p className="text-teal-700 dark:text-yellow-300">
-                Team stats update once matches start or as the event gets closer.
-                You can sync again later to pull the latest EPA.
+            <div className="rounded-2xl border border-dashed border-white/10 dashboard-panel p-10 text-center">
+              <p className="text-sm font-medium text-gray-300">No team stats yet</p>
+              <p className="mt-1 text-xs text-gray-500">
+                Stats populate once matches begin. Check back after the event starts or sync again to pull the latest EPA.
               </p>
             </div>
           ) : (

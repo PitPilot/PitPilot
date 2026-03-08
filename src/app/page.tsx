@@ -1,77 +1,23 @@
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { createClient as createAdminClient, type SupabaseClient } from "@supabase/supabase-js";
-import {
-  Bot,
-  Check,
-  ClipboardList,
-  Database,
-  GaugeCircle,
-  Handshake,
-  Smartphone,
-  Users,
-} from "lucide-react";
+import { Check, GaugeCircle } from "lucide-react";
 import { HeroAnimations } from "./hero-animations";
 import { Navbar } from "@/components/navbar";
 import { LiveStats } from "./live-stats";
 import { DashboardPreview } from "./dashboard-preview";
-import { AIBriefingPreview } from "./ai-briefing-preview";
+import Image from "next/image";
 import { Testimonials } from "./testimonials";
 import { createClient } from "@/lib/supabase/server";
 import { MotionSection } from "@/components/motion-section";
 import { SiteFooter } from "@/components/site-footer";
 import type { Database as SupabaseDatabase } from "@/types/supabase";
 
-type Feature = {
-  title: string;
-  description: string;
-  icon: React.ComponentType<{ className?: string }>;
-};
-
 type Step = {
   label: string;
   title: string;
   description: string;
 };
-
-const FEATURES: Feature[] = [
-  {
-    title: "Smart scouting forms",
-    description:
-      "We built fast mobile forms for your scouts in the stands, with touch-first controls and reliable offline capture.",
-    icon: ClipboardList,
-  },
-  {
-    title: "Unified event intelligence",
-    description:
-      "We bring your PitPilot entries, TBA schedules/results, and Statbotics context together in one shared view.",
-    icon: Database,
-  },
-  {
-    title: "Pre-match AI briefs",
-    description:
-      "We generate concise pre-match plans for you with priorities, risks, and role focus before each match.",
-    icon: Bot,
-  },
-  {
-    title: "Alliance pick optimizer",
-    description:
-      "We rank teams by fit with your robot, not just raw EPA, so you can draft with intent.",
-    icon: Handshake,
-  },
-  {
-    title: "Team operations",
-    description:
-      "Your captains can manage roles, assignments, and communication without leaving the dashboard.",
-    icon: Users,
-  },
-  {
-    title: "Competition-ready reliability",
-    description:
-      "We keep you moving with offline-first behavior, sync recovery, and resilient UX for real venue networks.",
-    icon: Smartphone,
-  },
-];
 
 const STEPS: Step[] = [
   {
@@ -156,8 +102,6 @@ export default async function Home() {
           <div className="absolute top-24 right-[16%] h-[320px] w-[320px] rounded-full bg-cyan-400/10 blur-[120px]" />
           <div className="absolute bottom-0 left-[8%] h-[260px] w-[260px] rounded-full bg-teal-300/10 blur-[120px]" />
         </div>
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(30,41,59,0.5)_1px,transparent_1px),linear-gradient(to_bottom,rgba(30,41,59,0.5)_1px,transparent_1px)] bg-[size:56px_56px] [mask-image:radial-gradient(circle_at_center,black_40%,transparent_100%)]" />
-
         <div className="relative mx-auto max-w-7xl px-4 py-24 md:py-28 lg:py-32">
           <HeroAnimations />
         </div>
@@ -165,18 +109,18 @@ export default async function Home() {
         <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#03070a] to-transparent" />
       </section>
 
-      <LiveStats
+      {/* <LiveStats
         teams={stats.teams}
         entries={stats.entries}
         matches={stats.matches}
         scouts={stats.scouts}
-      />
+      /> */}
 
       <MotionSection id="problem" className="relative py-24">
         <div className="pointer-events-none absolute left-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
         <div className="mx-auto max-w-6xl px-4">
           <div className="text-center">
-            <p className="section-label">Why teams switch</p>
+            <p className="section-label">Why switch</p>
             <h2 className="font-outfit mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl">
               Strategy is not a spreadsheet problem
             </h2>
@@ -217,30 +161,11 @@ export default async function Home() {
         </div>
       </MotionSection>
 
-      <MotionSection id="features" className="relative py-24">
-        <div className="pointer-events-none absolute left-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-        <div className="mx-auto max-w-7xl px-4">
-          <div className="text-center">
-            <p className="section-label">Core capabilities</p>
-            <h2 className="font-outfit mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl">
-              Built for high-pressure match days
-            </h2>
-          </div>
-
-          <div className="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {FEATURES.map((feature) => (
-              <FeatureCard key={feature.title} feature={feature} />
-            ))}
-          </div>
-        </div>
-      </MotionSection>
-
       <MotionSection id="how-it-works" className="relative py-24">
         <div className="pointer-events-none absolute left-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
         <div className="mx-auto max-w-4xl px-4">
           <div className="text-center">
-            <p className="section-label">How it works</p>
-            <h2 className="font-outfit mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl">
+            <h2 className="font-outfit text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl">
               One clean scouting loop
             </h2>
           </div>
@@ -255,7 +180,7 @@ export default async function Home() {
                 <div className="mb-4 inline-flex h-8 min-w-8 items-center justify-center rounded-full border border-teal-300/30 bg-teal-300/15 px-3 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-teal-200">
                   {step.label}
                 </div>
-                <h3 className="font-outfit text-xl font-semibold text-blue-400">{step.title}</h3>
+                <h3 className="font-outfit text-xl font-semibold text-white">{step.title}</h3>
                 <p className="mt-3 text-sm leading-relaxed text-slate-400">{step.description}</p>
                 <div className="pointer-events-none absolute right-4 top-4 font-mono text-xs text-slate-600">
                   0{index + 1}
@@ -267,7 +192,7 @@ export default async function Home() {
       </MotionSection>
 
       <DashboardPreview />
-      <AIBriefingPreview />
+
       <Testimonials />
 
       <MotionSection id="pricing" className="relative py-24">
@@ -337,8 +262,7 @@ export default async function Home() {
         <div className="pointer-events-none absolute left-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
         <div className="relative mx-auto max-w-2xl px-4 text-center">
-          <p className="section-label">Start scouting better</p>
-          <h2 className="font-outfit mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl">
+          <h2 className="font-outfit text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl">
             Ready for cleaner decisions at your next event?
           </h2>
           <p className="mx-auto mt-5 max-w-xl text-sm text-slate-400 md:text-base">
@@ -364,22 +288,6 @@ export default async function Home() {
 
       <SiteFooter />
     </div>
-  );
-}
-
-function FeatureCard({ feature }: { feature: Feature }) {
-  const Icon = feature.icon;
-
-  return (
-    <article className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#0f1115]/85 p-6 backdrop-blur-md transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:border-teal-300/40 hover:shadow-[0_0_34px_-18px_rgba(67,217,162,0.6)]">
-      <div className="pointer-events-none absolute right-0 top-0 h-16 w-16 border-r border-t border-teal-300/25 opacity-0 transition group-hover:opacity-100" />
-      <div className="pointer-events-none absolute bottom-0 left-0 h-16 w-16 border-b border-l border-teal-300/25 opacity-0 transition group-hover:opacity-100" />
-      <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-teal-300/25 bg-teal-300/10 text-teal-200 shadow-[0_0_20px_-12px_rgba(67,217,162,0.9)]">
-        <Icon className="h-5 w-5" />
-      </div>
-      <h3 className="font-outfit text-xl font-semibold text-blue-400">{feature.title}</h3>
-      <p className="mt-3 text-sm leading-relaxed text-slate-400">{feature.description}</p>
-    </article>
   );
 }
 

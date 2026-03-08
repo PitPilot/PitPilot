@@ -21,7 +21,7 @@ import { DashboardTour } from "./dashboard-tour";
 
 export const metadata: Metadata = {
   title: "Dashboard | PitPilot",
-  description: "Your FRC scouting dashboard — manage events, view data, and access AI strategy tools.",
+  description: "Your FRC scouting dashboard: manage events, view data, and access AI strategy tools.",
 };
 
 export default async function DashboardPage() {
@@ -171,7 +171,7 @@ export default async function DashboardPage() {
             {/* Subtle gradient accent */}
             <div className="pointer-events-none absolute top-0 right-0 h-32 w-32 rounded-full bg-teal-500/10 blur-3xl" />
             <div className="relative">
-              <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
+              <p className="text-xs font-semibold uppercase tracking-widest text-teal-400">
                 Team Overview
               </p>
               <div className="mt-2 flex flex-wrap items-center gap-2.5">
@@ -388,7 +388,7 @@ export default async function DashboardPage() {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="truncate text-xs font-semibold uppercase tracking-widest text-blue-400">
+                        <p className="truncate text-xs font-medium text-slate-400">
                           {eventTitle}
                         </p>
                         <h4 className="text-base font-semibold text-white">

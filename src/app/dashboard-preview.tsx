@@ -141,7 +141,7 @@ function MatchMockup({
   return (
     <div className="relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.03] p-3 transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:border-teal-300/35 hover:shadow-[0_0_20px_-12px_rgba(67,217,162,0.55)]">
       <div className="mb-2 flex items-center justify-between">
-        <span className="font-mono text-[11px] font-medium text-blue-400">{label}</span>
+        <span className="font-mono text-[11px] font-medium text-slate-300">{label}</span>
         <div className="flex items-center gap-2">
           {score && <span className="font-mono text-[11px] text-slate-500">{score}</span>}
           <span

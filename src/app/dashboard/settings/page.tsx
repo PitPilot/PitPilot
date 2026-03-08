@@ -65,14 +65,15 @@ export default async function SettingsPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Link href="/dashboard/settings/account" className="back-button">
-              Personal profile
-            </Link>
             <Link
-              href="/dashboard"
-              className="back-button"
+              href="/dashboard/settings/account"
+              className="inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm font-medium text-gray-200 transition hover:bg-white/5 hover:border-white/20"
             >
-              Back to dashboard
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Account
+            </Link>
+            <Link href="/dashboard" className="back-button">
+              Back
             </Link>
           </div>
         </div>

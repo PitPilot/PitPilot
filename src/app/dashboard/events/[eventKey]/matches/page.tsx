@@ -295,15 +295,12 @@ export default async function MatchListPage({
       <main className="mx-auto max-w-2xl px-4 pb-12 pt-32 space-y-6">
         <div data-tour="matches-header" className="flex items-center justify-between">
           <div data-tour="matches-tips">
-            <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
+            <p className="text-xs font-semibold uppercase tracking-widest text-teal-400">
               {eventTitle}
             </p>
             <h1 className="text-lg font-bold">Scout matches</h1>
             <p className="text-xs text-gray-400">
-              Tap a team number to scout
-            </p>
-            <p className="mt-1 text-xs text-gray-400">
-              Boxes that are highlighted were assigned to you by the captain.
+              Tap a number to scout. Highlighted boxes are your assignments.
             </p>
           </div>
           <Link

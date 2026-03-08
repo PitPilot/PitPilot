@@ -72,7 +72,7 @@ export function AIBriefingPreview() {
           className="order-1"
         >
           <div className="rounded-2xl border border-white/10 bg-[#0b1116]/90 p-4 shadow-[0_0_45px_-20px_rgba(67,217,162,0.35)] backdrop-blur-md sm:p-5">
-            <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-blue-400">
+            <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-slate-400">
               AI Briefing Preview
             </p>
 
